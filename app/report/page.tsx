@@ -118,6 +118,8 @@ export default function ReportPage() {
     }
   }, [report]);
 
+  const [schoolName, setSchoolName] = useState<string | null>(null);
+
   useEffect(() => {
     const stored = sessionStorage.getItem("reportData");
     if (!stored) {
@@ -130,6 +132,16 @@ export default function ReportPage() {
     } catch {
       router.push("/form");
     }
+    // Load school name from resume data if available
+    try {
+      const resumeStr = sessionStorage.getItem("resumeData");
+      if (resumeStr) {
+        const resume = JSON.parse(resumeStr);
+        if (resume.extraInfo?.schoolName) {
+          setSchoolName(resume.extraInfo.schoolName);
+        }
+      }
+    } catch { /* empty */ }
   }, [router]);
 
   if (!report) {
@@ -140,7 +152,7 @@ export default function ReportPage() {
     );
   }
 
-  const { meta, summary, jobOverview, industryAnalysis, competencyProfile, developmentPath, personalizedAdvice, supplementary } = report;
+  const { meta, summary, jobOverview, industryAnalysis, competencyProfile, developmentPath, personalizedAdvice, supplementary, resumeSuggestions } = report;
 
   const radarData = competencyProfile.dimensions.map((d) => ({
     subject: d.name,
@@ -179,6 +191,12 @@ export default function ReportPage() {
                     {meta.formData.positionName}
                   </h1>
                   <div className="flex flex-wrap gap-2 text-sm text-white/60">
+                    {schoolName && (
+                      <>
+                        <span>{schoolName}</span>
+                        <span>·</span>
+                      </>
+                    )}
                     <span>{meta.formData.industry}</span>
                     <span>·</span>
                     <span>{meta.formData.companyType}</span>
@@ -471,7 +489,42 @@ export default function ReportPage() {
             </div>
           </Section>
 
-          {/* 7. Supplementary */}
+          {/* 7. Resume Suggestions (conditional) */}
+          {resumeSuggestions && resumeSuggestions.items && resumeSuggestions.items.length > 0 && (
+            <Section title="简历优化建议" badge="简历" delay={0.38}>
+              <div className="space-y-4">
+                {resumeSuggestions.items.map((item, i) => (
+                  <div key={i} className="border border-[var(--blue-100)] rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--blue-400)] to-[var(--blue-500)] flex items-center justify-center shrink-0">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M4 2h6l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="white" strokeWidth="1.3" strokeLinejoin="round" />
+                          <path d="M10 2v4h4" stroke="white" strokeWidth="1.3" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-[var(--navy-900)] mb-1">{item.title}</p>
+                        <div className="bg-red-50 rounded-lg px-3 py-2 mb-2">
+                          <p className="text-xs text-red-600">
+                            <span className="font-medium">问题：</span>
+                            {item.problem}
+                          </p>
+                        </div>
+                        <div className="bg-[var(--blue-50)] rounded-lg px-3 py-2">
+                          <p className="text-xs text-[var(--navy-700)]">
+                            <span className="font-medium text-[var(--blue-500)]">建议：</span>
+                            {item.suggestion}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* 8. Supplementary */}
           <Section title="补充信息" badge="参考" delay={0.4}>
             <div className="space-y-4">
               {/* Salary range */}

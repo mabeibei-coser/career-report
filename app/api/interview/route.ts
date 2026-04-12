@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import client, { MINIMAX_MODEL } from "@/lib/minimax";
-import type { JobFormData } from "@/lib/types";
+import type { JobFormData, ResumeExtraInfo } from "@/lib/types";
 
 const SYSTEM_PROMPT = `你是一位资深的职业咨询顾问，正在社保局为来访者进行职业定位访谈。
 
@@ -19,22 +19,49 @@ const SYSTEM_PROMPT = `你是一位资深的职业咨询顾问，正在社保局
 回复格式：直接输出问题内容，不要加编号或前缀。
 如果访谈应该结束，在问题后另起一行加上 [访谈结束]。`;
 
-function buildUserContext(formData: JobFormData): string {
-  return `来访者基本信息：
+const RESUME_CONTEXT_ADDENDUM = `
+
+注意：来访者已上传简历，你已了解其基本背景信息。请跳过基础信息采集（如工作内容、基本经历等），直接深入了解以下方面：
+- 职业困惑、发展瓶颈
+- 当前能力与目标岗位的差距
+- 对未来方向的想法和期望
+- 希望获得的具体建议`;
+
+function buildUserContext(
+  formData: JobFormData,
+  resumeExtraInfo?: ResumeExtraInfo
+): string {
+  let context = `来访者基本信息：
 - 岗位名称：${formData.positionName}
 - 所属行业：${formData.industry}
 - 企业性质：${formData.companyType}
 - 城市等级：${formData.cityLevel}
 - 匹配职级：${formData.jobLevel}
 - 工作年限：${formData.workYears}`;
+
+  if (resumeExtraInfo) {
+    if (resumeExtraInfo.schoolName) {
+      context += `\n- 毕业学校：${resumeExtraInfo.schoolName}`;
+    }
+    if (resumeExtraInfo.skills?.length) {
+      context += `\n- 核心技能：${resumeExtraInfo.skills.join("、")}`;
+    }
+    if (resumeExtraInfo.workHistory) {
+      context += `\n- 工作经历：${resumeExtraInfo.workHistory}`;
+    }
+  }
+
+  return context;
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { formData, messages } = body as {
+    const { formData, messages, resumeExtraInfo, stream } = body as {
       formData: JobFormData;
       messages: { role: "user" | "assistant"; content: string }[];
+      resumeExtraInfo?: ResumeExtraInfo;
+      stream?: boolean;
     };
 
     if (!formData || !formData.positionName) {
@@ -44,30 +71,86 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const userContext = buildUserContext(formData);
+    const systemPrompt = resumeExtraInfo
+      ? SYSTEM_PROMPT + RESUME_CONTEXT_ADDENDUM
+      : SYSTEM_PROMPT;
+    const userContext = buildUserContext(formData, resumeExtraInfo);
 
-    // Build conversation for the AI
     const apiMessages: { role: "system" | "user" | "assistant"; content: string }[] = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: systemPrompt },
       { role: "user", content: userContext },
     ];
 
-    // If no prior messages, this is the first question
     if (!messages || messages.length === 0) {
       apiMessages.push({
         role: "user",
         content: "请根据我的基本信息，开始第一轮访谈提问。",
       });
     } else {
-      // Add conversation history
       for (const msg of messages) {
-        apiMessages.push({
-          role: msg.role,
-          content: msg.content,
-        });
+        apiMessages.push({ role: msg.role, content: msg.content });
       }
     }
 
+    // SSE streaming mode
+    if (stream) {
+      const response = await client.chat.completions.create({
+        model: MINIMAX_MODEL,
+        messages: apiMessages,
+        temperature: 0.7,
+        max_tokens: 500,
+        stream: true,
+      });
+
+      const encoder = new TextEncoder();
+      let fullContent = "";
+
+      const readable = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const chunk of response) {
+              const delta = chunk.choices[0]?.delta?.content || "";
+              if (delta) {
+                // Strip <think> blocks incrementally
+                fullContent += delta;
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`)
+                );
+              }
+            }
+
+            // Clean full content
+            const cleaned = fullContent.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+            const isComplete = cleaned.includes("[访谈结束]");
+            const cleanContent = cleaned.replace("[访谈结束]", "").trim();
+
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ done: true, message: cleanContent, isComplete })}\n\n`
+              )
+            );
+            controller.close();
+          } catch (err) {
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ error: "AI 服务异常" })}\n\n`
+              )
+            );
+            controller.close();
+          }
+        },
+      });
+
+      return new NextResponse(readable, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    }
+
+    // Non-streaming (original behavior)
     const response = await client.chat.completions.create({
       model: MINIMAX_MODEL,
       messages: apiMessages,
@@ -76,7 +159,6 @@ export async function POST(req: NextRequest) {
     });
 
     const rawContent = response.choices[0]?.message?.content || "";
-    // Strip <think>...</think> blocks from reasoning models
     const content = rawContent.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
     const isComplete = content.includes("[访谈结束]");
     const cleanContent = content.replace("[访谈结束]", "").trim();

@@ -61,6 +61,7 @@ export default function LoadingPage() {
 
     const formDataStr = sessionStorage.getItem("formData");
     const messagesStr = sessionStorage.getItem("interviewMessages");
+    const resumeDataStr = sessionStorage.getItem("resumeData");
 
     if (!formDataStr) {
       router.push("/form");
@@ -69,12 +70,13 @@ export default function LoadingPage() {
 
     const formData: JobFormData = JSON.parse(formDataStr);
     const messages = messagesStr ? JSON.parse(messagesStr) : [];
+    const resumeData = resumeDataStr ? JSON.parse(resumeDataStr) : undefined;
 
     // Fire the report generation API
     fetch("/api/report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ formData, messages }),
+      body: JSON.stringify({ formData, messages, resumeData }),
     })
       .then((res) => res.json())
       .then((data) => {

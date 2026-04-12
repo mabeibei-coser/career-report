@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import client, { MINIMAX_MODEL } from "@/lib/minimax";
-import type { JobFormData, ReportData } from "@/lib/types";
+import type { JobFormData, ReportData, ResumeData } from "@/lib/types";
 
 const REPORT_SYSTEM_PROMPT = `你是一位资深的职业分析专家。请根据来访者的基本信息和访谈内容，生成一份结构化的职业定位分析报告。
 
@@ -61,11 +61,23 @@ const REPORT_SYSTEM_PROMPT = `你是一位资深的职业分析专家。请根�
 4. upwardPaths 需要 2-3 个，lateralPaths 需要 1-2 个
 5. personalizedAdvice.items 需要 3-4 个
 6. 内容要专业、具体、有建设性
-7. salaryRange 根据岗位、行业、城市给出合理估计`;
+7. salaryRange 根据岗位、行业、城市给出合理估计
+8. 如果提供了简历原文，额外生成 resumeSuggestions 字段（见下方说明）`;
+
+const RESUME_SUGGESTIONS_ADDENDUM = `
+
+由于来访者上传了简历，请在报告 JSON 中额外包含以下字段：
+"resumeSuggestions": {
+  "items": [
+    {"title": "建议标题", "problem": "发现的问题", "suggestion": "改进建议"}
+  ]
+}
+要求：给出 3 条简历优化建议，针对简历内容的结构、表述、关键信息缺失等方面给出具体可操作的改进建议。`;
 
 function buildReportPrompt(
   formData: JobFormData,
-  messages: { role: string; content: string }[]
+  messages: { role: string; content: string }[],
+  resumeData?: ResumeData
 ): string {
   let prompt = `来访者基本信息：
 - 岗位名称：${formData.positionName}
@@ -76,6 +88,25 @@ function buildReportPrompt(
 - 工作年限：${formData.workYears}
 
 `;
+
+  if (resumeData) {
+    prompt += `简历背景信息：\n`;
+    if (resumeData.extraInfo?.schoolName) {
+      prompt += `- 毕业学校：${resumeData.extraInfo.schoolName}\n`;
+    }
+    if (resumeData.extraInfo?.skills?.length) {
+      prompt += `- 核心技能：${resumeData.extraInfo.skills.join("、")}\n`;
+    }
+    if (resumeData.extraInfo?.workHistory) {
+      prompt += `- 工作经历：${resumeData.extraInfo.workHistory}\n`;
+    }
+    // Include truncated raw text for resume suggestions
+    const resumeText = resumeData.rawText?.slice(0, 4000);
+    if (resumeText) {
+      prompt += `\n简历原文（用于生成简历优化建议）：\n${resumeText}\n`;
+    }
+    prompt += "\n";
+  }
 
   if (messages && messages.length > 0) {
     prompt += "访谈记录：\n";
@@ -93,9 +124,10 @@ function buildReportPrompt(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { formData, messages } = body as {
+    const { formData, messages, resumeData } = body as {
       formData: JobFormData;
       messages: { role: string; content: string }[];
+      resumeData?: ResumeData;
     };
 
     if (!formData || !formData.positionName) {
@@ -105,12 +137,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const userPrompt = buildReportPrompt(formData, messages);
+    const userPrompt = buildReportPrompt(formData, messages, resumeData);
+    const systemPrompt = resumeData
+      ? REPORT_SYSTEM_PROMPT + RESUME_SUGGESTIONS_ADDENDUM
+      : REPORT_SYSTEM_PROMPT;
 
     const response = await client.chat.completions.create({
       model: MINIMAX_MODEL,
       messages: [
-        { role: "system", content: REPORT_SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
       temperature: 0.6,

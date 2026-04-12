@@ -1,3 +1,27 @@
+// ========== 简历解析类型 ==========
+
+export interface ResumeData {
+  rawText: string;
+  fileName: string;
+  fileType: 'pdf' | 'docx' | 'doc';
+  extractedFields: Partial<JobFormData>;
+  extraInfo: ResumeExtraInfo;
+}
+
+export interface ResumeExtraInfo {
+  schoolName?: string;
+  skills?: string[];
+  workHistory?: string;
+}
+
+export interface ResumeSuggestions {
+  items: {
+    title: string;
+    problem: string;
+    suggestion: string;
+  }[];
+}
+
 // ========== 表单输入类型 ==========
 
 export interface JobFormData {
@@ -34,6 +58,7 @@ export interface ReportData {
   developmentPath: DevelopmentPath;
   personalizedAdvice: PersonalizedAdvice;
   supplementary: SupplementaryInfo;
+  resumeSuggestions?: ResumeSuggestions;
 }
 
 export interface ReportMeta {
