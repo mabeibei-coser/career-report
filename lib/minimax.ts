@@ -7,11 +7,15 @@ const client = new OpenAI({
 
 export const MINIMAX_MODEL = process.env.MINIMAX_MODEL || "MiniMax-M1";
 
-// TTS base URL — use China endpoint if MINIMAX_BASE_URL suggests China
-const TTS_BASE_URL = process.env.MINIMAX_TTS_BASE_URL
-  || (process.env.MINIMAX_BASE_URL?.includes("minimaxi.chat")
-    ? "https://api.minimaxi.chat/v1"
-    : "https://api.minimax.io/v1");
+// TTS base URL — derive from MINIMAX_BASE_URL to use the same domain
+function getTtsBaseUrl(): string {
+  if (process.env.MINIMAX_TTS_BASE_URL) return process.env.MINIMAX_TTS_BASE_URL;
+  const base = process.env.MINIMAX_BASE_URL || "";
+  if (base.includes("minimaxi.chat")) return "https://api.minimaxi.chat/v1";
+  if (base.includes("minimax.chat")) return "https://api.minimax.chat/v1";
+  return "https://api.minimax.io/v1";
+}
+const TTS_BASE_URL = getTtsBaseUrl();
 
 export async function textToSpeech(text: string): Promise<Buffer> {
   const res = await fetch(`${TTS_BASE_URL}/t2a_v2`, {

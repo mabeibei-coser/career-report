@@ -104,17 +104,39 @@ export async function POST(req: NextRequest) {
 
       const encoder = new TextEncoder();
       let fullContent = "";
+      let insideThink = false;
 
       const readable = new ReadableStream({
         async start(controller) {
           try {
             for await (const chunk of response) {
               const delta = chunk.choices[0]?.delta?.content || "";
-              if (delta) {
-                // Strip <think> blocks incrementally
-                fullContent += delta;
+              if (!delta) continue;
+
+              fullContent += delta;
+
+              // Incrementally filter <think>...</think> blocks
+              // Track whether we're inside a think block
+              let visibleDelta = "";
+              for (const char of delta) {
+                if (!insideThink) {
+                  visibleDelta += char;
+                  // Check if we just completed a <think> opening tag
+                  if (visibleDelta.endsWith("<think>")) {
+                    visibleDelta = visibleDelta.slice(0, -7); // Remove <think>
+                    insideThink = true;
+                  }
+                } else {
+                  // Inside think block — check for closing tag
+                  if (fullContent.endsWith("</think>")) {
+                    insideThink = false;
+                  }
+                }
+              }
+
+              if (visibleDelta) {
                 controller.enqueue(
-                  encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`)
+                  encoder.encode(`data: ${JSON.stringify({ delta: visibleDelta })}\n\n`)
                 );
               }
             }

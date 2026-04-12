@@ -42,12 +42,17 @@ export default function InterviewPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [questionCount, setQuestionCount] = useState(0);
-  const [mode, setMode] = useState<"text" | "voice">("text");
+  const [mode, setMode] = useState<"text" | "voice">("voice");
   const [streamingText, setStreamingText] = useState("");
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Ensure voices are loaded for speechSynthesis
+  useEffect(() => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+    }
+  }, []);
 
   // Load form data and resume data on mount
   useEffect(() => {
@@ -80,35 +85,33 @@ export default function InterviewPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading, streamingText]);
 
-  // Play TTS for AI response
+  // Play TTS using browser speechSynthesis API
   const playTTS = useCallback(async (text: string) => {
+    if (!window.speechSynthesis) {
+      console.warn("speechSynthesis not supported");
+      return;
+    }
     try {
       setIsPlayingAudio(true);
-      const res = await fetch("/api/interview/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
 
-      if (!res.ok) throw new Error("TTS failed");
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "zh-CN";
+      utterance.rate = 1;
+      utterance.pitch = 1;
 
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      // Try to pick a Chinese voice
+      const voices = window.speechSynthesis.getVoices();
+      const zhVoice = voices.find(
+        (v) => v.lang.startsWith("zh") && v.localService
+      ) || voices.find((v) => v.lang.startsWith("zh"));
+      if (zhVoice) utterance.voice = zhVoice;
 
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.onended = () => {
-        setIsPlayingAudio(false);
-        URL.revokeObjectURL(url);
-      };
-      audio.onerror = () => {
-        setIsPlayingAudio(false);
-        URL.revokeObjectURL(url);
-      };
-      await audio.play();
+      utterance.onend = () => setIsPlayingAudio(false);
+      utterance.onerror = () => setIsPlayingAudio(false);
+
+      window.speechSynthesis.speak(utterance);
     } catch (err) {
       console.error("TTS playback failed:", err);
       setIsPlayingAudio(false);
@@ -154,6 +157,7 @@ export default function InterviewPage() {
       let buffer = "";
       let finalMessage = "";
       let finalComplete = false;
+      let ttsPromise: Promise<void> | null = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -176,6 +180,10 @@ export default function InterviewPage() {
             if (data.done) {
               finalMessage = data.message;
               finalComplete = data.isComplete;
+              // 立即并行发起 TTS 请求，不等流式循环结束
+              if (useVoice && finalMessage) {
+                ttsPromise = playTTS(finalMessage);
+              }
             }
             if (data.error) {
               throw new Error(data.error);
@@ -198,9 +206,9 @@ export default function InterviewPage() {
         setIsComplete(true);
       }
 
-      // Play TTS if in voice mode
-      if (useVoice && aiContent) {
-        playTTS(aiContent);
+      // 等待 TTS 播放完成（如果已发起）
+      if (ttsPromise) {
+        await ttsPromise;
       }
     } catch (error) {
       console.error("Failed to fetch AI question:", error);
@@ -246,10 +254,9 @@ export default function InterviewPage() {
 
   function handleFinish() {
     if (messages.length === 0) return;
-    // Stop any audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
+    // Stop any speech
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
     }
     sessionStorage.setItem("interviewMessages", JSON.stringify(messages));
     router.push("/loading");
@@ -390,7 +397,7 @@ export default function InterviewPage() {
                 </AvatarFallback>
               </Avatar>
               <div className="max-w-[75%] bg-white shadow-sm border border-[var(--blue-100)] rounded-2xl px-4 py-3 text-sm leading-relaxed text-[var(--navy-950)]">
-                {streamingText.replace(/<think>[\s\S]*?<\/think>/g, "").replace("[访谈结束]", "")}
+                {streamingText.replace(/<think>[\s\S]*?(<\/think>|$)/g, "").replace("[访谈结束]", "")}
                 <span className="inline-block w-0.5 h-4 bg-[var(--blue-500)] animate-pulse ml-0.5 align-middle" />
               </div>
             </motion.div>
