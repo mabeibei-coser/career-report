@@ -7,6 +7,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_TEXT_FOR_AI = 8000; // 发送给 AI 的最大字符数
 
 const EXTRACTION_PROMPT = `你是一个简历信息提取助手。请从以下简历文本中提取结构化信息。
+不要输出任何思考过程，直接输出 JSON 结果。
 
 ## 需要提取的字段
 
@@ -95,7 +96,7 @@ export async function POST(req: NextRequest) {
         { role: "user", content: `简历内容：\n${textForAI}` },
       ],
       temperature: 0.1,
-      max_tokens: 1000,
+      max_tokens: 4000,
     });
 
     const aiResponse = completion.choices[0]?.message?.content || "";
