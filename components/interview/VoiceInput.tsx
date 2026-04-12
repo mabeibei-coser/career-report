@@ -13,7 +13,6 @@ interface VoiceInputProps {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SpeechRecognitionType = any;
 
-// Check for Web Speech API support
 function getSpeechRecognition(): SpeechRecognitionType | null {
   if (typeof window === "undefined") return null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -23,6 +22,7 @@ function getSpeechRecognition(): SpeechRecognitionType | null {
 
 export default function VoiceInput({ onSend, disabled }: VoiceInputProps) {
   const [isRecording, setIsRecording] = useState(false);
+  const [isPending, setIsPending] = useState(false); // waiting for permission
   const [transcript, setTranscript] = useState("");
   const [interimTranscript, setInterimTranscript] = useState("");
   const [isSupported, setIsSupported] = useState(true);
@@ -37,10 +37,22 @@ export default function VoiceInput({ onSend, disabled }: VoiceInputProps) {
     const SpeechRecognitionClass = getSpeechRecognition();
     if (!SpeechRecognitionClass) return;
 
+    // Clean up any previous instance
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch { /* empty */ }
+      recognitionRef.current = null;
+    }
+
     const recognition = new SpeechRecognitionClass();
     recognition.lang = "zh-CN";
     recognition.continuous = true;
     recognition.interimResults = true;
+
+    // Only set recording=true after recognition actually starts (after permission granted)
+    recognition.onstart = () => {
+      setIsPending(false);
+      setIsRecording(true);
+    };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onresult = (event: any) => {
@@ -62,25 +74,36 @@ export default function VoiceInput({ onSend, disabled }: VoiceInputProps) {
     recognition.onerror = (event: any) => {
       console.error("Speech recognition error:", event.error);
       setIsRecording(false);
+      setIsPending(false);
+      recognitionRef.current = null;
     };
 
     recognition.onend = () => {
       setIsRecording(false);
+      setIsPending(false);
+      recognitionRef.current = null;
     };
 
     recognitionRef.current = recognition;
-    recognition.start();
-    setIsRecording(true);
+    setIsPending(true); // show "waiting for permission" state
     setTranscript("");
     setInterimTranscript("");
+
+    try {
+      recognition.start();
+    } catch (err) {
+      console.error("Failed to start recognition:", err);
+      setIsPending(false);
+      recognitionRef.current = null;
+    }
   }, []);
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
+      try { recognitionRef.current.stop(); } catch { /* empty */ }
     }
     setIsRecording(false);
+    setIsPending(false);
   }, []);
 
   const handleSend = useCallback(() => {
@@ -123,7 +146,7 @@ export default function VoiceInput({ onSend, disabled }: VoiceInputProps) {
 
       {/* Mic button */}
       <MicButton
-        isRecording={isRecording}
+        isRecording={isRecording || isPending}
         onPressStart={startRecording}
         onPressEnd={stopRecording}
         disabled={disabled}
@@ -151,7 +174,7 @@ export default function VoiceInput({ onSend, disabled }: VoiceInputProps) {
         </div>
       ) : (
         <p className="text-xs text-[var(--muted-foreground)]">
-          {isRecording ? "正在聆听，点击停止..." : "点击麦克风开始说话"}
+          {isPending ? "请授权麦克风权限..." : isRecording ? "正在聆听，点击停止..." : "点击麦克风开始说话"}
         </p>
       )}
     </div>

@@ -93,7 +93,6 @@ export default function InterviewPage() {
     }
     try {
       setIsPlayingAudio(true);
-      // Cancel any ongoing speech
       window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
@@ -101,17 +100,35 @@ export default function InterviewPage() {
       utterance.rate = 1;
       utterance.pitch = 1;
 
-      // Try to pick a Chinese voice
       const voices = window.speechSynthesis.getVoices();
       const zhVoice = voices.find(
         (v) => v.lang.startsWith("zh") && v.localService
       ) || voices.find((v) => v.lang.startsWith("zh"));
       if (zhVoice) utterance.voice = zhVoice;
 
-      utterance.onend = () => setIsPlayingAudio(false);
-      utterance.onerror = () => setIsPlayingAudio(false);
+      // Safety timeout — mobile browsers often don't fire onend
+      const safetyTimeout = setTimeout(() => {
+        setIsPlayingAudio(false);
+      }, Math.max(text.length * 300, 5000)); // ~300ms per char or min 5s
+
+      utterance.onend = () => {
+        clearTimeout(safetyTimeout);
+        setIsPlayingAudio(false);
+      };
+      utterance.onerror = () => {
+        clearTimeout(safetyTimeout);
+        setIsPlayingAudio(false);
+      };
 
       window.speechSynthesis.speak(utterance);
+
+      // Some mobile browsers don't support speechSynthesis at all but don't error
+      setTimeout(() => {
+        if (!window.speechSynthesis.speaking) {
+          clearTimeout(safetyTimeout);
+          setIsPlayingAudio(false);
+        }
+      }, 500);
     } catch (err) {
       console.error("TTS playback failed:", err);
       setIsPlayingAudio(false);
