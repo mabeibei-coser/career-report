@@ -151,7 +151,7 @@ export default function VoiceInput({ onSend, disabled }: VoiceInputProps) {
         </div>
       ) : (
         <p className="text-xs text-[var(--muted-foreground)]">
-          {isRecording ? "正在聆听，松开结束..." : "按住麦克风开始说话"}
+          {isRecording ? "正在聆听，点击停止..." : "点击麦克风开始说话"}
         </p>
       )}
     </div>

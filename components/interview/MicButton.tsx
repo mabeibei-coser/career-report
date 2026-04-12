@@ -15,6 +15,15 @@ export default function MicButton({
   onPressEnd,
   disabled,
 }: MicButtonProps) {
+  const handleClick = () => {
+    if (disabled) return;
+    if (isRecording) {
+      onPressEnd();
+    } else {
+      onPressStart();
+    }
+  };
+
   return (
     <div className="relative flex items-center justify-center">
       {/* Halo rings — only visible when recording */}
@@ -46,35 +55,32 @@ export default function MicButton({
       {/* Main button */}
       <motion.button
         type="button"
-        className={`relative z-10 w-20 h-20 rounded-full flex items-center justify-center transition-colors ${
+        className={`relative z-10 w-20 h-20 rounded-full flex items-center justify-center transition-colors select-none ${
           disabled
             ? "bg-gray-300 cursor-not-allowed"
             : isRecording
             ? "bg-[var(--blue-400)] shadow-lg shadow-[var(--blue-400)]/30"
-            : "bg-[var(--navy-900)] hover:bg-[var(--navy-800)] shadow-lg shadow-[var(--navy-900)]/20"
+            : "bg-[var(--navy-900)] hover:bg-[var(--navy-800)] shadow-lg shadow-[var(--navy-900)]/20 active:scale-95"
         }`}
         animate={isRecording ? { scale: 1.1 } : { scale: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        onPointerDown={(e) => {
-          if (disabled) return;
-          e.preventDefault();
-          onPressStart();
-        }}
-        onPointerUp={() => {
-          if (disabled) return;
-          onPressEnd();
-        }}
-        onPointerLeave={() => {
-          if (isRecording) onPressEnd();
-        }}
+        onClick={handleClick}
+        onContextMenu={(e) => e.preventDefault()}
         disabled={disabled}
+        style={{ touchAction: "none", WebkitTouchCallout: "none" } as React.CSSProperties}
       >
-        {/* Mic icon */}
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-          <rect x="11" y="4" width="10" height="16" rx="5" stroke="white" strokeWidth="2" />
-          <path d="M8 16a8 8 0 0016 0" stroke="white" strokeWidth="2" strokeLinecap="round" />
-          <path d="M16 26v2" stroke="white" strokeWidth="2" strokeLinecap="round" />
-        </svg>
+        {/* Mic icon / Stop icon */}
+        {isRecording ? (
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <rect x="10" y="10" width="12" height="12" rx="2" fill="white" />
+          </svg>
+        ) : (
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <rect x="11" y="4" width="10" height="16" rx="5" stroke="white" strokeWidth="2" />
+            <path d="M8 16a8 8 0 0016 0" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            <path d="M16 26v2" stroke="white" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        )}
 
         {/* Recording indicator dot */}
         {isRecording && (
