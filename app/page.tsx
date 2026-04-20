@@ -110,24 +110,24 @@ const steps = [
   {
     icon: ClipboardList,
     step: "01",
-    title: "填写信息",
-    desc: "输入来访者的岗位、行业、企业性质等基本信息，快速建立分析基础",
+    title: "填写求职意向",
+    desc: "填写意向岗位、学历、公司、城市 4 项；可选上传 PDF/Word 简历作为分析加成",
     accent: "from-blue-500 to-cyan-400",
     delay: 0,
   },
   {
     icon: MessageCircle,
     step: "02",
-    title: "AI 智能访谈",
-    desc: "AI 根据来访者背景自动生成问题，进行 3-5 轮深度职业对话",
+    title: "6 题 AI 快测",
+    desc: "AI 语音朗读题目，覆盖 MBTI 四维度 + 风险偏好 + 价值取向，1-2 分钟完成",
     accent: "from-indigo-500 to-blue-400",
     delay: 1,
   },
   {
     icon: FileBarChart,
     step: "03",
-    title: "生成报告",
-    desc: "综合分析数据与访谈内容，自动输出图表化职业定位报告",
+    title: "生成 7 章节定位报告",
+    desc: "总览 · 岗位薪资 · 岗位信息 · 简历诊断 · 谈薪要点 · 发展建议 · 职场环境透视",
     accent: "from-violet-500 to-indigo-400",
     delay: 2,
   },
@@ -407,9 +407,9 @@ export default function HomePage() {
                 custom={1}
                 className="text-5xl sm:text-6xl lg:text-[4.5rem] font-extrabold tracking-tight leading-[1.05] text-gradient-hero"
               >
-                AI 职业
+                谨世 ATA
                 <br />
-                定位报告
+                职业定位报告
               </motion.h1>
 
               <motion.div
@@ -432,7 +432,7 @@ export default function HomePage() {
                 custom={3}
                 className="mt-6 text-lg text-blue-100/60 max-w-lg leading-relaxed font-light mx-auto lg:mx-0"
               >
-                通过 AI 智能访谈与多维度数据分析，为每一位来访者生成专属的职业定位分析报告，赋能专业化职业咨询服务
+                面向应届大学生的校招定位工具：填写求职意向 + 上传简历（选填），1-2 分钟完成 AI 语音快测，获得含薪资、谈薪、发展建议的 7 章节报告
               </motion.p>
 
               <motion.div
@@ -599,7 +599,7 @@ export default function HomePage() {
               核心能力
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold text-[var(--foreground)] tracking-tight">
-              为什么选择 AI 职业定位报告
+              为什么选择谨世 ATA 职业定位报告
             </h2>
             <p className="mt-4 text-base text-[var(--muted-foreground)] max-w-xl mx-auto">
               将职业咨询从经验判断升级为数据驱动的专业分析
@@ -669,10 +669,10 @@ export default function HomePage() {
             </div>
 
             <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-4">
-              让每一次职业咨询都有据可依
+              让应届校招准备不再迷茫
             </h3>
             <p className="text-sm text-blue-200/50 max-w-lg mx-auto mb-8 leading-relaxed">
-              专为社保局职业咨询场景设计，将 AI 技术与职业分析深度融合，帮助咨询老师更高效、更专业地服务来访者
+              面向应届大学生的校招定位工具：AI 结合你的意向岗位、性格测评和简历，生成一份可执行、有数据的校招定位报告
             </p>
 
             <Link href="/form">
@@ -698,7 +698,7 @@ export default function HomePage() {
                 <FileBarChart className="size-4 text-white" />
               </div>
               <span className="text-sm font-semibold text-[var(--foreground)]">
-                AI 职业定位报告
+                谨世 ATA 职业定位报告
               </span>
             </div>
             <span className="text-xs text-[var(--muted-foreground)]">
