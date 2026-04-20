@@ -32,7 +32,7 @@ cd career-report
 git checkout claude/sharp-lumiere-c98cc8
 
 # 配置环境变量
-cp deploy/.env.production.example .env.production.local
+cp deploy/env.production.example .env.production.local
 vim .env.production.local   # 填入真实 MINIMAX_API_KEY
 
 # 安装依赖 + 构建
