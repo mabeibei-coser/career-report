@@ -1,0 +1,72 @@
+# 腾讯云 CVM · Nginx 反向代理配置示例
+# 部署路径：通常 /etc/nginx/conf.d/career-report.conf
+# 部署后：sudo nginx -t && sudo systemctl reload nginx
+
+# ===== HTTP → HTTPS 跳转（如果已配 SSL 证书，保留这一段） =====
+server {
+    listen 80;
+    listen [::]:80;
+    server_name your-domain.com;
+
+    # 让 Let's Encrypt / 腾讯云 SSL 证书续签可访问
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # 其他请求全部跳 https
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# ===== 主站（HTTPS） =====
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name your-domain.com;
+
+    # 腾讯云 SSL 证书下载后的文件路径（或者 /etc/letsencrypt/live/your-domain.com/ 下的 fullchain.pem + privkey.pem）
+    ssl_certificate     /etc/nginx/ssl/your-domain.com_bundle.pem;
+    ssl_certificate_key /etc/nginx/ssl/your-domain.com.key;
+
+    # 现代 TLS 配置
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+
+    # 基础安全头
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # 请求体上限（简历上传会走这个，PDF 一般几 MB）
+    client_max_body_size 15m;
+
+    # AI 接口响应时间长，proxy timeout 要给够
+    proxy_read_timeout 180s;
+    proxy_send_timeout 180s;
+    proxy_connect_timeout 10s;
+    proxy_buffering off; # Next.js streaming response 不要缓冲
+
+    # 反代到本地 3000 端口（pm2 启动的 next start 进程）
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Next.js 静态资源加缓存（_next/static 里面的文件都是带 hash 的）
+    location /_next/static {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_cache_valid 200 30d;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+}
