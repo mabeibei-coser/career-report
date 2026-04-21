@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     const data = await callMiniMaxJson<WorkplaceInsight>({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
-      maxTokens: 3600,
+      maxTokens: 2400,
       temperature: 0.55,
     });
     return NextResponse.json({ data });

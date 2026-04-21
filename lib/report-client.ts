@@ -159,7 +159,9 @@ export async function generateReport(
   });
 
   // 6 章节全并发；若账号额度不支持会触发 429，退避重试兜底（最坏情况个别章节用 mock）
-  const results = await runWithConcurrency(tasks, 6);
+  // 并发 3：MiniMax 个人版 Token Plan 大约只允许 2-3 并发，
+  // 设太高会触发大量 429/529，退避反而拉长总时长
+  const results = await runWithConcurrency(tasks, 3);
   const map = new Map<ReportSectionKey, unknown>();
   for (const r of results) map.set(r.key, r.data);
 
