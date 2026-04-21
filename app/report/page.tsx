@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ReportRenderContext } from "@/components/report/report-context";
@@ -10,7 +10,6 @@ import { PositionInfoSection } from "@/components/report/position-info-section";
 import { ResumeDiagnosisSection } from "@/components/report/resume-diagnosis-section";
 import { NegotiationSection } from "@/components/report/negotiation-section";
 import { WorkplaceInsightSection } from "@/components/report/workplace-insight-section";
-import { ExportActions } from "@/components/report/export-actions";
 import type { ReportData } from "@/lib/types";
 
 function loadReportFromSession(): ReportData | null {
@@ -42,8 +41,6 @@ function loadReportFromSession(): ReportData | null {
 export default function ReportPage() {
   const router = useRouter();
   const [report] = useState<ReportData | null>(loadReportFromSession);
-  const [exporting, setExporting] = useState(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!report) {
@@ -51,7 +48,8 @@ export default function ReportPage() {
     }
   }, [router, report]);
 
-  const ctxValue = useMemo(() => ({ exporting }), [exporting]);
+  // exporting stays false — PDF/print entry points removed per user request.
+  const ctxValue = useMemo(() => ({ exporting: false }), []);
 
   if (!report) {
     return (
@@ -60,12 +58,6 @@ export default function ReportPage() {
       </div>
     );
   }
-
-  const handleNewAnalysis = () => {
-    sessionStorage.removeItem("reportData");
-    sessionStorage.removeItem("quizAnswers");
-    router.push("/form");
-  };
 
   const formDate = new Date(report.meta.generatedAt);
   const dateLabel = formDate.toLocaleDateString("zh-CN");
@@ -76,7 +68,7 @@ export default function ReportPage() {
 
   return (
     <ReportRenderContext.Provider value={ctxValue}>
-      <div className="report-shell pb-32 print:pb-0 print:bg-white">
+      <div className="report-shell pb-10 print:pb-0 print:bg-white">
         {/* Header — aligned with form page masthead */}
         <div
           data-pdf-section="header"
@@ -116,10 +108,7 @@ export default function ReportPage() {
         </div>
 
         {/* Sections */}
-        <div
-          ref={containerRef}
-          className="mx-auto max-w-5xl px-4 sm:px-6 space-y-4 sm:space-y-5"
-        >
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 space-y-4 sm:space-y-5">
           <OverviewSection data={report.overview} index={1} total={total} />
           <SalarySection
             data={report.salary}
@@ -162,13 +151,6 @@ export default function ReportPage() {
             具体薪资以实际 offer 为准。职场环境透视聚焦行业与公司类型共性观察，不针对任何具体公司。
           </div>
         </div>
-
-        <ExportActions
-          report={report}
-          containerRef={containerRef}
-          onExportingChange={setExporting}
-          onNewAnalysis={handleNewAnalysis}
-        />
       </div>
     </ReportRenderContext.Provider>
   );

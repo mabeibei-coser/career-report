@@ -225,12 +225,12 @@ function QuartileTile({
     <div
       className={
         highlight
-          ? "rounded-xl border-2 border-[var(--blue-500)] bg-[var(--blue-500)]/5 p-4 flex flex-col items-start"
-          : "rounded-xl border border-[var(--blue-100)] bg-white p-4 flex flex-col items-start"
+          ? "rounded-xl border-2 border-[var(--blue-500)] bg-[var(--blue-500)]/5 p-2.5 sm:p-4 flex flex-col items-start min-w-0"
+          : "rounded-xl border border-[var(--blue-100)] bg-white p-2.5 sm:p-4 flex flex-col items-start min-w-0"
       }
     >
-      <Coins className="size-4 text-[var(--blue-600)] mb-2" />
-      <span className="text-[11px] text-[var(--report-ink-muted)] tracking-wider uppercase mb-1">
+      <Coins className="size-3.5 sm:size-4 text-[var(--blue-600)] mb-1.5 sm:mb-2" />
+      <span className="text-[10px] sm:text-[11px] text-[var(--report-ink-muted)] tracking-wider uppercase mb-1">
         {label}
       </span>
       <div className="report-kpi">

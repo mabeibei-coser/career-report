@@ -48,7 +48,7 @@ function getScoreTier(score: number) {
     };
   }
   return {
-    label: "较差",
+    label: "待改进",
     main: "oklch(0.5 0.16 25)",
     gradient:
       "linear-gradient(90deg, oklch(0.75 0.12 25), oklch(0.55 0.18 25))",
