@@ -10,6 +10,7 @@ import { PositionInfoSection } from "@/components/report/position-info-section";
 import { ResumeDiagnosisSection } from "@/components/report/resume-diagnosis-section";
 import { NegotiationSection } from "@/components/report/negotiation-section";
 import { WorkplaceInsightSection } from "@/components/report/workplace-insight-section";
+import { DownloadPDFButton } from "@/components/report/download-pdf-button";
 import type { ReportData } from "@/lib/types";
 
 function loadReportFromSession(): ReportData | null {
@@ -19,8 +20,7 @@ function loadReportFromSession(): ReportData | null {
   try {
     const data = JSON.parse(stored) as ReportData;
     if (!data?.meta?.formData?.targetPosition) return null;
-    // Schema sanity check for the current (post-redesign) shape.
-    // Older sessionStorage entries used `strengths[]` / `weaknesses[]` etc.
+    // Schema sanity check
     if (
       !data.overview?.strength?.title ||
       !data.overview?.improvement?.title ||
@@ -40,16 +40,29 @@ function loadReportFromSession(): ReportData | null {
 
 export default function ReportPage() {
   const router = useRouter();
-  const [report] = useState<ReportData | null>(loadReportFromSession);
+  // useState 初始化器在 SSR hydration 边界上不稳定（特别是 Puppeteer 渲染场景），
+  // 改用 useEffect 懒加载 sessionStorage
+  const [report, setReport] = useState<ReportData | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  // 检测 ?pdf=1：Puppeteer 服务端渲染时加这个 flag
+  const [isPdfMode, setIsPdfMode] = useState(false);
 
   useEffect(() => {
-    if (!report) {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("pdf") === "1") setIsPdfMode(true);
+    setReport(loadReportFromSession());
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (loaded && !report) {
       router.replace("/form");
     }
-  }, [router, report]);
+  }, [loaded, router, report]);
 
-  // exporting stays false — PDF/print entry points removed per user request.
-  const ctxValue = useMemo(() => ({ exporting: false }), []);
+  const ctxValue = useMemo(() => ({ exporting: isPdfMode }), [isPdfMode]);
 
   if (!report) {
     return (
@@ -150,6 +163,9 @@ export default function ReportPage() {
             本报告由 AI 基于公开信息和你的输入生成，仅作为职业定位的参考，不构成就业、薪资或公司评价承诺。
             具体薪资以实际 offer 为准。职场环境透视聚焦行业与公司类型共性观察，不针对任何具体公司。
           </div>
+
+          {/* 下载 PDF 按钮（PDF 导出模式下自动隐藏） */}
+          {!isPdfMode && <DownloadPDFButton report={report} />}
         </div>
       </div>
     </ReportRenderContext.Provider>

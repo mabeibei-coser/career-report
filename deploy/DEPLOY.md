@@ -14,6 +14,15 @@ apt update && apt upgrade -y
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 apt install -y nodejs git build-essential
 
+# 装中文字体 + Puppeteer 依赖的 system libs（PDF 导出会跑 headless Chromium）
+apt install -y fonts-noto-cjk fonts-noto-cjk-extra \
+  ca-certificates fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 \
+  libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 \
+  libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 \
+  libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 \
+  libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 \
+  libxss1 libxtst6 lsb-release wget xdg-utils
+
 # 全局装 pm2
 npm install -g pm2
 
@@ -54,7 +63,17 @@ pm2 save
 ```bash
 cd /var/www/career-report
 git pull
-npm ci
+npm ci              # 首次执行后 puppeteer 会下载 Chromium（~170MB）到 ~/.cache/puppeteer/
+npm run build
+pm2 restart career-report
+```
+
+**如果 `npm ci` 阶段 Chromium 下载失败**（国内网络不稳）：
+```bash
+# 跳过 postinstall，先装依赖
+PUPPETEER_SKIP_DOWNLOAD=true npm ci
+# 单独装 chromium（支持断点续传）
+npx puppeteer browsers install chrome
 npm run build
 pm2 restart career-report
 ```

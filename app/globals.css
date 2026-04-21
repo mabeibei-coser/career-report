@@ -441,17 +441,38 @@
     inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
-/* Print styles */
+/* ================ Print / PDF styles ================ */
+/* Puppeteer 通过 headless Chromium 的 print 模式渲染 PDF，
+   下面规则同时服务"用户浏览器 Ctrl+P"和"服务端导出 PDF"两种场景 */
+
+@page {
+  size: A4;
+  /* margin 在 puppeteer 侧用 page.pdf(margin:...) 覆盖；
+     此处是给浏览器本地打印用的 */
+  margin: 14mm 10mm 18mm 10mm;
+}
+
 @media print {
   .hero-grid, .aurora-bg, .noise-overlay::before,
   .btn-glow, .border-beam::before {
     display: none !important;
     animation: none !important;
   }
-  body { background: white !important; }
-  button { display: none !important; }
-  @page { margin: 15mm; }
 
+  html, body {
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 隐藏所有按钮 / 装饰性固定元素 */
+  button,
+  .print\:hidden,
+  [data-no-print] {
+    display: none !important;
+  }
+
+  /* Section 分页避让 */
   [data-pdf-section] {
     break-inside: avoid-page !important;
     page-break-inside: avoid !important;
@@ -460,9 +481,32 @@
     break-inside: avoid;
     page-break-inside: avoid;
   }
-  h1, h2, h3 {
+  [data-pdf-section] + [data-pdf-section] {
+    /* 相邻 section 之间允许分页，但不要额外留太空 */
+    break-before: auto;
+  }
+
+  /* 卡片 / 网格小块也避免内部断开 */
+  .break-inside-avoid,
+  .break-inside-avoid-page {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* 标题孤行：避免和正文分开 */
+  h1, h2, h3, h4 {
     break-after: avoid;
     page-break-after: avoid;
+  }
+
+  /* report-shell 的背景色梯度在 print 下干掉，减少墨水 */
+  .report-shell {
+    background: white !important;
+  }
+
+  /* 卡片白底保留但抹掉 box-shadow（puppeteer 渲染 shadow 可能出偏移灰框） */
+  .report-card {
+    box-shadow: none !important;
   }
 }
 

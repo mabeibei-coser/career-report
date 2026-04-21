@@ -49,3 +49,5 @@ next-env.d.ts
 
 # stray local files
 fromfile.bin
+pdf-sample.pdf
+pdf-test-payload.json
