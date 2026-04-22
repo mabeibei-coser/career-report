@@ -158,10 +158,10 @@ export async function generateReport(
     return { key: section.key, data: section.fallback };
   });
 
-  // 6 章节全并发；若账号额度不支持会触发 429，退避重试兜底（最坏情况个别章节用 mock）
-  // 并发 3：MiniMax 个人版 Token Plan 大约只允许 2-3 并发，
-  // 设太高会触发大量 429/529，退避反而拉长总时长
-  const results = await runWithConcurrency(tasks, 3);
+  // 6 章节全并发：每章节一个 MiniMax 请求同时发出
+  // 若额度不够会出 429/529，由内层指数退避 + 最多 3 次重试兜底；
+  // 真·最坏情况个别章节用 mock 兜底，不会整个报告失败
+  const results = await runWithConcurrency(tasks, 6);
   const map = new Map<ReportSectionKey, unknown>();
   for (const r of results) map.set(r.key, r.data);
 
