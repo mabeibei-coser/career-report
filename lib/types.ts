@@ -124,15 +124,13 @@ export interface ResumeDiagnosis {
   }[];
 }
 
-// 谈薪要点：只讲 2 个主题（AI 应用经验 + 企业实习成果案例）
+// 谈薪要点：只讲 2 个主题的 summary（AI 应用经验 + AI 相关的企业实习成果）
 export interface NegotiationTips {
   aiExperience: {
     summary: string;
-    points: string[]; // 3 条具体举措
   };
   internshipExperience: {
     summary: string;
-    points: string[];
   };
 }
 

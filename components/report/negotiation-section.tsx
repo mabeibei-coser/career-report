@@ -19,14 +19,12 @@ export function NegotiationSection({
       label: "AI 应用经验",
       tag: "筹码 1",
       summary: data.aiExperience.summary,
-      points: data.aiExperience.points,
     },
     {
       icon: Briefcase,
-      label: "企业实习 × 成果案例",
+      label: "AI 相关的企业实习成果",
       tag: "筹码 2",
       summary: data.internshipExperience.summary,
-      points: data.internshipExperience.points,
     },
   ];
 
@@ -36,7 +34,7 @@ export function NegotiationSection({
       title="谈薪要点"
       index={index}
       total={total}
-      takeaway="校招能撬动薪资的只有两件事：真实的 AI 应用能力 + 有成果的企业实习"
+      takeaway="校招能撬动薪资的只有两件事：真实的 AI 应用能力 + AI 相关的实习成果"
       meta={<span>2 个核心筹码</span>}
     >
       <div className="grid gap-4 md:grid-cols-2">
@@ -58,23 +56,9 @@ export function NegotiationSection({
                 </div>
                 <span className="report-chip">{t.tag}</span>
               </div>
-              <p className="text-[13.5px] leading-[1.75] text-[var(--navy-800)] mb-4">
+              <p className="text-[13.5px] leading-[1.75] text-[var(--navy-800)]">
                 {t.summary}
               </p>
-              <div className="report-divider mb-4" />
-              <ul className="space-y-2">
-                {t.points.map((p, i) => (
-                  <li
-                    key={i}
-                    className="flex gap-3 text-[13.5px] leading-[1.7] text-[var(--navy-800)]"
-                  >
-                    <span className="tabular-nums shrink-0 pt-0.5 size-5 inline-flex items-center justify-center rounded-full bg-[var(--blue-50)] text-[11px] font-bold text-[var(--blue-600)]">
-                      {i + 1}
-                    </span>
-                    <span>{p}</span>
-                  </li>
-                ))}
-              </ul>
             </div>
           );
         })}
