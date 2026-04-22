@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import type { ReportData } from "@/lib/types";
 
@@ -8,9 +8,23 @@ interface Props {
   report: ReportData;
 }
 
+// 检测常见国产 in-app 浏览器（微信/QQ/钉钉/微博/UC/百度等）
+// 这些 WebView 对 blob + <a download> 兼容差，需要提示用户在外部浏览器打开
+function detectInAppBrowser(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /MicroMessenger|QQ\/|QQBrowser|DingTalk|Weibo|UCBrowser|Baidu|BaiduHD|MQQBrowser/i.test(
+    navigator.userAgent
+  );
+}
+
 export function DownloadPDFButton({ report }: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isInApp, setIsInApp] = useState(false);
+
+  useEffect(() => {
+    setIsInApp(detectInAppBrowser());
+  }, []);
 
   const onClick = async () => {
     if (status === "loading") return;
@@ -41,10 +55,19 @@ export function DownloadPDFButton({ report }: Props) {
       const a = document.createElement("a");
       a.href = url;
       a.download = filename;
+      // download 属性被忽略时（部分 Android 系统浏览器 / 国产 WebView），
+      // target=_blank 让 PDF 至少在新标签页打开，用户可在 PDF viewer 里保存
+      a.target = "_blank";
+      a.rel = "noopener";
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+
+      // 关键：延迟 10s 再清理，给 Android Chrome / 某些 WebView 的
+      // 异步下载流程足够时间去抓取 blob。立即 revoke 会导致下载空文件
+      setTimeout(() => {
+        if (a.parentNode) a.parentNode.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 10_000);
 
       setStatus("idle");
     } catch (e) {
@@ -56,6 +79,12 @@ export function DownloadPDFButton({ report }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-2 mt-6 print:hidden">
+      {isInApp && (
+        <p className="max-w-md text-[12px] leading-relaxed text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+          检测到微信 / QQ / 钉钉等内置浏览器，PDF 下载可能失败。请点击右上角「⋯」菜单 →
+          选择「在浏览器中打开」后再点下载。
+        </p>
+      )}
       <button
         type="button"
         onClick={onClick}
@@ -89,9 +118,6 @@ export function DownloadPDFButton({ report }: Props) {
           </button>
         </p>
       )}
-      <p className="text-[11px] text-[var(--report-ink-muted)]">
-        PDF 保留完整 6 章节内容，文字可选可搜，无分页截断
-      </p>
     </div>
   );
 }
