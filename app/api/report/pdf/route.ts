@@ -36,9 +36,12 @@ export async function POST(req: NextRequest) {
 
   try {
     browser = await puppeteer.launch({
-      // 'shell' 模式使用轻量级 chrome-headless-shell（～60MB），体积小、启动快，
-      // 足够渲染 PDF；完整 chrome 放着不用以免 puppeteer 启动时找不到二进制
-      headless: "shell",
+      // 用 new headless 模式（完整 Chrome），而不是 chrome-headless-shell。
+      // shell 模式精简掉了一些 JS runtime 特性（如 WebSocket、ServiceWorker 等），
+      // 导致 Next.js App Router 的客户端 hydration 无法正常运行——sessionStorage
+      // 已注入、页面 HTML 渲染出来，但 React hydration 停留在 SSR loading spinner
+      // 阶段，useEffect 永远不触发。换回完整 Chrome 即可让 hydration 正常。
+      headless: true,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
