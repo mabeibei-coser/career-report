@@ -1,11 +1,9 @@
 import client, { MINIMAX_MODEL } from "@/lib/minimax";
 import type { JobFormData, QuizAnswer } from "@/lib/types";
 
-export const APPLICANT_BASELINE = `用户是应届大学生（校招场景），无正式工作经验（可能有实习）。所有分析均以应届生的视角展开：
-- 薪资严格对标校招起薪（非社招）；一线中位 8-10K，新一线 6-8K，二线 5-6K，三线 4K 左右是常见区间，避免给出明显高于真实应届水平的虚高数字
-- 简历以教育背景 + 实习 + 校园项目 + 技能为主
-- 语气亲和，像校招指导老师；避免"多年工作"、"团队管理"等社招语境
-- 所有内容务必紧扣校招语境，不要泛化`;
+export const APPLICANT_BASELINE = `用户是应届校招生（无正式工作经验，可能有实习）。
+- 薪资按校招起薪：一线 8-10K、新一线 6-8K、二线 5-6K、三线 4K 左右，勿虚高
+- 简历维度：教育 + 实习 + 校园项目 + 技能；语气像校招指导老师，避免社招腔`;
 
 export function buildBaseContext(
   formData: JobFormData,
@@ -30,8 +28,8 @@ export function buildBaseContext(
 
   if (formData.resumeText) {
     const snippet =
-      formData.resumeText.length > 4000
-        ? formData.resumeText.slice(0, 4000) + "\n...(已截断)"
+      formData.resumeText.length > 1500
+        ? formData.resumeText.slice(0, 1500) + "\n...(已截断)"
         : formData.resumeText;
     parts.push("\n简历内容：\n" + snippet);
   } else {
