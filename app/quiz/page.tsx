@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Volume2, Pause, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -17,8 +17,6 @@ import type {
 
 const cubicEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-type TTSStatus = "idle" | "loading" | "playing" | "paused" | "error";
-
 interface SelectionMap {
   [questionId: string]: "A" | "B" | "C" | "D";
 }
@@ -31,11 +29,6 @@ export default function QuizPage() {
   const [selections, setSelections] = useState<SelectionMap>({});
   const [loadError, setLoadError] = useState<string | null>(null);
   const [quizLoading, setQuizLoading] = useState(true);
-
-  const [ttsStatus, setTtsStatus] = useState<TTSStatus>("idle");
-  const [ttsDisabled, setTtsDisabled] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioUrlRef = useRef<string | null>(null);
 
   // Load form data and fetch quiz
   useEffect(() => {
@@ -100,70 +93,6 @@ export default function QuizPage() {
   const currentQ = questions[currentIdx];
   const selectedKey = currentQ ? selections[currentQ.id] : undefined;
 
-  const stopAudio = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.removeAttribute("src");
-      audioRef.current.load();
-    }
-    if (audioUrlRef.current) {
-      URL.revokeObjectURL(audioUrlRef.current);
-      audioUrlRef.current = null;
-    }
-    setTtsStatus("idle");
-  }, []);
-
-  const playTTS = useCallback(
-    async (text: string) => {
-      if (ttsDisabled || !text) return;
-      stopAudio();
-      setTtsStatus("loading");
-      try {
-        const res = await fetch("/api/tts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        });
-        if (!res.ok) {
-          const j = await res.json().catch(() => ({}));
-          throw new Error(j.error || `TTS 服务不可用 (${res.status})`);
-        }
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        audioUrlRef.current = url;
-        if (!audioRef.current) {
-          audioRef.current = new Audio();
-        }
-        const audio = audioRef.current;
-        audio.src = url;
-        audio.onplay = () => setTtsStatus("playing");
-        audio.onpause = () => {
-          if (!audio.ended) setTtsStatus("paused");
-        };
-        audio.onended = () => setTtsStatus("idle");
-        audio.onerror = () => setTtsStatus("error");
-        await audio.play();
-      } catch (e) {
-        console.warn("[quiz] TTS failed:", e);
-        setTtsStatus("error");
-        // First failure: stay enabled but show hint. Keep trying on user click.
-      }
-    },
-    [stopAudio, ttsDisabled]
-  );
-
-  // Stop audio on unmount / question switch
-  useEffect(() => {
-    return () => {
-      stopAudio();
-    };
-  }, [stopAudio]);
-
-  useEffect(() => {
-    // When switching question, stop old audio
-    stopAudio();
-  }, [currentIdx, stopAudio]);
-
   const handleSelect = (key: "A" | "B" | "C" | "D") => {
     if (!currentQ) return;
     const updated = { ...selections, [currentQ.id]: key };
@@ -203,7 +132,6 @@ export default function QuizPage() {
 
   const handleFinish = () => {
     if (!allAnswered) return;
-    stopAudio();
     persistAnswers(selections);
     sessionStorage.removeItem("reportData");
     router.push("/loading");
@@ -299,55 +227,6 @@ export default function QuizPage() {
                   </h2>
                 </div>
               </div>
-
-              {/* TTS player */}
-              {!ttsDisabled && (
-                <div className="flex items-center gap-2 mb-5">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      ttsStatus === "playing"
-                        ? audioRef.current?.pause()
-                        : playTTS(currentQ.ttsText || currentQ.question)
-                    }
-                    disabled={ttsStatus === "loading"}
-                    className="h-9 min-w-[110px] gap-1.5"
-                  >
-                    {ttsStatus === "loading" ? (
-                      <>
-                        <Loader2 className="size-4 animate-spin" />
-                        合成中…
-                      </>
-                    ) : ttsStatus === "playing" ? (
-                      <>
-                        <Pause className="size-4" />
-                        暂停朗读
-                      </>
-                    ) : (
-                      <>
-                        <Volume2 className="size-4" />
-                        点击听题
-                      </>
-                    )}
-                  </Button>
-                  {ttsStatus === "error" && (
-                    <button
-                      type="button"
-                      onClick={() => setTtsDisabled(true)}
-                      className="text-xs text-muted-foreground underline decoration-dotted"
-                    >
-                      朗读不可用？关闭语音
-                    </button>
-                  )}
-                  {ttsStatus !== "error" && (
-                    <span className="text-xs text-muted-foreground">
-                      iOS 请确保未开启静音键
-                    </span>
-                  )}
-                </div>
-              )}
 
               {/* Options */}
               <div className="grid gap-3">
