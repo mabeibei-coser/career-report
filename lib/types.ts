@@ -102,7 +102,7 @@ export interface SalaryInsight {
 export interface PositionInfo {
   subPositions: {
     name: string;
-    priority: "primary" | "secondary" | "tertiary";
+    priority: "primary" | "secondary";
     coreResponsibilities: string[];
     coreCompetencies: {
       name: string;

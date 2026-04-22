@@ -90,24 +90,6 @@ export const positionInfoMock: PositionInfo = {
       fitReason:
         "你对用户需求的敏感度（测评 F 倾向明显）能直接迁移到 C 端的用户研究环节。但 C 端节奏更快，需要在数据敏感度上补课——你简历里暂未见明显 SQL / 指标分析经历，如果走这条路，入职前建议刷一遍 SQL 基础 + 某本互联网数据分析入门书。",
     },
-    {
-      name: "AI 产品经理",
-      priority: "tertiary",
-      coreResponsibilities: [
-        "设计 AI 能力的产品场景落地方案",
-        "评估 LLM/模型的业务价值",
-        "与算法团队紧密协作调优",
-      ],
-      coreCompetencies: [
-        { name: "技术理解", score: 60, description: "理解模型能力边界与成本" },
-        { name: "Prompt 工程", score: 72, description: "能设计高质量 Prompt 方案" },
-        { name: "业务结合", score: 68, description: "找到 AI 能切入的业务场景" },
-        { name: "实验思维", score: 65, description: "能设计评估指标和 A/B" },
-        { name: "跨团队沟通", score: 70, description: "连接业务、算法、研发" },
-      ],
-      fitReason:
-        "作为备选方向——简历中暂未体现 AI 项目或算法相关经历。若要走这条路，需要在校招前 6 个月内做一个可展示的 AI 应用 side project（例如用 LLM 做简历筛选、用户访谈摘要），把「业务理解 × AI 能力边界」这两点讲清楚，才在终面谈判中有筹码。",
-    },
   ],
 };
 

@@ -7,7 +7,7 @@ import {
   RadarChart,
   ResponsiveContainer,
 } from "recharts";
-import { Crown, Star, Circle } from "lucide-react";
+import { Crown, Star } from "lucide-react";
 import { SectionWrapper } from "./section-wrapper";
 import { useReportRender } from "./report-context";
 import type { PositionInfo } from "@/lib/types";
@@ -52,7 +52,7 @@ function getScoreStyle(score: number): {
 }
 
 const PRIORITY_META: Record<
-  "primary" | "secondary" | "tertiary",
+  "primary" | "secondary",
   { label: string; icon: React.ComponentType<{ className?: string }>; tone: string }
 > = {
   primary: {
@@ -65,11 +65,6 @@ const PRIORITY_META: Record<
     icon: Star,
     tone: "border-[var(--blue-300)] bg-white text-[var(--navy-700)]",
   },
-  tertiary: {
-    label: "备选",
-    icon: Circle,
-    tone: "border-[var(--blue-200)] bg-white text-[var(--navy-600)]",
-  },
 };
 
 function SubPositionCard({
@@ -79,7 +74,7 @@ function SubPositionCard({
   sub: PositionInfo["subPositions"][number];
   exporting: boolean;
 }) {
-  const meta = PRIORITY_META[sub.priority] ?? PRIORITY_META.tertiary;
+  const meta = PRIORITY_META[sub.priority] ?? PRIORITY_META.secondary;
   const Icon = meta.icon;
   const radarData = sub.coreCompetencies.map((c) => ({
     subject: c.name,
@@ -215,8 +210,11 @@ export function PositionInfoSection({
 }) {
   const { exporting } = useReportRender();
   const primary = data.subPositions.find((s) => s.priority === "primary");
+  const secondary = data.subPositions.find((s) => s.priority === "secondary");
   const takeaway = primary
-    ? `最匹配方向：${primary.name}（首选），另 ${data.subPositions.length - 1} 个方向可作为备选`
+    ? secondary
+      ? `最匹配方向：${primary.name}（首选），${secondary.name}（次选）`
+      : `最匹配方向：${primary.name}（首选）`
     : `共 ${data.subPositions.length} 个细分方向可选`;
 
   return (
