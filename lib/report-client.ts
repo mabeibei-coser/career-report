@@ -114,7 +114,7 @@ export async function generateReport(
   const update = () => options.onProgress?.([...progress]);
   update();
 
-  const retries = options.retries ?? 2; // 2 次重试（加初始尝试共 3 次）：优先保证报告能生成。单次 90s 硬超时控制最坏情况，90×3=270s 极端值；实际绝大多数章节第 1 或第 2 次就成功
+  const retries = options.retries ?? 1; // 1 次重试（加初始尝试共 2 次）：M2.7 不稳时让失败章节 fallback 到 mock，报告立刻出来，而不是让用户等 2+ 分钟重试
 
   const tasks = SECTION_CONFIG.map((section, idx) => async () => {
     if (
