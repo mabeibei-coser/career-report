@@ -36,12 +36,10 @@ export async function POST(req: NextRequest) {
 
   try {
     browser = await puppeteer.launch({
-      // 用 new headless 模式（完整 Chrome），而不是 chrome-headless-shell。
-      // shell 模式精简掉了一些 JS runtime 特性（如 WebSocket、ServiceWorker 等），
-      // 导致 Next.js App Router 的客户端 hydration 无法正常运行——sessionStorage
-      // 已注入、页面 HTML 渲染出来，但 React hydration 停留在 SSR loading spinner
-      // 阶段，useEffect 永远不触发。换回完整 Chrome 即可让 hydration 正常。
-      headless: true,
+      // shell 模式（chrome-headless-shell）是预装好的轻量 Chrome。
+      // 完整 Chrome 需 `npx puppeteer browsers install chrome` 联网下载 ~150MB，
+      // 国内网络下载困难，所以保持 shell 模式兼容
+      headless: "shell",
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -79,9 +77,11 @@ export async function POST(req: NextRequest) {
     // 直接跳 /report 页面，sessionStorage 在任何页面 JS 执行前已注入
     // dev 模式 Turbopack 首次编译 /report 可能 30-60s
     const url = `${INTERNAL_BASE}/report?pdf=1`;
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
+    // waitUntil: "load"（比 domcontentloaded 晚，等所有资源加载完；
+    // 不用 networkidle0 因为 dev 模式 HMR websocket 永远不 idle）
+    await page.goto(url, { waitUntil: "load", timeout: 60000 });
 
-    // React hydrate 完成后 section 才出现
+    // React hydrate 完成后 section 才出现。shell 模式下 hydration 可能较慢
     await page.waitForSelector("[data-pdf-section]", { timeout: 60000 });
     await page.evaluate(() => document.fonts?.ready);
     // 再多等 800ms 给 framer-motion / recharts 初始渲染收敛

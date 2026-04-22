@@ -51,3 +51,7 @@ next-env.d.ts
 fromfile.bin
 pdf-sample.pdf
 pdf-test-payload.json
+
+# 本地测试临时文件
+_test_out/
+_test_payload.json

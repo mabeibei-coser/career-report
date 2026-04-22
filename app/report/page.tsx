@@ -19,21 +19,27 @@ function loadReportFromSession(): ReportData | null {
   if (!stored) return null;
   try {
     const data = JSON.parse(stored) as ReportData;
-    if (!data?.meta?.formData?.targetPosition) return null;
-    // Schema sanity check
-    if (
-      !data.overview?.strength?.title ||
-      !data.overview?.improvement?.title ||
-      !data.overview?.personality?.type ||
-      !data.salaryNegotiation?.aiExperience ||
-      !data.workplaceInsight?.companyInsight?.developmentSummary ||
-      !data.positionInfo?.subPositions?.[0]?.fitReason
-    ) {
-      sessionStorage.removeItem("reportData");
+    // 最低要求：meta + targetPosition（决定页面要不要渲染；其他字段缺失
+    // 由具体 section 组件自己兜底）
+    if (!data?.meta?.formData?.targetPosition) {
+      console.warn("[report-page] missing meta.formData.targetPosition, data=", data);
       return null;
     }
+    // 详细 schema 检查仅 warning 不拦截——哪怕部分字段缺失，至少让用户看到
+    // 生成出来的内容，section 组件层面自己兜底空值
+    const missing: string[] = [];
+    if (!data.overview?.strength?.title) missing.push("overview.strength.title");
+    if (!data.overview?.improvement?.title) missing.push("overview.improvement.title");
+    if (!data.overview?.personality?.type) missing.push("overview.personality.type");
+    if (!data.salaryNegotiation?.aiExperience) missing.push("salaryNegotiation.aiExperience");
+    if (!data.workplaceInsight?.companyInsight?.developmentSummary) missing.push("workplaceInsight.companyInsight.developmentSummary");
+    if (!data.positionInfo?.subPositions?.[0]?.fitReason) missing.push("positionInfo.subPositions[0].fitReason");
+    if (missing.length > 0) {
+      console.warn("[report-page] some schema fields missing (still rendering):", missing);
+    }
     return data;
-  } catch {
+  } catch (e) {
+    console.error("[report-page] JSON.parse failed:", e);
     return null;
   }
 }
