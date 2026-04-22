@@ -60,29 +60,25 @@ export async function POST(req: NextRequest) {
     // 桌面布局 + 2x DPI
     await page.setViewport({ width: 1024, height: 1400, deviceScaleFactor: 2 });
 
-    // Step 1: 跳到目标域的 about:blank 初始化 main frame + 允许后续 sessionStorage 写入
-    await page.goto(`${INTERNAL_BASE}/api/_ping_or_404`, {
-      waitUntil: "domcontentloaded",
-      timeout: 10000,
-    }).catch(() => {/* 404 is fine, we just need a same-origin document */});
-
-    // Step 2: 在同源 context 里写 sessionStorage
-    await page.evaluate((dataStr: string) => {
+    // 关键：用 evaluateOnNewDocument 让"写 sessionStorage"脚本在每个页面加载
+    // 最早期运行，**早于任何页面 JS**。比起原来"先跳 404 页再 evaluate 再跳真页"
+    // 三步流程更稳，不会因 navigation 之间 sessionStorage 被清空而失败。
+    // 注意：这个脚本会在每次 navigation 前运行，所以直接 goto 即可。
+    const reportDataStr = JSON.stringify(reportData);
+    await page.evaluateOnNewDocument((dataStr: string) => {
       try {
         window.sessionStorage.setItem("reportData", dataStr);
       } catch {
-        /* ignore */
+        /* ignore storage errors */
       }
-    }, JSON.stringify(reportData));
+    }, reportDataStr);
 
-    // Step 3: 跳真正的 /report 页面
+    // 直接跳 /report 页面，sessionStorage 在任何页面 JS 执行前已注入
+    // dev 模式 Turbopack 首次编译 /report 可能 30-60s
     const url = `${INTERNAL_BASE}/report?pdf=1`;
-    // dev 模式下 Turbopack 首次编译 /report 可能要 30-60s，生产 build 后几秒
-    // timeout 放宽到 60s 保证 dev 也能生成 PDF；生产环境远不会用满
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
 
-    // React hydrate 完成后 section 才出现。dev 模式首次编译 + hydrate 可能很慢
-    // 超时放宽到 60s 覆盖 Turbopack 冷启动
+    // React hydrate 完成后 section 才出现
     await page.waitForSelector("[data-pdf-section]", { timeout: 60000 });
     await page.evaluate(() => document.fonts?.ready);
     // 再多等 800ms 给 framer-motion / recharts 初始渲染收敛
