@@ -105,9 +105,11 @@ const JSON_ONLY_PREFIX = `【输出约束 · 必须严格遵守】
 以下是章节具体要求：
 `;
 
-// 单章节硬超时（毫秒）：超过这个时间直接 abort，别让个别慢请求拖整体
-// M2.7 正常章节 14-40s 完成，设 45s 给足裕量；超过基本就是卡死，等下去也没意义
-const SECTION_HARD_TIMEOUT_MS = 45_000;
+// 单章节硬超时（毫秒）：= 用户"60 秒内生成报告"目标的上限
+// M2.7 对复杂 schema（position-info / workplace-insight）单次需 45-60s 才能完整输出
+// 设太紧会把正常但慢的请求全 abort → 全部 fallback mock。60s 是保留刚好够完成的阈值，
+// 超过基本就是卡死，等下去也达不到用户的时间目标
+const SECTION_HARD_TIMEOUT_MS = 60_000;
 
 export async function callMiniMaxJson<T>(opts: CallOptions): Promise<T> {
   const controller = new AbortController();
