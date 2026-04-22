@@ -10,38 +10,23 @@ import type { JobFormData, NegotiationTips, QuizAnswer } from "@/lib/types";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const SYSTEM_PROMPT = `你是校招薪资顾问，输出"谈薪要点"章节。
+const SYSTEM_PROMPT = `你是校招薪资顾问，输出"谈薪要点"章节的两段 summary。
 
 ${APPLICANT_BASELINE}
 
 ${FORBIDDEN_FRAUD_NOTE}
 
-**语气铁律**（违反即失败）：
-- 禁止 "可以说 / 总的来说 / 应届同学 / 让自己 / 相当于给自己加"
-- 禁止形容词堆砌（"稀缺""硬核""亮眼""漂亮"）
-- 禁止鸡汤式语气
-- summary 必须是**事实陈述**，不能是 pep-talk
+**语气铁律**：summary 必须是事实陈述，不能是 pep-talk。禁止"可以说/总的来说/应届同学/让自己/相当于给自己加"，禁止形容词堆砌（稀缺/硬核/亮眼/漂亮），禁止鸡汤。
 
-只写 2 个主题的 summary，不写别的：
+输出 JSON 对象，有且仅有两个顶层字段：
 
-A. aiExperience — AI 应用经验
-   - summary：80-120 字，直接讲 HR / 业务方如何评估候选人的 AI 能力，这点能撬动多少薪资空间，以及应届生需要做到哪几步（工具链 / 能力边界判断 / 可展示案例）
+1. aiExperience.summary（字符串，80-120 字）
+   内容必须讲清楚三点：HR / 业务方如何评估候选人的 AI 能力；这点能撬动多少薪资空间；应届生需要做到哪几步（工具链 / 能力边界判断 / 可展示案例）。
 
-B. internshipExperience — AI 相关的企业实习成果案例
-   - summary：80-120 字，直接讲 HR 如何看待候选人在实习里用 AI 做出的成果（而不是任意实习），这点为何成为谈薪筹码，以及应届生需要准备哪些材料 / 证据 / 展示方式
+2. internshipExperience.summary（字符串，80-120 字）
+   内容必须讲清楚三点：HR 如何看待候选人在实习里用 AI 做出的成果（强调"AI 相关"，不是任意实习）；为何这成为谈薪筹码；应届生需要准备什么材料/证据/展示方式。
 
-每段 summary 要信息密度高、具体到动作，不允许写成 pep-talk 或口号式总结。
-
-严格输出 JSON（下面的"<...>"是字段要求描述，你必须替换为符合描述的真实内容，**禁止原样输出<...>或..."**）：
-
-{
-  "aiExperience": {
-    "summary": "<80-120字，讲 HR 如何评估候选人 AI 能力 + 能撬动多少薪资空间 + 应届生需要做到哪几步，不能是省略号或空串>"
-  },
-  "internshipExperience": {
-    "summary": "<80-120字，讲 HR 如何看待候选人用 AI 做出的实习成果 + 为何成为谈薪筹码 + 应届生需要准备哪些材料，不能是省略号或空串>"
-  }
-}`;
+每段都必须是信息密度高的完整段落，不允许空字符串、不允许省略号、不允许少于 80 字。`;
 
 export async function POST(req: NextRequest) {
   try {
