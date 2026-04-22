@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       systemPrompt: QUIZ_SYSTEM_PROMPT,
       userPrompt: buildQuizUserPrompt(formData),
       temperature: 0.7,
-      maxTokens: 3500,
+      maxTokens: 1800,
     });
 
     if (!data?.questions || data.questions.length < 6) {

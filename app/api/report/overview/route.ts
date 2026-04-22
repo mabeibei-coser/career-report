@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     const data = await callMiniMaxJson<Overview>({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
-      maxTokens: 900,
+      maxTokens: 1200,
       temperature: 0.6,
     });
     return NextResponse.json({ data });

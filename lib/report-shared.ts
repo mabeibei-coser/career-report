@@ -54,7 +54,15 @@ export function extractJson(content: string): string {
   } else {
     start = Math.max(firstBrace, firstBracket);
   }
-  if (start > 0) return content.slice(start).trim();
+  // 找到了合法 JSON 起点（包括起点 0）就从那里切
+  if (start >= 0) {
+    const sliced = content.slice(start).trim();
+    // 再反向找最后一个闭合符，保底截掉 JSON 后的任何尾部解释文字
+    const lastBrace = sliced.lastIndexOf("}");
+    const lastBracket = sliced.lastIndexOf("]");
+    const end = Math.max(lastBrace, lastBracket);
+    return end >= 0 ? sliced.slice(0, end + 1) : sliced;
+  }
   return content.trim();
 }
 
@@ -83,11 +91,23 @@ export interface CallOptions {
   temperature?: number;
 }
 
+// 全局 JSON 约束前缀：压制模型的"让我分析一下..."/"用户要求..."等前言
+// 以及 <think> 外的思考痕迹。不同章节的 system prompt 会 append 在后面
+const JSON_ONLY_PREFIX = `【输出约束 · 必须严格遵守】
+1. 只输出合法 JSON 对象，第一个字符必须是 {，最后一个字符必须是 }
+2. 禁止任何说明性前言（如"让我分析..." "用户要求..." "好的，我来..."）
+3. 禁止 markdown 代码围栏（\`\`\`json）
+4. 禁止 JSON 之外的任何文字、注释、解释
+5. 禁止思考过程被输出到 response 里
+
+以下是章节具体要求：
+`;
+
 export async function callMiniMaxJson<T>(opts: CallOptions): Promise<T> {
   const response = await client.chat.completions.create({
     model: MINIMAX_MODEL,
     messages: [
-      { role: "system", content: opts.systemPrompt },
+      { role: "system", content: JSON_ONLY_PREFIX + opts.systemPrompt },
       { role: "user", content: opts.userPrompt },
     ],
     temperature: opts.temperature ?? 0.6,

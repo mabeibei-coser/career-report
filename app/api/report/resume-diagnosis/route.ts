@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     const data = await callMiniMaxJson<ResumeDiagnosis>({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
-      maxTokens: 1100,
+      maxTokens: 1400,
       temperature: 0.5,
     });
     return NextResponse.json({ data });

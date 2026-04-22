@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
         formData.resumeText
       ),
       userPrompt,
-      maxTokens: 900,
+      maxTokens: 1400,
       temperature: 0.5,
     });
 
