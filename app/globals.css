@@ -472,18 +472,19 @@
     display: none !important;
   }
 
-  /* Section 分页避让 */
-  [data-pdf-section] {
+  /* Section 本身允许跨页（单个章节通常 > 1 页，强制 avoid 会让
+     section 被整体推到下一页、产生第 1 页大段空白）。
+     只对显式标记 break-inside-avoid 的小块（KPI 卡、图表、表格）做避让 */
+  [data-pdf-section] .break-inside-avoid,
+  [data-pdf-section] .break-inside-avoid-page {
     break-inside: avoid-page !important;
     page-break-inside: avoid !important;
   }
-  [data-pdf-section] > * {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-  [data-pdf-section] + [data-pdf-section] {
-    /* 相邻 section 之间允许分页，但不要额外留太空 */
-    break-before: auto;
+
+  /* Header 紧跟第一章节，不要在下方留白 */
+  [data-pdf-section="header"] {
+    break-after: avoid;
+    page-break-after: avoid;
   }
 
   /* 卡片 / 网格小块也避免内部断开 */
