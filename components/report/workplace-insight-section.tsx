@@ -25,7 +25,7 @@ export function WorkplaceInsightSection({
       title="职场环境透视"
       index={index}
       total={total}
-      takeaway={`${data.companyInsight.targetLabel}发展动向 · 网友现场观察 ${data.companyInsight.observations.length} 条 · 行业要点 ${data.industryAdvice.items.length} 条`}
+      takeaway={`${data.companyInsight.targetLabel}发展动向 · 网友现场观察 ${data.companyInsight.observations.length} 条 · 行业共性速览`}
       meta={<span>公司 · 现场 · 行业 · 综合</span>}
     >
       <div className="rounded-md border border-amber-200/80 bg-amber-50/60 px-3 py-2 text-[12px] leading-relaxed text-amber-800 mb-5 break-inside-avoid">
@@ -106,22 +106,9 @@ export function WorkplaceInsightSection({
             3 · 行业共性关注要点
           </span>
         </div>
-        <p className="text-[13.5px] leading-[1.75] text-[var(--navy-800)] mb-4">
+        <p className="text-[13.5px] leading-[1.75] text-[var(--navy-800)]">
           {data.industryAdvice.summary}
         </p>
-        <ul className="space-y-2">
-          {data.industryAdvice.items.map((item, i) => (
-            <li
-              key={i}
-              className="flex gap-3 text-[13.5px] leading-[1.7] text-[var(--navy-800)]"
-            >
-              <span className="tabular-nums shrink-0 pt-0.5 size-5 inline-flex items-center justify-center rounded-full bg-[var(--blue-50)] text-[11px] font-bold text-[var(--blue-600)]">
-                {i + 1}
-              </span>
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
       </div>
 
       {/* Block 4 · 综合建议 */}

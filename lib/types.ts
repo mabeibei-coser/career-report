@@ -138,7 +138,6 @@ export interface NegotiationTips {
 export interface WorkplaceInsight {
   industryAdvice: {
     summary: string;
-    items: string[]; // 3-4 条行业关注点
   };
   companyInsight: {
     targetLabel: string; // 用户填的意向公司/类型名，原样回显

@@ -28,10 +28,7 @@ ${APPLICANT_BASELINE}
 章节 3 部分：
 
 1. industryAdvice（行业）
-   - summary：60-100 字，讲这个行业对应届生当下的趋势和价值判断
-   - items：恰好 3-4 条行业层面关注点，**每条 35-60 字的完整观察**（不是标题 / 不是短语）
-     * 必须含具体信号（数字、岗位名、趋势方向、政策或市场变化）
-     * **禁止**"toB 稳定"、"一线集中"、"AI 扩张" 这种 4-6 字短语 —— 至少要展开成"toB / SaaS 岗位近两年相对稳定，适合喜欢深入业务的同学，但早期项目体验不如 C 端有成就感"这种句子
+   - summary：80-140 字，讲这个行业对应届生当下的趋势和价值判断。信息密度要高、具体到 2-3 个可观察信号（数字、岗位名、趋势方向、政策或市场变化），不要用"toB 稳定""AI 扩张"这类 4-6 字短语拼凑，而是写成完整句子
 
 2. companyInsight（对用户意向公司的具体观察）
    - targetLabel：**原样回显**用户填写的意向公司名，不改写
@@ -47,7 +44,7 @@ ${APPLICANT_BASELINE}
 严格输出 JSON，不加任何额外文字：
 
 {
-  "industryAdvice": { "summary": "...", "items": ["..."] },
+  "industryAdvice": { "summary": "..." },
   "companyInsight": {
     "targetLabel": "...",
     "developmentSummary": "...",
