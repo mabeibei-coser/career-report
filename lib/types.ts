@@ -16,7 +16,6 @@ export type QuizDimension = "E-I" | "S-N" | "T-F" | "J-P" | "risk" | "value";
 export interface QuizOption {
   key: "A" | "B" | "C" | "D";
   label: string;
-  ttsText: string;
   score: Partial<Record<string, number>>;
 }
 
@@ -24,7 +23,6 @@ export interface QuizQuestion {
   id: string;
   dimension: QuizDimension;
   question: string;
-  ttsText: string;
   options: QuizOption[];
 }
 
