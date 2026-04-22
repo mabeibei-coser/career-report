@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { ReportData } from "@/lib/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 180; // dev 模式 Turbopack 冷编译 /report + Puppeteer 启动 + 渲染合计可能 ~90-120s
 
 // 通过 127.0.0.1 让 headless Chromium 回访自己的页面
 const INTERNAL_BASE =
@@ -77,10 +77,13 @@ export async function POST(req: NextRequest) {
 
     // Step 3: 跳真正的 /report 页面
     const url = `${INTERNAL_BASE}/report?pdf=1`;
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+    // dev 模式下 Turbopack 首次编译 /report 可能要 30-60s，生产 build 后几秒
+    // timeout 放宽到 60s 保证 dev 也能生成 PDF；生产环境远不会用满
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
 
-    // React hydrate 完成后 section 才出现
-    await page.waitForSelector("[data-pdf-section]", { timeout: 20000 });
+    // React hydrate 完成后 section 才出现。dev 模式首次编译 + hydrate 可能很慢
+    // 超时放宽到 60s 覆盖 Turbopack 冷启动
+    await page.waitForSelector("[data-pdf-section]", { timeout: 60000 });
     await page.evaluate(() => document.fonts?.ready);
     // 再多等 800ms 给 framer-motion / recharts 初始渲染收敛
     await new Promise((r) => setTimeout(r, 800));
