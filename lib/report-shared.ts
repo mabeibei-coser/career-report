@@ -112,6 +112,9 @@ export async function callMiniMaxJson<T>(opts: CallOptions): Promise<T> {
     ],
     temperature: opts.temperature ?? 0.6,
     max_tokens: opts.maxTokens ?? 3000,
+    // 原生 JSON 模式：约束解码，强制输出合法 JSON
+    // 消除"用户要求我..."/"让我分析..."等前言污染
+    response_format: { type: "json_object" },
   });
 
   const rawContent = response.choices[0]?.message?.content || "";

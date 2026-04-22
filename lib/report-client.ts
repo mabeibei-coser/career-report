@@ -114,7 +114,7 @@ export async function generateReport(
   const update = () => options.onProgress?.([...progress]);
   update();
 
-  const retries = options.retries ?? 3; // 升到 3 次，含退避，吃掉短暂的 429/529
+  const retries = options.retries ?? 1; // 降到 1 次：M2.7 单次调用已 ~45s，3 次重试会把失败章节拖到 200s+，拉整体时长到 3 分钟；宁愿快速 fallback 到 mock 也不让用户干等
 
   const tasks = SECTION_CONFIG.map((section, idx) => async () => {
     if (
