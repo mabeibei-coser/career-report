@@ -9,51 +9,24 @@ import type { JobFormData, QuizAnswer, WorkplaceInsight } from "@/lib/types";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const SYSTEM_PROMPT = `你是校招市场观察员，输出"职场环境透视"章节。
+const SYSTEM_PROMPT = `你是校招市场观察员，输出"职场环境透视"章节的 JSON。
 
 ${APPLICANT_BASELINE}
 
-**写作铁律**（违反即失败）：
-- 禁止"整体而言""总体来看""可以说""值得注意的是"类套话
-- 禁止形容词堆砌和宣传口号感
-- observations 要**像把脉脉 / 小红书 / 知乎 / 贴吧的真实帖子改写成第三人称复述**，保留网友原帖的具体性：职级命名（P4/P5/P6、T3/T4）、比例数字、具体动作、具体吐槽点
-- 关于意向公司的 observations **可以直接出现用户填入的公司名**，并把它当作"这家公司"来陈述事实
-- 但**严禁杜撰**以下内容（造成诽谤风险）：
-  * 具体员工姓名 / 未公开的内部薪资数字 / 未经验证的具体事件
-  * 任何违法犯罪 / 行业垄断定性的指控
-  * 没有来源依据的负面事实断言
-- observations 必须**归因到公开平台**（"据脉脉/小红书/知乎上的反馈…"、"JD 里反复出现…"），明确信息是公开网络整理，不是报告立场
-- attentions 必须动词开头、动作具体（例"签约前追问 Level 和直属 leader 姓名"），不写"注意 XXX"这种空话
+**铁律**：禁止套话（整体而言/值得注意的是/可以说）、禁止形容词堆砌、observations 必须归因公开渠道（脉脉/小红书/知乎/JD），严禁杜撰姓名/内部薪资/违法指控，attentions 必须动词开头具体到"查什么字段/对比什么"。
 
-章节 3 部分：
+输出以下顶层字段：
 
-1. industryAdvice（行业）
-   - summary：80-140 字，讲这个行业对应届生当下的趋势和价值判断。信息密度要高、具体到 2-3 个可观察信号（数字、岗位名、趋势方向、政策或市场变化），不要用"toB 稳定""AI 扩张"这类 4-6 字短语拼凑，而是写成完整句子
+1. industryAdvice.summary（80-120 字）：行业趋势 + 2-3 个可观察信号（数字/岗位名/趋势），完整句子不要短语拼凑
 
-2. companyInsight（对用户意向公司的具体观察）
-   - targetLabel：**原样回显**用户填写的意向公司名，不改写
-   - developmentSummary：80-150 字，聚焦该公司**近 12 个月**的发展现状 —— 市场地位、近期业务动向（扩张 / 收缩 / 新业务 / 融资 / 组织调整）、对应届生的用人偏好变化。必须**归因公开来源**（"据 2024-2025 年公开财报 / 媒体报道 / 招聘 JD 动态…"），**禁止杜撰未公开数据**，**禁止负面事实断言**，不要和下方 observations 重复（developmentSummary 讲公司"当下状态"，observations 讲网友"怎么说"）
-   - summary：50-90 字，简洁说明后面的 observations 基于哪些公开渠道和时间范围（例"综合 2024-2025 年脉脉 / 小红书 / 知乎 / 校招贴吧上关于 XXX 的公开反馈"）
-   - observations：3-4 条
-     * source：来源标签（要有差异，如"脉脉近一年吐槽"、"小红书校招笔记"、"知乎校招话题"、"校招贴吧反馈"、"官方 JD 反复出现"）
-     * voice：80-150 字的单一观察，针对**用户填入的那家公司**来写。内容含具体可验证的细节（职级 / 比例 / 薪资区间 / 团队风格 / 加班强度等），**归因公开网络**，不夸大不造谣
-   - attentions：恰好 2-3 条签约前要做的动作，**每条 25-50 字**，动词开头，针对**该家公司**最值得问 / 查 / 对比的点，具体到追问哪个字段 / 查哪个平台 / 对比什么
+2. companyInsight：
+   - targetLabel：原样回显用户填写的意向公司名
+   - developmentSummary（80-120 字）：该公司近 12 个月发展现状（市场地位/业务动向/用人偏好），归因"据 2024-2025 公开财报/媒体报道/JD 动态"，不和 observations 重复
+   - summary（40-60 字）：说明 observations 基于哪些渠道和时间范围
+   - observations：恰好 3 条，每条 {source: 来源标签差异化, voice: 60-100 字针对这家公司的具体观察，含职级/比例/强度等可验证细节}
+   - attentions：恰好 2 条签约前动作，每条 25-40 字，动词开头
 
-3. synthesis：80-120 字，把前面内容收束成「应届生对这家公司该怎么做决策」——要具体，不泛化
-
-严格输出 JSON，不加任何额外文字：
-
-{
-  "industryAdvice": { "summary": "..." },
-  "companyInsight": {
-    "targetLabel": "...",
-    "developmentSummary": "...",
-    "summary": "...",
-    "observations": [{"source": "...", "voice": "..."}],
-    "attentions": ["..."]
-  },
-  "synthesis": "..."
-}`;
+3. synthesis（60-90 字）：收束成"对这家公司该怎么决策"的具体建议`;
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,7 +42,7 @@ export async function POST(req: NextRequest) {
     const data = await callMiniMaxJson<WorkplaceInsight>({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
-      maxTokens: 2000,
+      maxTokens: 1500,
       temperature: 0.55,
     });
     return NextResponse.json({ data });

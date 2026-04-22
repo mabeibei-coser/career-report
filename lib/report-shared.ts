@@ -105,24 +105,37 @@ const JSON_ONLY_PREFIX = `【输出约束 · 必须严格遵守】
 以下是章节具体要求：
 `;
 
-export async function callMiniMaxJson<T>(opts: CallOptions): Promise<T> {
-  const response = await client.chat.completions.create({
-    model: MINIMAX_MODEL,
-    messages: [
-      { role: "system", content: JSON_ONLY_PREFIX + opts.systemPrompt },
-      { role: "user", content: opts.userPrompt },
-    ],
-    temperature: opts.temperature ?? 0.6,
-    max_tokens: opts.maxTokens ?? 3000,
-    // 原生 JSON 模式：约束解码，强制输出合法 JSON
-    // 消除"用户要求我..."/"让我分析..."等前言污染
-    response_format: { type: "json_object" },
-  });
+// 单章节硬超时（毫秒）：超过这个时间直接 abort，别让个别慢请求拖整体
+// M2.7 正常章节 14-40s 完成，设 45s 给足裕量；超过基本就是卡死，等下去也没意义
+const SECTION_HARD_TIMEOUT_MS = 45_000;
 
-  const rawContent = response.choices[0]?.message?.content || "";
-  const cleaned = stripReasoning(rawContent);
-  const jsonStr = extractJson(cleaned);
-  return tryFixAndParse(jsonStr) as T;
+export async function callMiniMaxJson<T>(opts: CallOptions): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SECTION_HARD_TIMEOUT_MS);
+  try {
+    const response = await client.chat.completions.create(
+      {
+        model: MINIMAX_MODEL,
+        messages: [
+          { role: "system", content: JSON_ONLY_PREFIX + opts.systemPrompt },
+          { role: "user", content: opts.userPrompt },
+        ],
+        temperature: opts.temperature ?? 0.6,
+        max_tokens: opts.maxTokens ?? 3000,
+        // 原生 JSON 模式：约束解码，强制输出合法 JSON
+        // 消除"用户要求我..."/"让我分析..."等前言污染
+        response_format: { type: "json_object" },
+      },
+      { signal: controller.signal }
+    );
+
+    const rawContent = response.choices[0]?.message?.content || "";
+    const cleaned = stripReasoning(rawContent);
+    const jsonStr = extractJson(cleaned);
+    return tryFixAndParse(jsonStr) as T;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export const FORBIDDEN_FRAUD_NOTE = `严禁建议任何伪造、虚构、购买性质的手段（如购买实习证明、代写简历、虚假经历、代考）；只建议合法的能力积累路径（真实实习申请、开源贡献、开源课程认证、学术竞赛、Kaggle、个人项目等）。`;
