@@ -11,7 +11,7 @@ export function getMiniMaxClient(): OpenAI {
   return cachedClient;
 }
 
-export const MINIMAX_MODEL = process.env.MINIMAX_MODEL || "MiniMax-M1";
+export const MINIMAX_MODEL = process.env.MINIMAX_MODEL || "MiniMax-Text-01";
 
 // Back-compat default export using a Proxy so existing `client.chat.completions...` paths still work.
 const clientProxy = new Proxy(
