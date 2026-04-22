@@ -441,7 +441,6 @@ const LOADING_STEPS = [
   { label: "解析求职意向与简历关键词", duration: 1200 },
   { label: "匹配性格测评维度", duration: 2000 },
   { label: "从谨世题库生成 6 道定制题", duration: 15000 },
-  { label: "校对题干并加载语音", duration: 2500 },
 ];
 
 function QuizLoadingScreen() {
