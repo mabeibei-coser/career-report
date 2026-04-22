@@ -32,11 +32,15 @@ B. internshipExperience — AI 相关的企业实习成果案例
 
 每段 summary 要信息密度高、具体到动作，不允许写成 pep-talk 或口号式总结。
 
-严格输出 JSON：
+严格输出 JSON（下面的"<...>"是字段要求描述，你必须替换为符合描述的真实内容，**禁止原样输出<...>或..."**）：
 
 {
-  "aiExperience": { "summary": "..." },
-  "internshipExperience": { "summary": "..." }
+  "aiExperience": {
+    "summary": "<80-120字，讲 HR 如何评估候选人 AI 能力 + 能撬动多少薪资空间 + 应届生需要做到哪几步，不能是省略号或空串>"
+  },
+  "internshipExperience": {
+    "summary": "<80-120字，讲 HR 如何看待候选人用 AI 做出的实习成果 + 为何成为谈薪筹码 + 应届生需要准备哪些材料，不能是省略号或空串>"
+  }
 }`;
 
 export async function POST(req: NextRequest) {
