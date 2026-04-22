@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Component, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ReportRenderContext } from "@/components/report/report-context";
@@ -12,6 +12,61 @@ import { NegotiationSection } from "@/components/report/negotiation-section";
 import { WorkplaceInsightSection } from "@/components/report/workplace-insight-section";
 import { DownloadPDFButton } from "@/components/report/download-pdf-button";
 import type { ReportData } from "@/lib/types";
+
+// 客户端错误上报到服务端日志（失败无副作用）
+function clientLog(event: string, data?: unknown) {
+  if (typeof window === "undefined") return;
+  try {
+    fetch("/api/_client_log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event,
+        url: window.location.href,
+        ua: navigator.userAgent,
+        time: new Date().toISOString(),
+        data,
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    /* 忽略 */
+  }
+}
+
+// React 错误边界：包住某个 section，内部 throw 时显示错误提示而不是白屏
+class SectionErrorBoundary extends Component<
+  { name: string; children: ReactNode },
+  { err: Error | null }
+> {
+  state = { err: null as Error | null };
+  static getDerivedStateFromError(err: Error) {
+    return { err };
+  }
+  componentDidCatch(err: Error, info: { componentStack?: string }) {
+    clientLog("section-error", {
+      name: this.props.name,
+      message: err.message,
+      stack: err.stack?.slice(0, 500),
+      componentStack: info.componentStack?.slice(0, 500),
+    });
+  }
+  render() {
+    if (this.state.err) {
+      return (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-[13px] text-amber-800 break-inside-avoid">
+          <div className="font-semibold mb-1">
+            本章节（{this.props.name}）加载时出错，已跳过
+          </div>
+          <div className="text-amber-700 text-[11px] font-mono">
+            {this.state.err.message}
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function loadReportFromSession(): ReportData | null {
   if (typeof window === "undefined") return null;
@@ -56,24 +111,63 @@ export default function ReportPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    clientLog("report-mount", {
+      hasSessionData: !!sessionStorage.getItem("reportData"),
+      sessionDataLen: sessionStorage.getItem("reportData")?.length || 0,
+    });
     const sp = new URLSearchParams(window.location.search);
     if (sp.get("pdf") === "1") setIsPdfMode(true);
-    setReport(loadReportFromSession());
+    const r = loadReportFromSession();
+    clientLog("report-loaded", {
+      hasReport: !!r,
+      targetPosition: r?.meta?.formData?.targetPosition,
+    });
+    setReport(r);
     setLoaded(true);
+
+    // 全局错误捕获
+    const onError = (e: ErrorEvent) => {
+      clientLog("window-error", {
+        message: e.message,
+        filename: e.filename,
+        line: e.lineno,
+        col: e.colno,
+      });
+    };
+    window.addEventListener("error", onError);
+    return () => window.removeEventListener("error", onError);
   }, []);
 
-  useEffect(() => {
-    if (loaded && !report) {
-      router.replace("/form");
-    }
-  }, [loaded, router, report]);
+  // 不再自动 router.replace("/form")——之前静默跳转让用户看到"This page couldn't load"
+  // 很困惑。改为显示明确的错误提示 + 返回按钮
 
   const ctxValue = useMemo(() => ({ exporting: isPdfMode }), [isPdfMode]);
 
-  if (!report) {
+  if (!loaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[var(--blue-50)]/60 to-white">
         <div className="animate-spin w-8 h-8 border-2 border-[var(--blue-500)] border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!report) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[var(--blue-50)]/60 to-white px-6">
+        <div className="max-w-md text-center space-y-4">
+          <div className="text-5xl">⚠️</div>
+          <div className="text-lg font-semibold text-[var(--navy-900)]">报告数据丢失</div>
+          <div className="text-sm text-[var(--muted-foreground)] leading-relaxed">
+            会话中没找到报告数据（可能是刷新了页面或换了浏览器打开）。请重新填写信息生成报告。
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push("/form")}
+            className="h-10 px-6 bg-[var(--blue-500)] hover:bg-[var(--blue-600)] text-white font-medium rounded-lg"
+          >
+            返回填写信息
+          </button>
+        </div>
       </div>
     );
   }
@@ -126,39 +220,51 @@ export default function ReportPage() {
           </p>
         </div>
 
-        {/* Sections */}
+        {/* Sections — 每个 section 用 ErrorBoundary 包，单个 crash 不拖垮整页 */}
         <div className="mx-auto max-w-5xl px-4 sm:px-6 space-y-4 sm:space-y-5">
-          <OverviewSection data={report.overview} index={1} total={total} />
-          <SalarySection
-            data={report.salary}
-            positionName={position}
-            targetEducation={report.meta.formData.targetEducation}
-            index={2}
-            total={total}
-          />
-          <PositionInfoSection
-            data={report.positionInfo}
-            positionName={position}
-            index={3}
-            total={total}
-          />
-          {report.resumeDiagnosis && (
-            <ResumeDiagnosisSection
-              data={report.resumeDiagnosis}
-              index={4}
+          <SectionErrorBoundary name="定位总览">
+            <OverviewSection data={report.overview} index={1} total={total} />
+          </SectionErrorBoundary>
+          <SectionErrorBoundary name="薪资区间">
+            <SalarySection
+              data={report.salary}
+              positionName={position}
+              targetEducation={report.meta.formData.targetEducation}
+              index={2}
               total={total}
             />
+          </SectionErrorBoundary>
+          <SectionErrorBoundary name="岗位信息">
+            <PositionInfoSection
+              data={report.positionInfo}
+              positionName={position}
+              index={3}
+              total={total}
+            />
+          </SectionErrorBoundary>
+          {report.resumeDiagnosis && (
+            <SectionErrorBoundary name="简历诊断">
+              <ResumeDiagnosisSection
+                data={report.resumeDiagnosis}
+                index={4}
+                total={total}
+              />
+            </SectionErrorBoundary>
           )}
-          <NegotiationSection
-            data={report.salaryNegotiation}
-            index={hasResume ? 5 : 4}
-            total={total}
-          />
-          <WorkplaceInsightSection
-            data={report.workplaceInsight}
-            index={hasResume ? 6 : 5}
-            total={total}
-          />
+          <SectionErrorBoundary name="谈薪要点">
+            <NegotiationSection
+              data={report.salaryNegotiation}
+              index={hasResume ? 5 : 4}
+              total={total}
+            />
+          </SectionErrorBoundary>
+          <SectionErrorBoundary name="职场环境透视">
+            <WorkplaceInsightSection
+              data={report.workplaceInsight}
+              index={hasResume ? 6 : 5}
+              total={total}
+            />
+          </SectionErrorBoundary>
 
           {/* Disclaimer */}
           <div
