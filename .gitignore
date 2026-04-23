@@ -55,3 +55,13 @@ pdf-test-payload.json
 # 本地测试临时文件
 _test_out/
 _test_payload.json
+
+# secrets / 密钥防护（2026-04 曾发生 SSH key 被误复制到仓库根目录）
+*.key
+id_rsa*
+id_ed25519*
+tencent_key*
+.ssh/
+**/.ssh/
+# Windows 路径在 Git Bash 里被错误解析时留下的残片（如 "C:Users..."）
+C\:*
