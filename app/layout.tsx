@@ -1,9 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI 职业定位报告",
-  description: "智能职业定位分析系统 - 社保局职业咨询辅助工具",
+  title: "谨世 ATA 职业定位报告",
+  description: "面向应届大学生的校招定位工具：意向信息 + 简历 → 6 题快测 → 6 章节定位报告",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#FAF7F2",
 };
 
 export default function RootLayout({

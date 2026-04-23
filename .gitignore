@@ -43,3 +43,15 @@ next-env.d.ts
 # env files
 .env.local
 .env*.local
+
+# claude agent worktree metadata
+/.claude/
+
+# stray local files
+fromfile.bin
+pdf-sample.pdf
+pdf-test-payload.json
+
+# 本地测试临时文件
+_test_out/
+_test_payload.json

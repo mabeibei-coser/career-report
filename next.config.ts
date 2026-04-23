@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  serverExternalPackages: ["pdf-parse", "mammoth", "puppeteer", "puppeteer-core"],
 };
 
 export default nextConfig;

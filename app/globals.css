@@ -88,6 +88,8 @@
   --navy-800: oklch(0.28 0.08 250);
   --navy-700: oklch(0.35 0.12 250);
   --navy-600: oklch(0.42 0.16 250);
+  --blue-700: oklch(0.38 0.2 255);
+  --blue-600: oklch(0.46 0.19 252);
   --blue-500: oklch(0.55 0.18 250);
   --blue-400: oklch(0.65 0.16 245);
   --blue-300: oklch(0.75 0.12 240);
@@ -95,6 +97,17 @@
   --blue-100: oklch(0.93 0.03 238);
   --blue-50: oklch(0.97 0.01 238);
   --gold-500: oklch(0.72 0.12 75);
+
+  /* Report tokens — aligned with form/quiz blue theme */
+  --report-ink: oklch(0.17 0.02 250);
+  --report-ink-soft: oklch(0.32 0.05 250);
+  --report-ink-muted: oklch(0.5 0.02 250);
+  --report-border: oklch(0.91 0.01 240);
+  --report-divider: oklch(0.93 0.008 240);
+
+  --semantic-positive: oklch(0.55 0.15 155);
+  --semantic-warning: oklch(0.62 0.14 55);
+  --semantic-danger: oklch(0.55 0.2 25);
 }
 
 .dark {
@@ -428,14 +441,193 @@
     inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
-/* Print styles */
+/* ================ Print / PDF styles ================ */
+/* Puppeteer 通过 headless Chromium 的 print 模式渲染 PDF，
+   下面规则同时服务"用户浏览器 Ctrl+P"和"服务端导出 PDF"两种场景 */
+
+@page {
+  size: A4;
+  /* margin 在 puppeteer 侧用 page.pdf(margin:...) 覆盖；
+     此处是给浏览器本地打印用的 */
+  margin: 14mm 10mm 18mm 10mm;
+}
+
 @media print {
   .hero-grid, .aurora-bg, .noise-overlay::before,
   .btn-glow, .border-beam::before {
     display: none !important;
     animation: none !important;
   }
-  body { background: white !important; }
-  button { display: none !important; }
-  @page { margin: 15mm; }
+
+  html, body {
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 隐藏所有按钮 / 装饰性固定元素 */
+  button,
+  .print\:hidden,
+  [data-no-print] {
+    display: none !important;
+  }
+
+  /* Section 本身允许跨页（单个章节通常 > 1 页，强制 avoid 会让
+     section 被整体推到下一页、产生第 1 页大段空白）。
+     只对显式标记 break-inside-avoid 的小块（KPI 卡、图表、表格）做避让 */
+  [data-pdf-section] .break-inside-avoid,
+  [data-pdf-section] .break-inside-avoid-page {
+    break-inside: avoid-page !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Header 紧跟第一章节，不要在下方留白 */
+  [data-pdf-section="header"] {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* 卡片 / 网格小块也避免内部断开 */
+  .break-inside-avoid,
+  .break-inside-avoid-page {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* 标题孤行：避免和正文分开 */
+  h1, h2, h3, h4 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* report-shell 的背景色梯度在 print 下干掉，减少墨水 */
+  .report-shell {
+    background: white !important;
+  }
+
+  /* 卡片白底保留但抹掉 box-shadow（puppeteer 渲染 shadow 可能出偏移灰框） */
+  .report-card {
+    box-shadow: none !important;
+  }
+}
+
+/* ========================================
+   REPORT · Aligned with form/quiz blue theme
+   Wrap report page in `.report-shell`
+   ======================================== */
+
+.report-shell {
+  background:
+    linear-gradient(180deg, var(--blue-50) 0%, transparent 40%),
+    radial-gradient(900px 500px at 100% 10%, oklch(0.9 0.04 250 / 0.4), transparent 60%),
+    #fff;
+  color: var(--report-ink);
+  min-height: 100vh;
+}
+
+.report-card {
+  background: #fff;
+  border: 1px solid var(--report-border);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 2px 8px rgba(15, 23, 42, 0.03);
+}
+
+.report-card:hover {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 20px rgba(15, 23, 42, 0.04);
+}
+
+.report-kpi {
+  display: flex;
+  align-items: baseline;
+  gap: 4px 6px;
+  flex-wrap: wrap;
+  font-variant-numeric: tabular-nums;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.report-kpi .n {
+  font-size: clamp(20px, 3.4vw, 36px);
+  font-weight: 700;
+  color: var(--blue-500);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.report-kpi .u {
+  font-size: 11px;
+  color: var(--report-ink-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.report-takeaway {
+  border-left: 3px solid var(--blue-500);
+  padding: 10px 14px;
+  background: var(--blue-50);
+  border-radius: 0 8px 8px 0;
+  color: var(--navy-800);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.report-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 9999px;
+  border: 1px solid var(--blue-200);
+  background: var(--blue-50);
+  color: var(--navy-700);
+}
+
+.report-chip[data-tone="positive"] {
+  border-color: oklch(0.85 0.08 155);
+  background: oklch(0.96 0.04 155);
+  color: oklch(0.35 0.12 155);
+}
+
+.report-chip[data-tone="warning"] {
+  border-color: oklch(0.85 0.1 70);
+  background: oklch(0.97 0.06 70);
+  color: oklch(0.4 0.12 55);
+}
+
+.report-chip[data-tone="danger"] {
+  border-color: oklch(0.85 0.08 25);
+  background: oklch(0.97 0.04 25);
+  color: oklch(0.4 0.18 25);
+}
+
+.report-quote {
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 10px 12px;
+  background: oklch(0.97 0.008 240);
+  border-left: 2px solid var(--blue-300);
+  color: var(--report-ink-soft);
+  border-radius: 0 6px 6px 0;
+  font-family: var(--font-mono);
+}
+
+.report-bar {
+  height: 6px;
+  background: var(--blue-100);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.report-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue-400), var(--blue-600));
+  border-radius: 9999px;
+}
+
+.report-divider {
+  height: 1px;
+  background: var(--report-divider);
 }

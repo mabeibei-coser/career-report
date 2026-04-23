@@ -17,32 +17,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import {
-  industries,
-  companyTypes,
-  cityLevels,
-  jobLevels,
-  workYears,
-} from "@/lib/form-options";
+import { FileUpload, type FileUploadValue } from "@/components/ui/file-upload";
+import { educationLevels, cityTiers } from "@/lib/form-options";
+import { startQuizPrefetch } from "@/lib/quiz-prefetch";
 import type { JobFormData } from "@/lib/types";
 
 const formSchema = z.object({
-  positionName: z.string().min(1, "请输入岗位名称"),
-  industry: z.string().min(1, "请选择所属行业"),
-  companyType: z.string().min(1, "请选择企业性质"),
-  cityLevel: z.string().min(1, "请选择城市等级"),
-  jobLevel: z.string().min(1, "请选择匹配职级"),
-  workYears: z.string().min(1, "请选择工作年限"),
+  targetPosition: z
+    .string()
+    .min(1, "请输入意向岗位")
+    .max(60, "岗位名称过长"),
+  targetEducation: z.string().min(1, "请选择最高学历"),
+  targetCompany: z
+    .string()
+    .min(1, "请填写意向公司简称")
+    .max(60, "内容过长"),
+  targetCityTier: z.string().min(1, "请选择意向城市能级"),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 const cubicEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 const formFields = [
   {
-    name: "positionName" as const,
-    label: "岗位名称",
-    type: "input",
-    placeholder: "例如：产品经理、前端工程师、销售总监",
+    name: "targetPosition" as const,
+    label: "意向岗位",
+    type: "input" as const,
+    placeholder: "例如：产品经理、前端工程师、数据分析师",
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
         <rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" strokeWidth="1.5" />
@@ -51,38 +53,36 @@ const formFields = [
     ),
   },
   {
-    name: "industry" as const,
-    label: "所属行业",
-    type: "select",
-    options: industries,
-    placeholder: "选择行业",
+    name: "targetEducation" as const,
+    label: "最高学历",
+    type: "select" as const,
+    options: [...educationLevels],
+    placeholder: "选择最高学历",
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M3 17V8l5-5 4 4V3h5v14H3z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-        <path d="M7 13v4M11 10v7M15 7v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M10 3L1.5 7 10 11l8.5-4L10 3z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M5 9v4c0 1.66 2.24 3 5 3s5-1.34 5-3V9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
   },
   {
-    name: "companyType" as const,
-    label: "企业性质",
-    type: "select",
-    options: companyTypes,
-    placeholder: "选择企业类型",
+    name: "targetCompany" as const,
+    label: "意向公司简称",
+    type: "input" as const,
+    placeholder: "例如：字节、腾讯、招行、中信建投、安永",
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M10 3v14M3 10h14" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M4.5 5.5Q7 8 10 8t5.5-2.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
+        <rect x="3" y="4" width="14" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M7 17v-4h6v4M7 8h2M7 11h2M11 8h2M11 11h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     ),
   },
   {
-    name: "cityLevel" as const,
-    label: "城市等级",
-    type: "select",
-    options: cityLevels,
-    placeholder: "选择城市等级",
+    name: "targetCityTier" as const,
+    label: "意向城市能级",
+    type: "select" as const,
+    options: [...cityTiers],
+    placeholder: "选择意向城市能级",
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
         <path d="M10 2L3 8v9a1 1 0 001 1h12a1 1 0 001-1V8l-7-6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
@@ -90,47 +90,43 @@ const formFields = [
       </svg>
     ),
   },
-  {
-    name: "jobLevel" as const,
-    label: "匹配职级",
-    type: "select",
-    options: jobLevels,
-    placeholder: "选择职级",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M4 16l4-4 3 3 5-7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="16" cy="5" r="2" stroke="currentColor" strokeWidth="1.5" />
-      </svg>
-    ),
-  },
-  {
-    name: "workYears" as const,
-    label: "工作年限",
-    type: "select",
-    options: workYears,
-    placeholder: "选择工作年限",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M10 6v4l3 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
 ];
+
+function getSavedDefaults(): Partial<FormValues> & {
+  resume: FileUploadValue | null;
+} {
+  const empty = {
+    targetPosition: "",
+    targetEducation: "",
+    targetCompany: "",
+    targetCityTier: "",
+    resume: null,
+  };
+  if (typeof window === "undefined") return empty;
+  try {
+    const saved = sessionStorage.getItem("formData");
+    if (!saved) return empty;
+    const parsed = JSON.parse(saved) as Partial<JobFormData>;
+    return {
+      targetPosition: parsed.targetPosition ?? "",
+      targetEducation: parsed.targetEducation ?? "",
+      targetCompany: parsed.targetCompany ?? "",
+      targetCityTier: parsed.targetCityTier ?? "",
+      resume:
+        parsed.resumeText && parsed.resumeFileName
+          ? { fileName: parsed.resumeFileName, text: parsed.resumeText }
+          : null,
+    };
+  } catch {
+    return empty;
+  }
+}
 
 export default function FormPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Restore previous form data if available
-  const getSavedDefaults = (): JobFormData => {
-    if (typeof window === "undefined") return { positionName: "", industry: "", companyType: "", cityLevel: "", jobLevel: "", workYears: "" };
-    try {
-      const saved = sessionStorage.getItem("formData");
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return { positionName: "", industry: "", companyType: "", cityLevel: "", jobLevel: "", workYears: "" };
-  };
+  const saved = getSavedDefaults();
+  const [resume, setResume] = useState<FileUploadValue | null>(saved.resume);
 
   const {
     register,
@@ -138,48 +134,56 @@ export default function FormPage() {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<JobFormData>({
+  } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: getSavedDefaults(),
+    defaultValues: {
+      targetPosition: saved.targetPosition ?? "",
+      targetEducation: saved.targetEducation ?? "",
+      targetCompany: saved.targetCompany ?? "",
+      targetCityTier: saved.targetCityTier ?? "",
+    },
   });
 
-  const onSubmit = (data: JobFormData) => {
+  const onSubmit = (data: FormValues) => {
     setIsSubmitting(true);
-    // Store form data in sessionStorage for the interview page
-    sessionStorage.setItem("formData", JSON.stringify(data));
-    // Navigate to interview
-    setTimeout(() => {
-      router.push("/interview");
-    }, 600);
+    const payload: JobFormData = {
+      ...data,
+      resumeText: resume?.text,
+      resumeFileName: resume?.fileName,
+    };
+    sessionStorage.setItem("formData", JSON.stringify(payload));
+    sessionStorage.removeItem("quizAnswers");
+    sessionStorage.removeItem("reportData");
+    // 提前预拉测评题：利用导航 + React mount 的 0.5-1.5s 消化掉一部分 MiniMax 等待
+    startQuizPrefetch(payload);
+    router.push("/quiz");
   };
 
   const watchedValues = watch();
-  const filledCount = Object.values(watchedValues).filter((v) => v && v.length > 0).length;
-  const progress = (filledCount / 6) * 100;
+  const filledCount = Object.values(watchedValues).filter(
+    (v) => v && v.length > 0
+  ).length;
+  const progress = (filledCount / 4) * 100;
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-[var(--blue-50)] via-white to-[var(--blue-100)]" />
       <div className="fixed inset-0 hero-grid opacity-40" />
 
-      {/* Decorative orbs */}
       <div className="fixed top-20 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-[var(--blue-200)] to-[var(--blue-100)] opacity-40 blur-3xl" />
       <div className="fixed -bottom-20 -left-32 w-80 h-80 rounded-full bg-gradient-to-tr from-[var(--blue-300)] to-[var(--blue-100)] opacity-30 blur-3xl" />
 
-      {/* Content */}
-      <div className="relative z-10 max-w-2xl mx-auto px-6 py-12">
-        {/* Header */}
+      <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12 pb-[max(2rem,env(safe-area-inset-bottom))]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: cubicEase }}
           className="mb-10"
         >
-          {/* Back link */}
           <button
+            type="button"
             onClick={() => router.push("/")}
-            className="inline-flex items-center gap-2 text-sm text-[var(--navy-600)] hover:text-[var(--navy-800)] transition-colors mb-8 group"
+            className="inline-flex items-center gap-2 text-sm text-[var(--navy-600)] hover:text-[var(--navy-800)] transition-colors mb-6 sm:mb-8 group"
           >
             <svg
               width="16"
@@ -199,8 +203,7 @@ export default function FormPage() {
             返回首页
           </button>
 
-          {/* Step indicator */}
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-5">
             <Badge
               variant="secondary"
               className="bg-[var(--blue-500)] text-white px-3 py-1 text-xs font-medium tracking-wide"
@@ -208,25 +211,24 @@ export default function FormPage() {
               第 1 步 / 共 3 步
             </Badge>
             <span className="text-sm text-[var(--muted-foreground)]">
-              填写来访者基本信息
+              填写求职意向
             </span>
           </div>
 
-          <h1 className="text-3xl font-bold text-[var(--navy-950)] tracking-tight mb-3">
-            来访者信息
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--navy-950)] tracking-tight mb-3">
+            你的求职意向
           </h1>
-          <p className="text-[var(--muted-foreground)] leading-relaxed">
-            请填写来访者的岗位与行业信息，这将作为 AI
-            智能访谈和报告分析的基础数据
+          <p className="text-sm sm:text-base text-[var(--muted-foreground)] leading-relaxed">
+            面向应届大学生的校招定位工具。填写岗位、学历、公司、城市四项意向，可选上传简历，AI
+            将据此完成 6 题快测并生成个性化报告。
           </p>
         </motion.div>
 
-        {/* Progress bar */}
         <motion.div
           initial={{ opacity: 0, scaleX: 0 }}
           animate={{ opacity: 1, scaleX: 1 }}
           transition={{ duration: 0.5, delay: 0.2, ease: cubicEase }}
-          className="mb-8"
+          className="mb-6 sm:mb-8"
           style={{ transformOrigin: "left" }}
         >
           <div className="flex justify-between items-center mb-2">
@@ -234,7 +236,7 @@ export default function FormPage() {
               完成进度
             </span>
             <span className="text-xs font-medium text-[var(--navy-700)]">
-              {filledCount}/6
+              {filledCount}/4
             </span>
           </div>
           <div className="h-1.5 bg-[var(--blue-100)] rounded-full overflow-hidden">
@@ -247,8 +249,7 @@ export default function FormPage() {
           </div>
         </motion.div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
           {formFields.map((field, index) => (
             <motion.div
               key={field.name}
@@ -260,7 +261,7 @@ export default function FormPage() {
                 ease: cubicEase,
               }}
             >
-              <div className="glass-card rounded-xl p-5 transition-all duration-300 hover:shadow-md">
+              <div className="glass-card rounded-xl p-4 sm:p-5 transition-all duration-300 hover:shadow-md">
                 <Label
                   htmlFor={field.name}
                   className="flex items-center gap-2 text-sm font-medium text-[var(--navy-800)] mb-3"
@@ -275,16 +276,18 @@ export default function FormPage() {
                     id={field.name}
                     placeholder={field.placeholder}
                     {...register(field.name)}
-                    className="h-11 bg-white/60 border-[var(--blue-200)] focus:border-[var(--blue-400)] focus:ring-2 focus:ring-[var(--blue-500)]/20 transition-all placeholder:text-[var(--muted-foreground)]/50"
+                    className="h-11 text-base md:text-sm bg-white/60 border-[var(--blue-200)] focus:border-[var(--blue-400)] focus:ring-2 focus:ring-[var(--blue-500)]/20 transition-all placeholder:text-[var(--muted-foreground)]/50"
                   />
                 ) : (
                   <Select
                     value={watchedValues[field.name]}
-                    onValueChange={(val) => setValue(field.name, val ?? "", { shouldValidate: true })}
+                    onValueChange={(val) =>
+                      setValue(field.name, val ?? "", { shouldValidate: true })
+                    }
                   >
                     <SelectTrigger
                       id={field.name}
-                      className="h-11 bg-white/60 border-[var(--blue-200)] focus:border-[var(--blue-400)] focus:ring-2 focus:ring-[var(--blue-500)]/20 transition-all data-[placeholder]:text-[var(--muted-foreground)]/50"
+                      className="h-11 text-base md:text-sm bg-white/60 border-[var(--blue-200)] focus:border-[var(--blue-400)] focus:ring-2 focus:ring-[var(--blue-500)]/20 transition-all data-[placeholder]:text-[var(--muted-foreground)]/50"
                     >
                       <SelectValue placeholder={field.placeholder} />
                     </SelectTrigger>
@@ -315,12 +318,47 @@ export default function FormPage() {
             </motion.div>
           ))}
 
-          {/* Submit section */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6, ease: cubicEase }}
-            className="pt-4"
+            transition={{
+              duration: 0.5,
+              delay: 0.1 + formFields.length * 0.08,
+              ease: cubicEase,
+            }}
+          >
+            <div className="glass-card rounded-xl p-4 sm:p-5">
+              <Label className="flex items-center gap-2 text-sm font-medium text-[var(--navy-800)] mb-3">
+                <span className="text-[var(--blue-500)]">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M12 2H5a1 1 0 00-1 1v14a1 1 0 001 1h10a1 1 0 001-1V6l-4-4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                    <path d="M12 2v4h4" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                    <path d="M7 11h6M7 14h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </span>
+                简历上传
+              </Label>
+              <p className="text-xs text-[var(--muted-foreground)] mb-3">
+                上传后，AI 将结合你的实习、项目、技能给出更个性化的分析和简历诊断；不传也能生成报告。
+              </p>
+              <FileUpload
+                value={resume}
+                onChange={setResume}
+                accept=".pdf,.doc,.docx"
+                maxSizeMB={5}
+              />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.5,
+              delay: 0.1 + (formFields.length + 1) * 0.08,
+              ease: cubicEase,
+            }}
+            className="pt-2 sm:pt-4"
           >
             <Button
               type="submit"
@@ -350,11 +388,11 @@ export default function FormPage() {
                       className="opacity-75"
                     />
                   </svg>
-                  正在准备访谈...
+                  准备测评中...
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  进入 AI 智能访谈
+                  开始 6 题快测
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                     <path
                       d="M6.5 4L12 9l-5.5 5"
@@ -369,7 +407,7 @@ export default function FormPage() {
             </Button>
 
             <p className="text-center text-xs text-[var(--muted-foreground)] mt-4">
-              填写信息仅用于生成职业分析报告，不会存储或分享给第三方
+              信息仅用于本次报告生成，不会存储或分享给第三方
             </p>
           </motion.div>
         </form>

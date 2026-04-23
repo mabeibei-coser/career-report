@@ -3,307 +3,341 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import type { JobFormData } from "@/lib/types";
+import { CheckCircle2, Loader2, Circle, AlertTriangle, Sparkles } from "lucide-react";
+import {
+  generateReport,
+  type SectionProgress,
+} from "@/lib/report-client";
+import { cn } from "@/lib/utils";
+import type { JobFormData, QuizAnswer } from "@/lib/types";
 
 const cubicEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-const steps = [
-  { label: "连接职业知识库", duration: 3000 },
-  { label: "识别岗位基础信息", duration: 4000 },
-  { label: "分析行业与企业特征", duration: 5000 },
-  { label: "匹配岗位对标数据", duration: 6000, hasCounter: true },
-  { label: "构建岗职价值模型", duration: 5000 },
-  { label: "生成能力画像分析", duration: 6000 },
-  { label: "生成发展路径建议", duration: 5000 },
-  { label: "输出最终报告", duration: 4000 },
+// 轮播小贴士：长等待时降低焦虑，顺便传递有用信息
+const CAREER_TIPS: string[] = [
+  "终面前 48 小时完成简历 V3 版本，V2 发给至少 1 位行业前辈过一遍",
+  "签约前追问 HR 三件事：具体 Level、直属 leader、是否进轮岗池",
+  "薪资谈判前把意向公司同级别员工的总包做一次横向对比",
+  "看 offer 要看 base 之外的 package：签字费 / 股票归属 / 年终倍数",
+  "脉脉 + 小红书 + 知乎校招话题，三处交叉看近 6 个月帖子做尽调",
+  "AI 应用经验能撬动 10-20% 的薪资空间 —— 有成果就敢要",
+  "实习成果一定要有数字：活跃从 X → Y、覆盖 N 个客户、节省 Z 小时 / 周",
+  "校招季平均每人投 20+ 岗位、进终面 3-5 家，一两次拒绝不说明能力问题",
+  "offer 到手别急着签，留 3-5 天做尽调，对比其他 offer 和 package 结构",
+  "技能栈分三档写：熟练 / 使用过 / 了解，把核心专长放最前面",
 ];
 
-const totalDuration = steps.reduce((sum, s) => sum + s.duration, 0);
-
-function DataCounter() {
-  const [count, setCount] = useState(0);
-  const target = 2847563;
-
+/**
+ * 轮播职业小贴士：每 4.5 秒切下一条，淡入淡出 + 上移。
+ * 初始索引随机，避免每次进页都从第 1 条开始。
+ */
+function RotatingTips() {
+  const [idx, setIdx] = useState(() => Math.floor(Math.random() * CAREER_TIPS.length));
   useEffect(() => {
-    const duration = 5500;
-    const start = Date.now();
-    const timer = setInterval(() => {
-      const elapsed = Date.now() - start;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(target * eased));
-      if (progress >= 1) clearInterval(timer);
-    }, 30);
-    return () => clearInterval(timer);
+    const id = window.setInterval(() => {
+      setIdx((i) => (i + 1) % CAREER_TIPS.length);
+    }, 4500);
+    return () => clearInterval(id);
   }, []);
 
   return (
-    <span className="text-[var(--blue-400)] font-mono text-xs ml-2">
-      已处理 {count.toLocaleString()} 条数据
-    </span>
+    <div className="relative rounded-2xl border border-[var(--blue-200)] bg-gradient-to-br from-white via-[var(--blue-50)]/40 to-white p-4 sm:p-5 overflow-hidden">
+      {/* 装饰性渐变条 */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--blue-400)] to-transparent" />
+
+      <div className="flex items-start gap-3">
+        <div className="shrink-0 size-8 rounded-full bg-gradient-to-br from-[var(--blue-400)] to-[var(--blue-600)] flex items-center justify-center shadow-sm">
+          <Sparkles className="size-4 text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] font-semibold tracking-[0.18em] uppercase text-[var(--blue-600)] mb-1">
+            谨世 · 应届校招小贴士
+          </div>
+          <div className="relative h-[44px] sm:h-[40px]">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={idx}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.45, ease: cubicEase }}
+                className="absolute inset-0 text-[13px] sm:text-sm leading-[1.65] text-[var(--navy-800)]"
+              >
+                {CAREER_TIPS[idx]}
+              </motion.p>
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+
+      {/* 进度小点 */}
+      <div className="mt-3 flex items-center justify-center gap-1">
+        {CAREER_TIPS.map((_, i) => (
+          <span
+            key={i}
+            className={cn(
+              "h-0.5 rounded-full transition-all duration-500",
+              i === idx
+                ? "w-6 bg-[var(--blue-500)]"
+                : "w-1.5 bg-[var(--blue-200)]"
+            )}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
 export default function LoadingPage() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const [reportReady, setReportReady] = useState(false);
-  const [animationDone, setAnimationDone] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const reportFetchStarted = useRef(false);
+  const [progress, setProgress] = useState<SectionProgress[]>([]);
+  const [globalError, setGlobalError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+  const started = useRef(false);
 
-  // Start report generation in background
   useEffect(() => {
-    if (reportFetchStarted.current) return;
-    reportFetchStarted.current = true;
+    if (started.current) return;
+    started.current = true;
 
-    const formDataStr = sessionStorage.getItem("formData");
-    const messagesStr = sessionStorage.getItem("interviewMessages");
+    let formData: JobFormData | null = null;
+    let quizAnswers: QuizAnswer[] = [];
 
-    if (!formDataStr) {
-      router.push("/form");
+    try {
+      const fd = sessionStorage.getItem("formData");
+      const qa = sessionStorage.getItem("quizAnswers");
+      if (!fd) {
+        router.replace("/form");
+        return;
+      }
+      formData = JSON.parse(fd) as JobFormData;
+      if (!formData?.targetPosition) {
+        router.replace("/form");
+        return;
+      }
+      quizAnswers = qa ? (JSON.parse(qa) as QuizAnswer[]) : [];
+    } catch {
+      router.replace("/form");
       return;
     }
 
-    const formData: JobFormData = JSON.parse(formDataStr);
-    const messages = messagesStr ? JSON.parse(messagesStr) : [];
+    if (!formData) return;
 
-    // Fire the report generation API
-    fetch("/api/report", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ formData, messages }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        sessionStorage.setItem("reportData", JSON.stringify(data));
-        setReportReady(true);
-      })
-      .catch((err) => {
-        console.error("Report generation failed:", err);
-        setError("报告生成失败，请重试");
-      });
+    (async () => {
+      try {
+        const report = await generateReport(formData, quizAnswers, {
+          onProgress: (p) => setProgress(p),
+        });
+        sessionStorage.setItem("reportData", JSON.stringify(report));
+        setDone(true);
+        setTimeout(() => router.push("/report"), 700);
+      } catch (e) {
+        console.error("report generation failed:", e);
+        setGlobalError(e instanceof Error ? e.message : "报告生成失败");
+      }
+    })();
   }, [router]);
 
-  // Step progression animation
-  useEffect(() => {
-    let elapsed = 0;
-    let stepIndex = 0;
-
-    const interval = setInterval(() => {
-      elapsed += 100;
-
-      // Calculate overall progress
-      const overallProgress = Math.min((elapsed / totalDuration) * 100, 100);
-      setProgress(overallProgress);
-
-      // Determine current step
-      let accumulated = 0;
-      for (let i = 0; i < steps.length; i++) {
-        accumulated += steps[i].duration;
-        if (elapsed < accumulated) {
-          stepIndex = i;
-          break;
-        }
-        if (i === steps.length - 1) {
-          stepIndex = steps.length;
-        }
-      }
-      setCurrentStep(stepIndex);
-
-      if (elapsed >= totalDuration) {
-        setAnimationDone(true);
-        clearInterval(interval);
-      }
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Navigate when both animation and report are done
-  useEffect(() => {
-    if (animationDone && reportReady) {
-      const timer = setTimeout(() => {
-        router.push("/report");
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-  }, [animationDone, reportReady, router]);
+  const completedCount = progress.filter(
+    (p) => p.status === "completed" || p.status === "fallback" || p.status === "skipped"
+  ).length;
+  const pct = progress.length > 0 ? (completedCount / progress.length) * 100 : 0;
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Dark background */}
-      <div className="fixed inset-0 bg-[var(--navy-950)]" />
+    <div className="min-h-screen relative overflow-hidden">
+      <div className="fixed inset-0 bg-gradient-to-br from-[var(--blue-50)] via-white to-[var(--blue-100)]" />
+      <div className="fixed inset-0 hero-grid opacity-40" />
+      <div className="fixed top-20 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-[var(--blue-200)] to-[var(--blue-100)] opacity-40 blur-3xl" />
+      <div className="fixed -bottom-20 -left-32 w-80 h-80 rounded-full bg-gradient-to-tr from-[var(--blue-300)] to-[var(--blue-100)] opacity-30 blur-3xl" />
 
-      {/* Animated gradient orbs */}
-      <motion.div
-        className="fixed top-1/4 left-1/4 w-96 h-96 rounded-full opacity-20 blur-[100px]"
-        style={{ background: "radial-gradient(circle, var(--blue-500), transparent)" }}
-        animate={{ x: [0, 50, -30, 0], y: [0, -30, 40, 0] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-      />
-      <motion.div
-        className="fixed bottom-1/4 right-1/4 w-80 h-80 rounded-full opacity-15 blur-[80px]"
-        style={{ background: "radial-gradient(circle, var(--blue-400), transparent)" }}
-        animate={{ x: [0, -40, 30, 0], y: [0, 40, -20, 0] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-      />
+      {/* 浮动粒子装饰，增加"正在运算"的空间感 */}
+      <FloatingParticles />
 
-      {/* Grid overlay */}
-      <div className="fixed inset-0 hero-grid opacity-20" />
-
-      {/* Main panel */}
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, ease: cubicEase }}
-        className="relative z-10 w-full max-w-lg mx-6"
-      >
-        {/* Header */}
-        <div className="text-center mb-8">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 mx-auto mb-4"
-          >
-            <svg viewBox="0 0 64 64" fill="none" className="w-full h-full">
-              <circle cx="32" cy="32" r="28" stroke="var(--blue-500)" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
-              <circle cx="32" cy="32" r="20" stroke="var(--blue-400)" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.5" />
-              <circle cx="32" cy="32" r="12" stroke="var(--blue-300)" strokeWidth="2" strokeLinecap="round" strokeDasharray="20 60" />
-              <circle cx="32" cy="8" r="2.5" fill="var(--blue-400)" className="pulse-dot" />
-            </svg>
-          </motion.div>
-          <h2 className="text-xl font-semibold text-white mb-2">
-            正在生成职业定位报告
-          </h2>
-          <p className="text-sm text-white/50">
-            AI 正在分析您的职业数据，请稍候...
+      <div className="relative z-10 max-w-xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: cubicEase }}
+          className="mb-6 text-center"
+        >
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--navy-950)] tracking-tight mb-3">
+            正在生成你的定位报告
+          </h1>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            我们在并发为你生成 6 个章节。每个章节独立完成，某一章失败也不会影响其它章节。
           </p>
-        </div>
+        </motion.div>
 
-        {/* Steps list */}
-        <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 space-y-3">
-          <AnimatePresence>
-            {steps.map((step, index) => {
-              const status =
-                index < currentStep
-                  ? "done"
-                  : index === currentStep
-                    ? "active"
-                    : "pending";
-
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05, ease: cubicEase }}
-                  className={`flex items-center gap-3 py-2.5 px-3 rounded-lg transition-all duration-500 ${
-                    status === "active"
-                      ? "bg-[var(--blue-500)]/10"
-                      : status === "done"
-                        ? "opacity-60"
-                        : "opacity-30"
-                  }`}
-                >
-                  {/* Status icon */}
-                  <div className="w-6 h-6 shrink-0 flex items-center justify-center">
-                    {status === "done" ? (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center"
-                      >
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                          <path
-                            d="M3 6l2 2 4-4.5"
-                            stroke="#34d399"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </motion.div>
-                    ) : status === "active" ? (
-                      <div className="w-5 h-5 rounded-full border-2 border-[var(--blue-400)] border-t-transparent animate-spin" />
-                    ) : (
-                      <div className="w-5 h-5 rounded-full border border-white/20" />
-                    )}
-                  </div>
-
-                  {/* Label */}
-                  <span
-                    className={`text-sm flex-1 ${
-                      status === "active"
-                        ? "text-white font-medium"
-                        : status === "done"
-                          ? "text-white/60"
-                          : "text-white/30"
-                    }`}
-                  >
-                    {step.label}
-                  </span>
-
-                  {/* Data counter for step 4 */}
-                  {step.hasCounter && status === "active" && <DataCounter />}
-
-                  {/* Done check */}
-                  {status === "done" && (
-                    <span className="text-xs text-emerald-400/60">完成</span>
-                  )}
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
-
-        {/* Progress bar */}
-        <div className="mt-6">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs text-white/40">处理进度</span>
-            <span className="text-xs text-white/60 font-mono">
-              {Math.round(progress)}%
+        <div className="mb-6">
+          <div className="flex justify-between text-xs text-[var(--muted-foreground)] mb-2">
+            <span>整体进度</span>
+            <span>
+              {completedCount}/{progress.length || 6}
             </span>
           </div>
-          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-[var(--blue-100)] rounded-full overflow-hidden">
             <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-[var(--blue-500)] to-[var(--blue-300)]"
-              style={{ width: `${progress}%` }}
-              transition={{ duration: 0.1 }}
+              className="h-full rounded-full bg-gradient-to-r from-[var(--blue-500)] to-[var(--blue-400)]"
+              animate={{ width: `${pct}%` }}
+              transition={{ duration: 0.4, ease: cubicEase }}
             />
           </div>
         </div>
 
-        {/* Waiting message */}
-        {animationDone && !reportReady && !error && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center text-xs text-white/40 mt-4"
-          >
-            分析即将完成，请耐心等候...
-          </motion.p>
+        <div className="glass-card rounded-2xl p-4 sm:p-5 space-y-1">
+          {progress.map((p) => {
+            const isActive = p.status === "loading";
+            return (
+              <motion.div
+                key={p.key}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={cn(
+                  "relative flex items-center gap-3 py-2.5 px-2 -mx-2 rounded-lg transition-colors",
+                  isActive && "bg-[var(--blue-50)]/70"
+                )}
+              >
+                {/* active 行左侧竖线高亮 */}
+                {isActive && (
+                  <motion.span
+                    layoutId="active-bar"
+                    className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-gradient-to-b from-[var(--blue-400)] to-[var(--blue-600)]"
+                    transition={{ duration: 0.3, ease: cubicEase }}
+                  />
+                )}
+                <StatusIcon status={p.status} />
+                <div className="flex-1 min-w-0 flex items-center flex-wrap gap-x-2 gap-y-0.5">
+                  <span className="text-sm font-medium text-[var(--navy-800)]">
+                    {p.label}
+                  </span>
+                  {p.dataSource && (
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 font-mono text-[10px] rounded px-1.5 py-0.5 border transition-colors",
+                        isActive
+                          ? "border-[var(--blue-300)] bg-white text-[var(--blue-700)]"
+                          : "border-[var(--blue-100)] bg-[var(--blue-50)]/60 text-[var(--navy-600)]"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "size-1 rounded-full bg-emerald-500 shrink-0",
+                          isActive && "animate-pulse"
+                        )}
+                      />
+                      {p.dataSource}
+                    </span>
+                  )}
+                </div>
+                <span className="shrink-0 text-[11px] text-[var(--muted-foreground)]">
+                  {shortStatusText(p.status)}
+                </span>
+              </motion.div>
+            );
+          })}
+          {progress.length === 0 && (
+            <div className="flex items-center gap-3 py-3 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" />
+              正在准备章节生成…
+            </div>
+          )}
+        </div>
+
+        {/* 轮播小贴士 —— 缓解长等待焦虑 */}
+        <div className="mt-5">
+          <RotatingTips />
+        </div>
+
+        {globalError && (
+          <div className="mt-5 flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-4">
+            <AlertTriangle className="mt-0.5 size-5 shrink-0 text-destructive" />
+            <div className="text-sm">
+              <div className="font-medium text-destructive mb-1">
+                报告生成过程中出错
+              </div>
+              <div className="text-xs text-muted-foreground">{globalError}</div>
+            </div>
+          </div>
         )}
 
-        {/* Error state */}
-        {error && (
+        {done && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-6 text-center space-y-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-6 text-center text-sm text-emerald-600"
           >
-            <p className="text-sm text-red-400">{error}</p>
-            <button
-              onClick={() => router.push("/form")}
-              className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-colors"
-            >
-              返回重试
-            </button>
+            <CheckCircle2 className="mx-auto mb-2 size-6" />
+            报告已生成，正在跳转…
           </motion.div>
         )}
-      </motion.div>
+      </div>
+    </div>
+  );
+}
+
+function StatusIcon({ status }: { status: SectionProgress["status"] }) {
+  if (status === "completed")
+    return <CheckCircle2 className="size-5 text-emerald-500 shrink-0" />;
+  if (status === "fallback")
+    return <AlertTriangle className="size-5 text-amber-500 shrink-0" />;
+  if (status === "skipped")
+    return <Circle className="size-5 text-muted-foreground shrink-0" />;
+  if (status === "loading")
+    return <Loader2 className="size-5 animate-spin text-[var(--blue-500)] shrink-0" />;
+  return <Circle className="size-5 text-muted-foreground/50 shrink-0" />;
+}
+
+function shortStatusText(status: SectionProgress["status"]): string {
+  switch (status) {
+    case "pending":
+      return "等待中";
+    case "loading":
+      return "生成中";
+    case "completed":
+      return "已完成";
+    case "fallback":
+      return "已兜底";
+    case "skipped":
+      return "已跳过";
+    default:
+      return "";
+  }
+}
+
+/**
+ * 浮动粒子装饰：随机点位 + 慢速上浮 + 透明度循环，做"数据运算中"的空间感。
+ * 纯装饰，pointer-events-none。
+ */
+function FloatingParticles() {
+  const [dots, setDots] = useState<Array<{ x: number; y: number; delay: number; dur: number }>>([]);
+  useEffect(() => {
+    const arr = Array.from({ length: 14 }, () => ({
+      x: Math.random() * 100,
+      y: 60 + Math.random() * 40,
+      delay: Math.random() * 4,
+      dur: 8 + Math.random() * 6,
+    }));
+    setDots(arr);
+  }, []);
+  return (
+    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      {dots.map((d, i) => (
+        <motion.span
+          key={i}
+          className="absolute size-1 rounded-full bg-[var(--blue-400)]/30"
+          style={{ left: `${d.x}%`, top: `${d.y}%` }}
+          initial={{ y: 0, opacity: 0 }}
+          animate={{
+            y: -140,
+            opacity: [0, 0.6, 0],
+          }}
+          transition={{
+            duration: d.dur,
+            delay: d.delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
     </div>
   );
 }
