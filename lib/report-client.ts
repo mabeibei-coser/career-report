@@ -18,6 +18,7 @@ import {
   salaryMock,
   workplaceInsightMock,
 } from "@/lib/mocks/report-mocks";
+import { consumeReportPrefetch, type PrefetchSectionKey } from "@/lib/report-prefetch";
 
 const SECTION_CONFIG: {
   key: ReportSectionKey;
@@ -104,6 +105,8 @@ export async function generateReport(
   quizAnswers: QuizAnswer[],
   options: GenerateReportOptions = {}
 ): Promise<ReportData> {
+  const prefetched = consumeReportPrefetch(formData);
+
   const progress: SectionProgress[] = SECTION_CONFIG.map((s) => ({
     key: s.key,
     label: s.label,
@@ -124,6 +127,22 @@ export async function generateReport(
       progress[idx].status = "skipped";
       update();
       return { key: section.key, data: null };
+    }
+
+    // 先尝试预拉取结果（只有 4 个前置章节有）
+    const prefetchedPromise = prefetched?.get(section.key as PrefetchSectionKey);
+    if (prefetchedPromise !== undefined) {
+      progress[idx].status = "loading";
+      update();
+      try {
+        const data = await prefetchedPromise;
+        progress[idx].status = "completed";
+        update();
+        return { key: section.key, data };
+      } catch (prefetchErr) {
+        // 预拉取失败，降级到下面的正常 callSection 重试
+        console.warn(`[report] prefetch failed for ${section.key}, falling back:`, prefetchErr);
+      }
     }
 
     progress[idx].status = "loading";

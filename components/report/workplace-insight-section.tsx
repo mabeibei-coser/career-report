@@ -25,7 +25,7 @@ export function WorkplaceInsightSection({
       title="职场环境透视"
       index={index}
       total={total}
-      takeaway={`${data.companyInsight.targetLabel}发展动向 · 网友现场观察 ${data.companyInsight.observations.length} 条 · 行业共性速览`}
+      takeaway={`${data.companyInsight?.targetLabel ?? "意向公司"}发展动向 · 网友现场观察 ${Array.isArray(data.companyInsight?.observations) ? data.companyInsight.observations.length : 0} 条 · 行业共性速览`}
       meta={<span>公司 · 现场 · 行业 · 综合</span>}
     >
       <div className="rounded-md border border-amber-200/80 bg-amber-50/60 px-3 py-2 text-[12px] leading-relaxed text-amber-800 mb-5 break-inside-avoid">
@@ -34,69 +34,77 @@ export function WorkplaceInsightSection({
       </div>
 
       {/* Block 1 · 意向公司 · 发展现状 */}
-      <div className="rounded-xl border border-[var(--blue-100)] bg-white p-4 sm:p-5 mb-4 break-inside-avoid">
-        <div className="flex items-center gap-2 mb-3">
-          <Building2 className="size-4 text-[var(--blue-600)]" />
-          <span className="text-sm font-semibold text-[var(--navy-900)]">
-            1 · {data.companyInsight.targetLabel} · 发展现状
-          </span>
-        </div>
-        <p className="text-[13.5px] leading-[1.8] text-[var(--navy-800)]">
-          {data.companyInsight.developmentSummary}
-        </p>
-      </div>
-
-      {/* Block 2 · 意向公司 · 小红书 / 脉脉 现场速记 */}
-      <div className="rounded-xl border border-[var(--blue-100)] bg-white p-4 sm:p-5 mb-4 break-inside-avoid">
-        <div className="flex items-center gap-2 mb-2">
-          <MessageSquareQuote className="size-4 text-[var(--blue-600)]" />
-          <span className="text-sm font-semibold text-[var(--navy-900)]">
-            2 · {data.companyInsight.targetLabel} · 小红书 / 脉脉 现场速记
-          </span>
-        </div>
-        <p className="text-[12px] leading-[1.7] text-[var(--report-ink-muted)] mb-4">
-          {data.companyInsight.summary}
-        </p>
-
-        <div className="grid gap-3 sm:grid-cols-2 mb-5">
-          {data.companyInsight.observations.map((ob, i) => (
-            <div
-              key={i}
-              className="rounded-lg border border-[var(--blue-100)] bg-[var(--blue-50)]/30 p-3 break-inside-avoid"
-            >
-              <div className="flex items-center gap-1.5 mb-2">
-                <span className="size-1.5 rounded-full bg-[var(--blue-500)]" />
-                <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--blue-600)]">
-                  {ob.source}
-                </span>
-              </div>
-              <p className="text-[13px] leading-[1.7] text-[var(--navy-800)]">
-                {ob.voice}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="rounded-lg border-l-4 border-[var(--blue-500)] bg-[var(--blue-50)] p-3">
-          <div className="flex items-center gap-2 mb-2">
-            <CheckSquare className="size-4 text-[var(--blue-700)]" />
-            <span className="text-xs font-semibold text-[var(--navy-900)]">
-              签约前必做
+      {data.companyInsight && (
+        <div className="rounded-xl border border-[var(--blue-100)] bg-white p-4 sm:p-5 mb-4 break-inside-avoid">
+          <div className="flex items-center gap-2 mb-3">
+            <Building2 className="size-4 text-[var(--blue-600)]" />
+            <span className="text-sm font-semibold text-[var(--navy-900)]">
+              1 · {data.companyInsight.targetLabel} · 发展现状
             </span>
           </div>
-          <ul className="space-y-1.5">
-            {data.companyInsight.attentions.map((a, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-[13px] leading-[1.7] text-[var(--navy-800)]"
-              >
-                <span className="text-[var(--blue-600)] shrink-0">✓</span>
-                <span>{a}</span>
-              </li>
-            ))}
-          </ul>
+          <p className="text-[13.5px] leading-[1.8] text-[var(--navy-800)]">
+            {data.companyInsight.developmentSummary}
+          </p>
         </div>
-      </div>
+      )}
+
+      {/* Block 2 · 意向公司 · 小红书 / 脉脉 现场速记 */}
+      {data.companyInsight && (
+        <div className="rounded-xl border border-[var(--blue-100)] bg-white p-4 sm:p-5 mb-4 break-inside-avoid">
+          <div className="flex items-center gap-2 mb-2">
+            <MessageSquareQuote className="size-4 text-[var(--blue-600)]" />
+            <span className="text-sm font-semibold text-[var(--navy-900)]">
+              2 · {data.companyInsight.targetLabel} · 小红书 / 脉脉 现场速记
+            </span>
+          </div>
+          <p className="text-[12px] leading-[1.7] text-[var(--report-ink-muted)] mb-4">
+            {data.companyInsight.summary}
+          </p>
+
+          {Array.isArray(data.companyInsight.observations) && data.companyInsight.observations.length > 0 && (
+            <div className="grid gap-3 sm:grid-cols-2 mb-5">
+              {data.companyInsight.observations.map((ob, i) => (
+                <div
+                  key={i}
+                  className="rounded-lg border border-[var(--blue-100)] bg-[var(--blue-50)]/30 p-3 break-inside-avoid"
+                >
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <span className="size-1.5 rounded-full bg-[var(--blue-500)]" />
+                    <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--blue-600)]">
+                      {ob.source}
+                    </span>
+                  </div>
+                  <p className="text-[13px] leading-[1.7] text-[var(--navy-800)]">
+                    {ob.voice}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {Array.isArray(data.companyInsight.attentions) && data.companyInsight.attentions.length > 0 && (
+            <div className="rounded-lg border-l-4 border-[var(--blue-500)] bg-[var(--blue-50)] p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckSquare className="size-4 text-[var(--blue-700)]" />
+                <span className="text-xs font-semibold text-[var(--navy-900)]">
+                  签约前必做
+                </span>
+              </div>
+              <ul className="space-y-1.5">
+                {data.companyInsight.attentions.map((a, i) => (
+                  <li
+                    key={i}
+                    className="flex gap-2 text-[13px] leading-[1.7] text-[var(--navy-800)]"
+                  >
+                    <span className="text-[var(--blue-600)] shrink-0">✓</span>
+                    <span>{a}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Block 3 · 行业共性关注要点 */}
       <div className="rounded-xl border border-[var(--blue-100)] bg-white p-4 sm:p-5 mb-4 break-inside-avoid">
@@ -107,7 +115,7 @@ export function WorkplaceInsightSection({
           </span>
         </div>
         <p className="text-[13.5px] leading-[1.75] text-[var(--navy-800)]">
-          {data.industryAdvice.summary}
+          {data.industryAdvice?.summary}
         </p>
       </div>
 

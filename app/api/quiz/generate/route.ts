@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   APPLICANT_BASELINE,
   callMiniMaxJson,
+  callIflytekJson,
 } from "@/lib/report-shared";
+import { hasIflytek } from "@/lib/iflytek";
 import type { JobFormData, QuizQuestion } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -66,12 +68,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const data = await callMiniMaxJson<{ questions: QuizQuestion[] }>({
+    const callOpts = {
       systemPrompt: QUIZ_SYSTEM_PROMPT,
       userPrompt: buildQuizUserPrompt(formData),
       temperature: 0.7,
       maxTokens: 1800,
-    });
+    };
+
+    let data: { questions: QuizQuestion[] };
+    if (hasIflytek) {
+      try {
+        data = await callIflytekJson<{ questions: QuizQuestion[] }>(callOpts);
+      } catch (iflytekErr) {
+        console.warn("iFlytek quiz generate failed, falling back to MiniMax:", iflytekErr);
+        data = await callMiniMaxJson<{ questions: QuizQuestion[] }>(callOpts);
+      }
+    } else {
+      data = await callMiniMaxJson<{ questions: QuizQuestion[] }>(callOpts);
+    }
 
     if (!data?.questions || data.questions.length < 6) {
       throw new Error("AI 返回的测评题不完整");

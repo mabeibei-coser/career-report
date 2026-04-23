@@ -3,7 +3,7 @@
 # AI 职业定位报告
 
 ## 项目概述
-面向**应届大学生**的校招定位工具。流程：求职意向 + 简历（选填）→ 6 题 AI 快测 → 7 章节定位报告（按章节并发生成，按 section 分页导出 PDF）。
+面向**应届大学生**的校招定位工具。流程：求职意向 + 简历（选填）→ 6 题 AI 快测 → 6 章节定位报告（按章节并发生成，按 section 分页导出 PDF）。
 
 ## 技术栈
 - Next.js 16 + TypeScript + Tailwind CSS v4 + shadcn/ui（@base-ui/react）
@@ -27,7 +27,7 @@ app/
   quiz/page.tsx                         → 第 2 步：6 题快测
   interview/page.tsx                    → 旧路径，重定向到 /quiz
   loading/page.tsx                      → 基于真实 section 进度的加载页
-  report/page.tsx                       → 第 3 步：7 章节报告装配层
+  report/page.tsx                       → 第 3 步：6 章节报告装配层
   layout.tsx                            → 含 viewport 配置
   api/
     resume/parse/route.ts               → 简历解析（PDF/DOCX → 文本）
@@ -38,8 +38,7 @@ app/
       position-info/route.ts            → 3. 岗位信息（3 细分 + 能力雷达）
       resume-diagnosis/route.ts         → 4. 简历诊断（无简历返回 null）
       negotiation/route.ts              → 5. 谈薪要点
-      development/route.ts              → 6. 发展建议
-      workplace-insight/route.ts        → 7. 职场环境透视
+      workplace-insight/route.ts        → 6. 职场环境透视
 components/
   ui/                                   → shadcn 基础 + 自建 file-upload
   report/
@@ -56,7 +55,7 @@ components/
 lib/
   minimax.ts                            → MiniMax OpenAI 兼容客户端
   report-shared.ts                      → buildBaseContext / callMiniMaxJson 等共享工具
-  report-client.ts                      → 前端并发调度 7 个 section API
+  report-client.ts                      → 前端并发调度 6 个 section API
   pdf-export.ts                         → 按 section 分页 PDF 导出
   salary-anchors.ts                     → 应届起薪锚点 + 城市系数
   form-options.ts                       → 学历 / 城市能级枚举
@@ -68,8 +67,10 @@ lib/
 - 每个页面用 /frontend-design skill 确保设计质量
 - 组件用 shadcn/ui（@base-ui/react），不手写基础组件
 - API 路由放 app/api/ 下；**所有 section API 独立**，失败互不影响
-- 环境变量放 .env.local：
+- 环境变量放 .env.local（模板见 `.env.local.example`）：
   - `MINIMAX_API_KEY` / `MINIMAX_BASE_URL` / `MINIMAX_MODEL`（默认 MiniMax-M1，生产为 minimax2.7）
+  - `IFLYTEK_API_KEY`（必填以启用讯飞；**留空则自动降级回 MiniMax**）/ `IFLYTEK_BASE_URL`（默认 `https://maas-coding-api.cn-huabei-1.xf-yun.com/v2`）/ `IFLYTEK_MODEL`（默认 `astron-code-latest`）
+  - 讯飞作用：6 题快测生成的**主模型**（MiniMax 仅兜底）；salary 章节 MiniMax 失败时的 **fallback**
 - 新增 Node 包（pdf-parse、mammoth）需在 `next.config.ts` 的 `serverExternalPackages` 中登记
 - 报告内容红线：
   - **职场环境透视**：绝不点名具体公司，只做行业/类型共性

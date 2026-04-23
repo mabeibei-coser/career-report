@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { ReportData } from "@/lib/types";
+import { takeReportData } from "@/lib/pdf-token-store";
 
 export const runtime = "nodejs";
 export const maxDuration = 180; // dev 模式 Turbopack 冷编译 /report + Puppeteer 启动 + 渲染合计可能 ~90-120s
@@ -16,19 +17,7 @@ function todayYYYYMMDD(): string {
   return `${y}${m}${day}`;
 }
 
-export async function POST(req: NextRequest) {
-  let body: { reportData?: ReportData };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "请求体解析失败" }, { status: 400 });
-  }
-
-  const reportData = body?.reportData;
-  if (!reportData?.meta?.formData?.targetPosition) {
-    return NextResponse.json({ error: "缺少 reportData" }, { status: 400 });
-  }
-
+async function renderPdf(reportData: ReportData): Promise<NextResponse> {
   // 动态 import puppeteer，避免构建期被静态分析报错
   const puppeteer = await import("puppeteer");
 
@@ -126,4 +115,35 @@ export async function POST(req: NextRequest) {
       }
     }
   }
+}
+
+export async function POST(req: NextRequest) {
+  let body: { reportData?: ReportData };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "请求体解析失败" }, { status: 400 });
+  }
+
+  const reportData = body?.reportData;
+  if (!reportData?.meta?.formData?.targetPosition) {
+    return NextResponse.json({ error: "缺少 reportData" }, { status: 400 });
+  }
+
+  return renderPdf(reportData);
+}
+
+export async function GET(req: NextRequest) {
+  const token = req.nextUrl.searchParams.get("token");
+  if (!token) {
+    return NextResponse.json({ error: "缺少 token" }, { status: 400 });
+  }
+  const reportData = takeReportData(token);
+  if (!reportData) {
+    return NextResponse.json(
+      { error: "链接已过期或已被使用，请回报告页重新下载" },
+      { status: 404 }
+    );
+  }
+  return renderPdf(reportData);
 }

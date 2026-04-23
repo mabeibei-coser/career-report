@@ -3,7 +3,9 @@ import {
   APPLICANT_BASELINE,
   buildBaseContext,
   callMiniMaxJson,
+  callIflytekJson,
 } from "@/lib/report-shared";
+import { hasIflytek } from "@/lib/iflytek";
 import {
   cityCoefficients,
   buildSalaryAnchorPrompt,
@@ -57,11 +59,7 @@ export async function POST(req: NextRequest) {
 
     const userPrompt = `${buildBaseContext(formData, quizAnswers)}\n\n请为"${formData.targetPosition}"应届校招岗位生成薪资 JSON。`;
 
-    const partial = await callMiniMaxJson<{
-      quartiles: SalaryInsight["quartiles"];
-      industryComparison: SalaryInsight["industryComparison"];
-      userIndustry?: SalaryInsight["userIndustry"];
-    }>({
+    const callOpts = {
       systemPrompt: buildSystemPrompt(
         formData.targetPosition,
         formData.targetEducation,
@@ -70,7 +68,28 @@ export async function POST(req: NextRequest) {
       userPrompt,
       maxTokens: 1400,
       temperature: 0.5,
-    });
+    };
+
+    type PartialSalary = {
+      quartiles: SalaryInsight["quartiles"];
+      industryComparison: SalaryInsight["industryComparison"];
+      userIndustry?: SalaryInsight["userIndustry"];
+    };
+
+    let partial: PartialSalary;
+    try {
+      partial = await callMiniMaxJson<PartialSalary>(callOpts);
+    } catch (miniMaxErr) {
+      if (hasIflytek) {
+        try {
+          partial = await callIflytekJson<PartialSalary>(callOpts);
+        } catch {
+          throw miniMaxErr;
+        }
+      } else {
+        throw miniMaxErr;
+      }
+    }
 
     // Normalize: coerce salary strings to numbers, sort desc, take top 5
     const toNum = (v: unknown): number => {

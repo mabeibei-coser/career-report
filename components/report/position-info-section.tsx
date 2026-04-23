@@ -76,7 +76,9 @@ function SubPositionCard({
 }) {
   const meta = PRIORITY_META[sub.priority] ?? PRIORITY_META.secondary;
   const Icon = meta.icon;
-  const radarData = sub.coreCompetencies.map((c) => ({
+  const safeCompetencies = Array.isArray(sub.coreCompetencies) ? sub.coreCompetencies : [];
+  const safeResponsibilities = Array.isArray(sub.coreResponsibilities) ? sub.coreResponsibilities : [];
+  const radarData = safeCompetencies.map((c) => ({
     subject: c.name,
     value: c.score,
     fullMark: 100,
@@ -103,7 +105,7 @@ function SubPositionCard({
               核心职责
             </div>
             <ul className="space-y-1.5 text-[13.5px] text-[var(--navy-800)]">
-              {sub.coreResponsibilities.map((r, i) => (
+              {safeResponsibilities.map((r, i) => (
                 <li key={i} className="flex gap-2 leading-relaxed">
                   <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--blue-500)]" />
                   <span>{r}</span>
@@ -117,7 +119,7 @@ function SubPositionCard({
               核心能力
             </div>
             <div className="space-y-1.5">
-              {sub.coreCompetencies.map((c, i) => {
+              {safeCompetencies.map((c, i) => {
                 const style = getScoreStyle(c.score);
                 return (
                   <div key={i}>
@@ -209,13 +211,14 @@ export function PositionInfoSection({
   total: number;
 }) {
   const { exporting } = useReportRender();
-  const primary = data.subPositions.find((s) => s.priority === "primary");
-  const secondary = data.subPositions.find((s) => s.priority === "secondary");
+  const subPositions = Array.isArray(data?.subPositions) ? data.subPositions : [];
+  const primary = subPositions.find((s) => s.priority === "primary");
+  const secondary = subPositions.find((s) => s.priority === "secondary");
   const takeaway = primary
     ? secondary
       ? `最匹配方向：${primary.name}（首选），${secondary.name}（次选）`
       : `最匹配方向：${primary.name}（首选）`
-    : `共 ${data.subPositions.length} 个细分方向可选`;
+    : `共 ${subPositions.length} 个细分方向可选`;
 
   return (
     <SectionWrapper
@@ -224,10 +227,10 @@ export function PositionInfoSection({
       index={index}
       total={total}
       takeaway={takeaway}
-      meta={<span>{data.subPositions.length} 个细分方向</span>}
+      meta={<span>{subPositions.length} 个细分方向</span>}
     >
       <div className="space-y-4">
-        {data.subPositions.map((sub, i) => (
+        {subPositions.map((sub, i) => (
           <SubPositionCard key={i} sub={sub} exporting={exporting} />
         ))}
       </div>

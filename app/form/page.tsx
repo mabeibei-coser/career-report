@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileUpload, type FileUploadValue } from "@/components/ui/file-upload";
 import { educationLevels, cityTiers } from "@/lib/form-options";
 import { startQuizPrefetch } from "@/lib/quiz-prefetch";
+import { startReportPrefetch, clearReportPrefetch } from "@/lib/report-prefetch";
 import type { JobFormData } from "@/lib/types";
 
 const formSchema = z.object({
@@ -156,8 +157,15 @@ export default function FormPage() {
     sessionStorage.removeItem("reportData");
     // 提前预拉测评题：利用导航 + React mount 的 0.5-1.5s 消化掉一部分 MiniMax 等待
     startQuizPrefetch(payload);
+    // 提前预拉不依赖测评画像的 4 个章节（答题期间并行跑）
+    startReportPrefetch(payload);
     router.push("/quiz");
   };
+
+  useEffect(() => {
+    // 用户返回表单重新填写：清理旧的预拉取，防止提交新表单后拿到旧数据
+    clearReportPrefetch();
+  }, []);
 
   const watchedValues = watch();
   const filledCount = Object.values(watchedValues).filter(
