@@ -3,7 +3,7 @@ import {
   APPLICANT_BASELINE,
   FORBIDDEN_FRAUD_NOTE,
   buildBaseContext,
-  callMiniMaxJson,
+  callWithFallback,
 } from "@/lib/report-shared";
 import type { JobFormData, NegotiationTips, QuizAnswer } from "@/lib/types";
 
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "缺少意向信息" }, { status: 400 });
     }
     const userPrompt = `${buildBaseContext(formData, quizAnswers)}\n\n请为"${formData.targetPosition}"意向"${formData.targetCompany}"的应届候选人，只就 AI 应用经验 和 AI 相关的企业实习成果 两个主题给出谈薪要点（仅 summary，各一段）。`;
-    const data = await callMiniMaxJson<NegotiationTips>({
+    const data = await callWithFallback<NegotiationTips>({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
       maxTokens: 800,

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   APPLICANT_BASELINE,
   buildBaseContext,
-  callMiniMaxJson,
+  callWithFallback,
 } from "@/lib/report-shared";
 import type { JobFormData, Overview, QuizAnswer } from "@/lib/types";
 
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "缺少意向信息" }, { status: 400 });
     }
     const userPrompt = `${buildBaseContext(formData, quizAnswers)}\n\n请严格按约定 JSON 输出"总览"章节。`;
-    const data = await callMiniMaxJson<Overview>({
+    const data = await callWithFallback<Overview>({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
       maxTokens: 1200,
