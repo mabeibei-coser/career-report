@@ -18,15 +18,15 @@ export function NegotiationSection({
       icon: Brain,
       label: "AI 应用经验",
       tag: "筹码 1",
-      summary: data.aiExperience.summary,
+      summary: data.aiExperience?.summary,
     },
     {
       icon: Briefcase,
       label: "AI 相关的企业实习成果",
       tag: "筹码 2",
-      summary: data.internshipExperience.summary,
+      summary: data.internshipExperience?.summary,
     },
-  ];
+  ].filter((t) => !!t.summary);
 
   return (
     <SectionWrapper

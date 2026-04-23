@@ -66,11 +66,19 @@ export function ResumeDiagnosisSection({
   index: number;
   total: number;
 }) {
-  const score = Math.max(0, Math.min(100, data.overallScore));
+  // Guard: overallScore may be NaN / undefined — fall back to 0
+  const rawScore = typeof data.overallScore === "number" && isFinite(data.overallScore)
+    ? data.overallScore
+    : 0;
+  const score = Math.max(0, Math.min(100, rawScore));
   const tier = getScoreTier(score);
+  const scoreLabel = isFinite(rawScore) ? String(score) : "--";
   const scoreLevel = tier.label;
-  const highCount = data.recommendations.filter((r) => r.priority === "high").length;
-  const takeaway = `简历 ${score} / 100 · ${scoreLevel}${highCount > 0 ? ` · ${highCount} 条高优先级建议待处理` : ""}`;
+
+  // Guard: recommendations may be undefined or not an array
+  const recs = Array.isArray(data.recommendations) ? data.recommendations : [];
+  const highCount = recs.filter((r) => r?.priority === "high").length;
+  const takeaway = `简历 ${scoreLabel} / 100 · ${scoreLevel}${highCount > 0 ? ` · ${highCount} 条高优先级建议待处理` : ""}`;
 
   return (
     <SectionWrapper
@@ -79,7 +87,7 @@ export function ResumeDiagnosisSection({
       index={index}
       total={total}
       takeaway={takeaway}
-      meta={<span>{data.recommendations.length} 条建议</span>}
+      meta={<span>{recs.length} 条建议</span>}
     >
       {/* Score hero */}
       <div className="rounded-xl border border-[var(--blue-200)] bg-gradient-to-br from-[var(--blue-50)] to-white p-4 sm:p-5 mb-5 break-inside-avoid">
@@ -96,7 +104,7 @@ export function ResumeDiagnosisSection({
                 className="tabular-nums text-3xl font-bold"
                 style={{ color: tier.main }}
               >
-                {score}
+                {scoreLabel}
               </span>
               <span className="text-xs text-[var(--report-ink-muted)]">
                 / 100
@@ -120,7 +128,7 @@ export function ResumeDiagnosisSection({
               className="tabular-nums text-xs font-semibold"
               style={{ color: tier.main }}
             >
-              {score}%
+              {scoreLabel}%
             </span>
           </div>
         </div>
@@ -153,55 +161,71 @@ export function ResumeDiagnosisSection({
       </div>
 
       {/* Recommendations */}
-      <ol className="space-y-3">
-        {data.recommendations.map((r, i) => (
-          <li
-            key={i}
-            className="rounded-xl border border-[var(--blue-100)] bg-white p-4 break-inside-avoid"
-          >
-            <div className="flex items-start gap-3 mb-2">
-              <span className="shrink-0 tabular-nums text-sm font-bold text-[var(--blue-500)] w-5 pt-0.5">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h4 className="text-[15px] font-semibold text-[var(--navy-900)]">
-                    {r.title}
-                  </h4>
-                  <span
-                    className="report-chip"
-                    data-tone={PRIORITY_TONE[r.priority]}
-                  >
-                    优先级 {PRIORITY_LABEL[r.priority]}
+      {recs.length > 0 && (
+        <ol className="space-y-3">
+          {recs.map((r, i) => {
+            // Guard: individual fields may be missing or empty strings
+            const title = r?.title?.trim() || "（待补充）";
+            const issue = r?.issue?.trim() || "—";
+            const suggestion = r?.suggestion?.trim() || "—";
+            const snippet = r?.quotedSnippet?.trim() || "";
+            // Guard: priority may be missing/unknown — fall back to "medium"
+            const validPriorities = ["high", "medium", "low"] as const;
+            const priority: "high" | "medium" | "low" =
+              validPriorities.includes(r?.priority as "high" | "medium" | "low")
+                ? (r.priority as "high" | "medium" | "low")
+                : "medium";
+
+            return (
+              <li
+                key={i}
+                className="rounded-xl border border-[var(--blue-100)] bg-white p-4 break-inside-avoid"
+              >
+                <div className="flex items-start gap-3 mb-2">
+                  <span className="shrink-0 tabular-nums text-sm font-bold text-[var(--blue-500)] w-5 pt-0.5">
+                    {String(i + 1).padStart(2, "0")}
                   </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="text-[15px] font-semibold text-[var(--navy-900)]">
+                        {title}
+                      </h4>
+                      <span
+                        className="report-chip"
+                        data-tone={PRIORITY_TONE[priority]}
+                      >
+                        优先级 {PRIORITY_LABEL[priority]}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {r.quotedSnippet && (
-              <div className="report-quote ml-8 mb-3">
-                <span className="opacity-60 mr-1 not-italic">原文</span>
-                {r.quotedSnippet}
-              </div>
-            )}
+                {snippet && (
+                  <div className="report-quote ml-8 mb-3">
+                    <span className="opacity-60 mr-1 not-italic">原文</span>
+                    {snippet}
+                  </div>
+                )}
 
-            <div className="ml-8 space-y-1.5 text-[13.5px] leading-[1.75]">
-              <p>
-                <span className="inline-block w-10 text-[11px] font-semibold tracking-wider uppercase text-amber-700 align-baseline">
-                  问题
-                </span>
-                <span className="text-[var(--navy-800)]">{r.issue}</span>
-              </p>
-              <p>
-                <span className="inline-block w-10 text-[11px] font-semibold tracking-wider uppercase text-emerald-700 align-baseline">
-                  建议
-                </span>
-                <span className="text-[var(--navy-800)]">{r.suggestion}</span>
-              </p>
-            </div>
-          </li>
-        ))}
-      </ol>
+                <div className="ml-8 space-y-1.5 text-[13.5px] leading-[1.75]">
+                  <p>
+                    <span className="inline-block w-10 text-[11px] font-semibold tracking-wider uppercase text-amber-700 align-baseline">
+                      问题
+                    </span>
+                    <span className="text-[var(--navy-800)]">{issue}</span>
+                  </p>
+                  <p>
+                    <span className="inline-block w-10 text-[11px] font-semibold tracking-wider uppercase text-emerald-700 align-baseline">
+                      建议
+                    </span>
+                    <span className="text-[var(--navy-800)]">{suggestion}</span>
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </SectionWrapper>
   );
 }

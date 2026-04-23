@@ -9,6 +9,52 @@ import type { JobFormData, Overview, QuizAnswer } from "@/lib/types";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+// ---- 内容校验：拦截 AI 吐合法 JSON 但字段是占位符/空串的情况 ----
+// 命中则抛错 → 外层 report-client.ts 的重试机制触发 → 仍失败 fallback 到 overviewMock
+const PLACEHOLDER_PATTERNS: RegExp[] = [
+  /^\.{2,}$/,          // "..."、".."
+  /^<[^>]*>$/,         // "<字段描述>"、"<请填>"
+  /^x{2,}$/i,          // "xxx"、"XX"
+  /^示例/,              // "示例..."
+  /^请填/,              // "请填..."
+  /^\d+\s*-\s*\d+\s*字/, // "40-60 字"、"2-4 字"（schema 描述被原样输出）
+];
+
+function isBadString(s: unknown, minLen = 2): boolean {
+  if (typeof s !== "string") return true;
+  const t = s.trim();
+  if (t.length < minLen) return true;
+  return PLACEHOLDER_PATTERNS.some((re) => re.test(t));
+}
+
+function validateOverview(d: Overview): string | null {
+  if (!d || typeof d !== "object") return "overview 根对象缺失";
+  if (isBadString(d.positioning, 10)) return "positioning 缺失/占位符";
+  if (isBadString(d.summary, 10)) return "summary 缺失/占位符";
+  if (
+    !d.strength ||
+    isBadString(d.strength.title) ||
+    isBadString(d.strength.detail, 15)
+  )
+    return "strength 缺失";
+  if (
+    !d.improvement ||
+    isBadString(d.improvement.title) ||
+    isBadString(d.improvement.detail, 15)
+  )
+    return "improvement 缺失";
+  if (!d.personality || isBadString(d.personality.type))
+    return "personality.type 缺失";
+  if (
+    !Array.isArray(d.personality.traits) ||
+    d.personality.traits.length === 0
+  )
+    return "personality.traits 缺失";
+  if (isBadString(d.personality.description, 30))
+    return "personality.description 缺失";
+  return null;
+}
+
 const SYSTEM_PROMPT = `你是校招定位分析师，输出"总览"章节 JSON。
 
 ${APPLICANT_BASELINE}
@@ -43,6 +89,11 @@ export async function POST(req: NextRequest) {
       maxTokens: 1200,
       temperature: 0.6,
     });
+    const issue = validateOverview(data);
+    if (issue) {
+      console.warn("[overview] 内容校验失败，触发重试:", issue, { data });
+      throw new Error(`overview 内容校验失败: ${issue}`);
+    }
     return NextResponse.json({ data });
   } catch (error: unknown) {
     console.error("overview section error:", error);

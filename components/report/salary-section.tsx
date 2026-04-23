@@ -33,10 +33,12 @@ export function SalarySection({
   index: number;
   total: number;
 }) {
-  const unit = data.quartiles.unit || "元/月";
+  // 防御：quartiles 整体可能缺失
+  const quartiles = data.quartiles ?? { low: NaN, median: NaN, high: NaN, unit: "" };
+  const unit = quartiles.unit || "元/月";
 
   // 排序：严格按薪资从高到低，数字健壮化
-  const ranked = (data.industryComparison || [])
+  const ranked = (Array.isArray(data.industryComparison) ? data.industryComparison : [])
     .map((row) => ({
       industry: row.industry,
       avgSalary: toNum(row.avgSalary),
@@ -75,7 +77,7 @@ export function SalarySection({
       ? Math.round(((userInd.avgSalary - medianTop5) / medianTop5) * 100)
       : 0;
 
-  const takeaway = `${positionName}应届校招中位约 ${formatMoney(data.quartiles.median)} ${unit}（低分位 ${formatMoney(data.quartiles.low)} / 高分位 ${formatMoney(data.quartiles.high)}）`;
+  const takeaway = `${positionName}应届校招中位约 ${formatMoney(quartiles.median)} ${unit}（低分位 ${formatMoney(quartiles.low)} / 高分位 ${formatMoney(quartiles.high)}）`;
 
   return (
     <SectionWrapper
@@ -88,14 +90,14 @@ export function SalarySection({
     >
       {/* Quartile KPI row */}
       <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
-        <QuartileTile label="低分位" value={data.quartiles.low} unit={unit} />
+        <QuartileTile label="低分位" value={quartiles.low} unit={unit} />
         <QuartileTile
           label="中位"
-          value={data.quartiles.median}
+          value={quartiles.median}
           unit={unit}
           highlight
         />
-        <QuartileTile label="高分位" value={data.quartiles.high} unit={unit} />
+        <QuartileTile label="高分位" value={quartiles.high} unit={unit} />
       </div>
 
       {/* 意向行业 · 星标卡 */}
@@ -139,6 +141,7 @@ export function SalarySection({
       )}
 
       {/* 行业对比 · 前 5（严格按薪资排序） */}
+      {ranked.length > 0 && (
       <div className="rounded-xl border border-[var(--blue-100)] bg-white p-4 sm:p-5 mb-5 break-inside-avoid">
         <div className="flex items-center gap-2 mb-4">
           <Factory className="size-4 text-[var(--blue-600)]" />
@@ -201,6 +204,7 @@ export function SalarySection({
           })}
         </ul>
       </div>
+      )}
 
       {/* 数据来源标注 */}
       <p className="mt-4 text-right text-[11px] font-mono text-[var(--report-ink-muted)]">
@@ -234,7 +238,9 @@ function QuartileTile({
         {label}
       </span>
       <div className="report-kpi">
-        <span className="n">{value.toLocaleString("en-US")}</span>
+        <span className="n">
+          {Number.isFinite(value) ? value.toLocaleString("en-US") : "--"}
+        </span>
         <span className="u">{unit}</span>
       </div>
     </div>
