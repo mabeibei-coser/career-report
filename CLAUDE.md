@@ -3,13 +3,12 @@
 # AI 职业定位报告
 
 ## 项目概述
-面向**应届大学生**的校招定位工具。流程：求职意向 + 简历（选填）→ 6 题 AI 语音快测 → 7 章节定位报告（按章节并发生成，按 section 分页导出 PDF）。
+面向**应届大学生**的校招定位工具。流程：求职意向 + 简历（选填）→ 6 题 AI 快测 → 7 章节定位报告（按章节并发生成，按 section 分页导出 PDF）。
 
 ## 技术栈
 - Next.js 16 + TypeScript + Tailwind CSS v4 + shadcn/ui（@base-ui/react）
 - Recharts（图表：柱状、雷达、进度）+ Framer Motion（动画）
 - MiniMax API（报告与测评题生成，OpenAI SDK 兼容）
-- 火山引擎语音合成 seed-tts-2.0（测评题 TTS 朗读）
 - pdf-parse + mammoth（服务端解析 PDF / DOCX 简历）
 - React Hook Form + Zod（表单验证）
 - html2canvas-pro + jsPDF（按 section 分页导出 PDF）
@@ -25,7 +24,7 @@
 app/
   page.tsx                              → 首页
   form/page.tsx                         → 第 1 步：4 字段意向 + 简历上传
-  quiz/page.tsx                         → 第 2 步：6 题 TTS 快测
+  quiz/page.tsx                         → 第 2 步：6 题快测
   interview/page.tsx                    → 旧路径，重定向到 /quiz
   loading/page.tsx                      → 基于真实 section 进度的加载页
   report/page.tsx                       → 第 3 步：7 章节报告装配层
@@ -33,7 +32,6 @@ app/
   api/
     resume/parse/route.ts               → 简历解析（PDF/DOCX → 文本）
     quiz/generate/route.ts              → 6 题 AI 快测生成
-    tts/route.ts                        → 火山引擎 TTS（内存缓存）
     report/
       overview/route.ts                 → 1. 总览
       salary/route.ts                   → 2. 岗位薪资（锚点注入 + 城市系数后端合成）
@@ -72,12 +70,6 @@ lib/
 - API 路由放 app/api/ 下；**所有 section API 独立**，失败互不影响
 - 环境变量放 .env.local：
   - `MINIMAX_API_KEY` / `MINIMAX_BASE_URL` / `MINIMAX_MODEL`（默认 MiniMax-M1，生产为 minimax2.7）
-  - 火山引擎 TTS V3 单向流式（seed-tts-2.0）：
-    - `VOLC_TTS_APP_KEY`（控制台 AppID）
-    - `VOLC_TTS_ACCESS_KEY`（控制台 Access Key / Token）
-    - `VOLC_TTS_SPEAKER`（音色 ID，如 `zh_female_vv_jupiter_bigtts`）
-    - `VOLC_TTS_RESOURCE_ID`（选填，默认 `seed-tts-2.0`）
-    - `VOLC_TTS_ENDPOINT`（选填，默认 `https://openspeech.bytedance.com/api/v3/tts/unidirectional`）
 - 新增 Node 包（pdf-parse、mammoth）需在 `next.config.ts` 的 `serverExternalPackages` 中登记
 - 报告内容红线：
   - **职场环境透视**：绝不点名具体公司，只做行业/类型共性
