@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   APPLICANT_BASELINE,
   buildBaseContext,
-  callMiniMaxJson,
+  callWithFallback,
 } from "@/lib/report-shared";
 import type { JobFormData, QuizAnswer, WorkplaceInsight } from "@/lib/types";
 
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "缺少意向信息" }, { status: 400 });
     }
     const userPrompt = `${buildBaseContext(formData, quizAnswers)}\n\n用户意向公司：「${formData.targetCompany}」\n请基于公开网络对这家公司的反馈（脉脉/小红书/知乎/校招贴吧），给出 companyInsight.observations；targetLabel 必须原样回显"${formData.targetCompany}"。`;
-    const data = await callMiniMaxJson<WorkplaceInsight>({
+    const data = await callWithFallback<WorkplaceInsight>({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
       maxTokens: 1600,

@@ -184,5 +184,31 @@ export async function callIflytekJson<T>(
   }
 }
 
+/**
+ * 章节 AI 调用的统一入口：MiniMax 主 → iFlytek fallback。
+ * 任一家成功就返回结果；两家都失败抛出**原始 MiniMax 错误**（第一手信息便于排查）。
+ * 未配 IFLYTEK_API_KEY 时自动退化为单路 MiniMax，调用方代码无需改动。
+ */
+export async function callWithFallback<T>(
+  opts: CallOptions & { timeoutMs?: number }
+): Promise<T> {
+  try {
+    return await callMiniMaxJson<T>(opts);
+  } catch (miniMaxErr) {
+    if (!iflytek) throw miniMaxErr; // 没配讯飞 key，直接抛 MiniMax 错误
+    const miniMsg =
+      miniMaxErr instanceof Error ? miniMaxErr.message : String(miniMaxErr);
+    console.warn("[fallback] MiniMax 失败，切换讯飞重试:", miniMsg);
+    try {
+      return await callIflytekJson<T>(opts);
+    } catch (iflytekErr) {
+      const ifMsg =
+        iflytekErr instanceof Error ? iflytekErr.message : String(iflytekErr);
+      console.warn("[fallback] 讯飞也失败:", ifMsg);
+      throw miniMaxErr; // 抛原始 MiniMax 错误，方便看到首因
+    }
+  }
+}
+
 export const FORBIDDEN_FRAUD_NOTE = `严禁建议任何伪造、虚构、购买性质的手段（如购买实习证明、代写简历、虚假经历、代考）；只建议合法的能力积累路径（真实实习申请、开源贡献、开源课程认证、学术竞赛、Kaggle、个人项目等）。`;
 export const COMPANY_NO_NAME_NOTE = `绝对不要点名任何具体公司（字节、腾讯、阿里、华为、京东等均不得出现）；只用"互联网大厂""国企""外企""咨询公司""初创公司"等类型化描述。`;

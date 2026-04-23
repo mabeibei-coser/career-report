@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   APPLICANT_BASELINE,
   buildBaseContext,
-  callMiniMaxJson,
+  callWithFallback,
 } from "@/lib/report-shared";
 import type {
   JobFormData,
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "缺少意向信息" }, { status: 400 });
     }
     const userPrompt = `${buildBaseContext(formData, quizAnswers)}\n\n请为"${formData.targetPosition}"这个意向岗位生成岗位信息 JSON（2 个细分岗位 + 每个 5 维能力）。`;
-    const data = await callMiniMaxJson<PositionInfo>({
+    const data = await callWithFallback<PositionInfo>({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
       maxTokens: 1400,

@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   APPLICANT_BASELINE,
   buildBaseContext,
-  callMiniMaxJson,
-  callIflytekJson,
+  callWithFallback,
 } from "@/lib/report-shared";
-import { hasIflytek } from "@/lib/iflytek";
 import {
   cityCoefficients,
   buildSalaryAnchorPrompt,
@@ -76,20 +74,7 @@ export async function POST(req: NextRequest) {
       userIndustry?: SalaryInsight["userIndustry"];
     };
 
-    let partial: PartialSalary;
-    try {
-      partial = await callMiniMaxJson<PartialSalary>(callOpts);
-    } catch (miniMaxErr) {
-      if (hasIflytek) {
-        try {
-          partial = await callIflytekJson<PartialSalary>(callOpts);
-        } catch {
-          throw miniMaxErr;
-        }
-      } else {
-        throw miniMaxErr;
-      }
-    }
+    const partial = await callWithFallback<PartialSalary>(callOpts);
 
     // Normalize: coerce salary strings to numbers, sort desc, take top 5
     const toNum = (v: unknown): number => {

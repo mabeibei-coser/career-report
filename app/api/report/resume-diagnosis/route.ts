@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   APPLICANT_BASELINE,
   buildBaseContext,
-  callMiniMaxJson,
+  callWithFallback,
 } from "@/lib/report-shared";
 import type {
   JobFormData,
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     }
 
     const userPrompt = `${buildBaseContext(formData, quizAnswers)}\n\n请基于以上简历内容输出 JSON 形式的简历诊断（3 条建议，含从简历摘取的原文片段）。`;
-    const data = await callMiniMaxJson<ResumeDiagnosis>({
+    const data = await callWithFallback<ResumeDiagnosis>({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
       maxTokens: 1400,
