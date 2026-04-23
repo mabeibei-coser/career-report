@@ -163,7 +163,7 @@ export default function LoadingPage() {
             正在生成你的定位报告
           </h1>
           <p className="text-sm text-[var(--muted-foreground)]">
-            我们在并发为你生成 6 个章节。每个章节独立完成，某一章失败也不会影响其它章节。
+            报告分 6 个章节并发生成。前 4 章已在答题期间预热，后 2 章正在进行中。
           </p>
         </motion.div>
 
