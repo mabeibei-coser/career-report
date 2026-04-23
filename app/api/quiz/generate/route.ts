@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       systemPrompt: QUIZ_SYSTEM_PROMPT,
       userPrompt: buildQuizUserPrompt(formData),
       temperature: 0.7,
-      maxTokens: 1800,
+      maxTokens: 3000, // 6道中文题+4选项每题，实测需要2000-2500 token，给足余量
     };
 
     let data: { questions: QuizQuestion[] };
