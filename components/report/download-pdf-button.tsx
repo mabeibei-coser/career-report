@@ -31,46 +31,39 @@ export function DownloadPDFButton({ report }: Props) {
     setStatus("loading");
     setErrorMsg(null);
 
+    // 关键：必须在 await fetch 之前同步 window.open，否则
+    // popup blocker 会把异步手势里的新窗口当普通弹窗拦截掉（表现：点了没反应）
+    // 先开空白窗口占位，拿到 token 后再把它导航到真实下载 URL
+    const popup = window.open("", "_blank");
+
     try {
-      const res = await fetch("/api/report/pdf", {
+      // Step 1: 获取 token（快，<1 秒）
+      const prepRes = await fetch("/api/report/pdf/prepare", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reportData: report }),
       });
-
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-        throw new Error(j.error || `HTTP ${res.status}`);
+      if (!prepRes.ok) {
+        const j = await prepRes.json().catch(() => ({}));
+        throw new Error((j as {error?: string}).error || `准备失败 HTTP ${prepRes.status}`);
       }
+      const { token } = await prepRes.json() as { token: string };
+      const downloadUrl = `/api/report/pdf?token=${encodeURIComponent(token)}`;
 
-      // 从 Content-Disposition 解析 UTF-8 文件名
-      const cd = res.headers.get("Content-Disposition") || "";
-      const m = /filename\*=UTF-8''([^;\n]+)/i.exec(cd);
-      const filename = m
-        ? decodeURIComponent(m[1])
-        : `校招定位报告_${report.meta.formData.targetPosition}.pdf`;
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      // download 属性被忽略时（部分 Android 系统浏览器 / 国产 WebView），
-      // target=_blank 让 PDF 至少在新标签页打开，用户可在 PDF viewer 里保存
-      a.target = "_blank";
-      a.rel = "noopener";
-      document.body.appendChild(a);
-      a.click();
-
-      // 关键：延迟 10s 再清理，给 Android Chrome / 某些 WebView 的
-      // 异步下载流程足够时间去抓取 blob。立即 revoke 会导致下载空文件
-      setTimeout(() => {
-        if (a.parentNode) a.parentNode.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 10_000);
-
+      if (popup && !popup.closed) {
+        // 预开的新窗口还活着 → 把它导航到下载 URL
+        popup.location.href = downloadUrl;
+      } else {
+        // popup 被拦截或被用户手动关了 → 降级为当前标签跳转
+        // 服务端返回 Content-Disposition: attachment，浏览器会触发下载而不是真的跳转页面
+        window.location.href = downloadUrl;
+      }
       setStatus("idle");
     } catch (e) {
+      // 失败了关掉那个空白窗口，避免留一个死链
+      if (popup && !popup.closed) {
+        try { popup.close(); } catch { /* ignore */ }
+      }
       console.error("[pdf-button] download failed:", e);
       setErrorMsg(e instanceof Error ? e.message : "下载失败");
       setStatus("error");
@@ -94,7 +87,7 @@ export function DownloadPDFButton({ report }: Props) {
         {status === "loading" ? (
           <>
             <Loader2 className="size-4 animate-spin" />
-            <span>正在生成 PDF…约 10 秒</span>
+            <span>正在准备下载…</span>
           </>
         ) : (
           <>
