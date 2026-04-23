@@ -186,26 +186,52 @@ export async function callIflytekJson<T>(
 
 /**
  * 章节 AI 调用的统一入口：MiniMax 主 → iFlytek fallback。
- * 任一家成功就返回结果；两家都失败抛出**原始 MiniMax 错误**（第一手信息便于排查）。
- * 未配 IFLYTEK_API_KEY 时自动退化为单路 MiniMax，调用方代码无需改动。
+ *
+ * **失败**包含三种情况，任一出现都会触发切换讯飞 key 重试：
+ * 1. API 调用错误（429/529/超时/网络）
+ * 2. JSON 解析失败（模型吐残缺 JSON）
+ * 3. `validator` 返回非 null 字符串（内容校验不通过——字段缺失/占位符/空串）
+ *
+ * 两家都失败才抛**原始 MiniMax 错误**（第一手信息便于排查）。
+ * 未配 IFLYTEK_API_KEY 时自动退化为单路 MiniMax，调用方无需改 env。
  */
 export async function callWithFallback<T>(
-  opts: CallOptions & { timeoutMs?: number }
+  opts: CallOptions & {
+    timeoutMs?: number;
+    /** 返回 null = 通过；返回字符串 = 错误原因，触发 fallback */
+    validator?: (data: T) => string | null;
+  }
 ): Promise<T> {
+  const { validator, ...callOpts } = opts;
+  const runOnce = async (
+    caller: "minimax" | "iflytek",
+    sectionName: string
+  ): Promise<T> => {
+    const data =
+      caller === "minimax"
+        ? await callMiniMaxJson<T>(callOpts)
+        : await callIflytekJson<T>(callOpts);
+    if (validator) {
+      const issue = validator(data);
+      if (issue) throw new Error(`[${sectionName}] 内容校验失败: ${issue}`);
+    }
+    return data;
+  };
+
   try {
-    return await callMiniMaxJson<T>(opts);
+    return await runOnce("minimax", "MiniMax");
   } catch (miniMaxErr) {
-    if (!iflytek) throw miniMaxErr; // 没配讯飞 key，直接抛 MiniMax 错误
+    if (!iflytek) throw miniMaxErr;
     const miniMsg =
       miniMaxErr instanceof Error ? miniMaxErr.message : String(miniMaxErr);
-    console.warn("[fallback] MiniMax 失败，切换讯飞重试:", miniMsg);
+    console.warn("[fallback] MiniMax 失败/校验不通过，切换讯飞重试:", miniMsg);
     try {
-      return await callIflytekJson<T>(opts);
+      return await runOnce("iflytek", "iFlytek");
     } catch (iflytekErr) {
       const ifMsg =
         iflytekErr instanceof Error ? iflytekErr.message : String(iflytekErr);
       console.warn("[fallback] 讯飞也失败:", ifMsg);
-      throw miniMaxErr; // 抛原始 MiniMax 错误，方便看到首因
+      throw miniMaxErr; // 抛原始 MiniMax 错误，看到首因
     }
   }
 }

@@ -83,17 +83,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "缺少意向信息" }, { status: 400 });
     }
     const userPrompt = `${buildBaseContext(formData, quizAnswers)}\n\n请严格按约定 JSON 输出"总览"章节。`;
+    // validator 接入 callWithFallback：MiniMax 吐残缺 JSON 会自动切讯飞重试
     const data = await callWithFallback<Overview>({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
       maxTokens: 1200,
       temperature: 0.6,
+      validator: validateOverview,
     });
-    const issue = validateOverview(data);
-    if (issue) {
-      console.warn("[overview] 内容校验失败，触发重试:", issue, { data });
-      throw new Error(`overview 内容校验失败: ${issue}`);
-    }
     return NextResponse.json({ data });
   } catch (error: unknown) {
     console.error("overview section error:", error);
