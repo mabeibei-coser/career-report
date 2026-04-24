@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>解码 AI 职业定位报告</title>
+
+  <!-- Google Fonts: Bricolage Grotesque · DM Sans · JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    :root {
+      --color-accent:       #2A7B9B;
+      --color-accent-hover: #1F6280;
+      --color-accent-light: #E4F2F7;
+      --color-accent-muted: #5A9DB8;
+    }
+  </style>
+
+  <script src="main.js" defer></script>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+    <div class="nav-inner">
+      <span class="nav-title">解码 AI 职业定位报告</span>
+      <div class="nav-dots" id="nav-dots" role="tablist">
+        <button class="nav-dot" data-target="module-1" data-tooltip="这个应用做了什么" role="tab" aria-label="Module 1: 这个应用做了什么"></button>
+        <button class="nav-dot" data-target="module-2" data-tooltip="认识主角们" role="tab" aria-label="Module 2: 认识主角们"></button>
+        <button class="nav-dot" data-target="module-3" data-tooltip="数据的旅程" role="tab" aria-label="Module 3: 数据的旅程"></button>
+        <button class="nav-dot" data-target="module-4" data-tooltip="AI 的幕后工作" role="tab" aria-label="Module 4: AI 的幕后工作"></button>
+        <button class="nav-dot" data-target="module-5" data-tooltip="让一切动起来" role="tab" aria-label="Module 5: 让一切动起来"></button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <!-- modules/*.html content is assembled here by build.sh -->
+<section class="module" id="module-1">
+
+  <!-- =========== SCREEN 1: 欢迎 =========== -->
+  <div class="screen" id="screen-1-1">
+    <div class="module-header animate-in">
+      <span class="module-number">模块 1</span>
+      <h1 class="module-title">这个应用做了什么？</h1>
+      <p class="module-subtitle">从零认识「AI 职业定位报告」——它的功能、用户体验和技术工具</p>
+    </div>
+
+    <div class="module-content">
+      <div class="callout callout-accent animate-in">
+        <p>想象你走进社保局，想了解自己的职业定位。一位 AI 顾问接待了你——它问你几个问题，然后生成一份专业的职业分析报告。这就是这个应用做的事。</p>
+      </div>
+
+      <h2 class="screen-heading animate-in">四大核心功能</h2>
+
+      <div class="pattern-cards animate-in">
+        <div class="pattern-card">
+          <div class="icon-circle">📝</div>
+          <h3>智能表单</h3>
+          <p>收集你的基本信息——年龄、学历、工作经历等，就像体检时的「登记表」。</p>
+        </div>
+        <div class="pattern-card">
+          <div class="icon-circle">🤖</div>
+          <h3>AI 访谈</h3>
+          <p>AI 会像真人顾问一样追问你的细节，深入了解你的职业情况。</p>
+        </div>
+        <div class="pattern-card">
+          <div class="icon-circle">⏳</div>
+          <h3>等待动画</h3>
+          <p>AI 在后台分析时，页面会显示优美的加载动画，让你知道它正在「思考」。</p>
+        </div>
+        <div class="pattern-card">
+          <div class="icon-circle">📊</div>
+          <h3>专业报告</h3>
+          <p>最终输出一份带图表的职业分析报告，包括雷达图、饼图和具体建议。</p>
+        </div>
+      </div>
+
+      <div class="callout callout-info animate-in">
+        <p><strong>💡 类比：就像体检</strong></p>
+        <p>登记信息 → 医生问诊 → 等待化验 → 拿到报告。这个应用的流程一模一样，只不过「医生」换成了 AI。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 2: 用户旅程 =========== -->
+  <div class="screen" id="screen-1-2">
+    <h2 class="screen-heading animate-in">用户旅程 — 从点击到报告</h2>
+
+    <div class="module-content">
+      <p class="animate-in">打开应用后，你会依次经历以下四个步骤。每一步都对应一个独立的页面。</p>
+
+      <div class="flow-steps animate-in">
+        <div class="flow-step">
+          <div class="flow-step-num">1</div>
+          <h3>填写表单</h3>
+          <p>输入你的姓名、年龄、学历、工作年限等基本信息。表单会自动校验，确保信息完整。</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-num">2</div>
+          <h3>AI 访谈</h3>
+          <p>AI 根据你的信息提出 3-5 个针对性问题。你用文字回答，就像和真人聊天一样。</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-num">3</div>
+          <h3>加载等待</h3>
+          <p>AI 在后台综合分析你的所有数据。页面显示动画和进度提示，大约需要 30-60 秒。</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-num">4</div>
+          <h3>查看报告</h3>
+          <p>一份完整的职业定位报告呈现在你面前——包含评分、图表和个性化建议。</p>
+        </div>
+      </div>
+
+      <div class="callout callout-info animate-in">
+        <p>整个过程大约 5-10 分钟。数据存在浏览器的 <span class="term" data-definition="浏览器提供的临时存储空间，关闭标签页后数据就会消失">sessionStorage</span> 中，关闭页面后不会保留。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 3: 技术栈一览 =========== -->
+  <div class="screen" id="screen-1-3">
+    <h2 class="screen-heading animate-in">技术栈一览 — 搭建这个应用用了什么工具？</h2>
+
+    <div class="module-content">
+      <p class="animate-in">这个应用由 6 个核心工具搭建而成。现在不需要全部理解，后面的模块会逐一拆解。</p>
+
+      <div class="icon-rows animate-in">
+        <div class="icon-row">
+          <div class="icon-circle">⚡</div>
+          <div>
+            <h3><span class="term" data-definition="一个基于 React 的全栈 Web 框架，提供路由、服务端渲染等功能，是整个应用的骨架">Next.js</span></h3>
+            <p>框架 — 应用的骨架。它决定了页面怎么组织、怎么跳转。</p>
+          </div>
+        </div>
+        <div class="icon-row">
+          <div class="icon-circle">🔒</div>
+          <div>
+            <h3><span class="term" data-definition="JavaScript 的超集，添加了类型检查功能，能在写代码时就发现错误，而不是等到运行时才出 bug">TypeScript</span></h3>
+            <p>语言 — 更安全的 <span class="term" data-definition="Web 世界最通用的编程语言，浏览器原生支持">JavaScript</span>。像给代码加了「拼写检查」。</p>
+          </div>
+        </div>
+        <div class="icon-row">
+          <div class="icon-circle">🎨</div>
+          <div>
+            <h3><span class="term" data-definition="一个实用优先的 CSS 框架，通过在 HTML 中直接写类名来设置样式，不用单独写 CSS 文件">Tailwind CSS</span></h3>
+            <p>样式 — 让页面变好看。用预设的类名快速美化界面。</p>
+          </div>
+        </div>
+        <div class="icon-row">
+          <div class="icon-circle">🧠</div>
+          <div>
+            <h3><span class="term" data-definition="MiniMax 公司提供的 AI 大模型接口，应用通过调用它来实现智能访谈和报告生成">MiniMax API</span></h3>
+            <p>AI 大脑 — 生成访谈问题和职业报告的核心引擎。</p>
+          </div>
+        </div>
+        <div class="icon-row">
+          <div class="icon-circle">📈</div>
+          <div>
+            <h3><span class="term" data-definition="一个基于 React 的图表库，用来绘制雷达图、饼图、柱状图等数据可视化图表">Recharts</span></h3>
+            <p>图表库 — 画雷达图和饼图，让报告数据一目了然。</p>
+          </div>
+        </div>
+        <div class="icon-row">
+          <div class="icon-circle">✨</div>
+          <div>
+            <h3><span class="term" data-definition="一个 React 动画库，可以轻松给页面元素添加入场、退场、拖拽等动画效果">Framer Motion</span></h3>
+            <p>动画库 — 让页面动起来，提供流畅的过渡效果。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 4: 代码翻译 + 小测验 =========== -->
+  <div class="screen" id="screen-1-4">
+    <h2 class="screen-heading animate-in">代码翻译 — 读懂第一段代码</h2>
+
+    <div class="module-content">
+      <p class="animate-in">下面是这个应用的「根布局」代码——整个应用的最外层壳子。我们把每一行翻译成大白话。</p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <pre><code>export default function RootLayout({
+  children,
+}: Readonly&lt;{
+  children: React.ReactNode;
+}&gt;) {
+  return (
+    &lt;html lang="zh-CN"&gt;
+      &lt;body className={`${geistSans.variable} antialiased`}&gt;
+        {children}
+      &lt;/body&gt;
+    &lt;/html&gt;
+  );
+}</code></pre>
+        </div>
+        <div class="translation-lines">
+          <div class="tl">
+            <span class="translation-label">第 1 行</span>
+            <span class="translation-english">导出一个叫 <span class="term" data-definition="根布局组件，是整个应用共享的最外层结构，所有页面都会被包裹在它里面">RootLayout</span> 的<span class="term" data-definition="一段可复用的代码块，接收输入（参数），返回输出（结果）">函数</span> — 它是整个应用的「外壳」</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 2-4 行</span>
+            <span class="translation-english">它接收一个叫 <span class="term" data-definition="子组件，指要显示在布局内部的页面内容。不同页面会传入不同的 children">children</span> 的<span class="term" data-definition="函数接收的输入值，就像你告诉一个计算器'请算 3+5'，3 和 5 就是参数">参数</span> — 就是要显示在里面的内容</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 5-6 行</span>
+            <span class="translation-english">返回 <span class="term" data-definition="超文本标记语言，网页的基本结构语言，用标签（如 &lt;div&gt;、&lt;p&gt;）来组织页面内容">HTML</span> 结构，设置语言为中文</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 7 行</span>
+            <span class="translation-english">给页面设置字体和<span class="term" data-definition="一种字体渲染技术，让文字边缘更平滑、更好看，避免出现锯齿状的粗糙边缘">抗锯齿</span>效果</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 8 行</span>
+            <span class="translation-english">把子内容放进去 — 不同的页面会替换这里</span>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="screen-heading animate-in">小测验</h2>
+
+      <div class="quiz-container animate-in" id="quiz-module1">
+
+        <!-- Question 1 -->
+        <div class="quiz-question-block" data-correct="C">
+          <p class="quiz-question">Q1：如果你想给这个应用添加一个「收藏报告」功能，你觉得最可能需要用到哪个技术？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：Tailwind CSS（只管样式）</span>
+            </div>
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：MiniMax API（只管 AI）</span>
+            </div>
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：Next.js + TypeScript（需要前后端逻辑）</span>
+            </div>
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：Recharts（只管图表）</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="quiz-question-block" data-correct="B">
+          <p class="quiz-question">Q2：这个应用的数据（用户填的表单、访谈记录）存在哪里？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：发送到远程服务器永久保存</span>
+            </div>
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：存在浏览器的 sessionStorage 中，关闭标签页就没了</span>
+            </div>
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：存在用户的硬盘上</span>
+            </div>
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：存在 AI 模型里</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module1')">检查答案</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module1')">重新作答</button>
+      </div>
+    </div>
+  </div>
+
+</section>
+<section class="module" id="module-2">
+  <div class="module-content">
+
+    <!-- ── MODULE HEADER ─────────────────────────────────────── -->
+    <div class="module-header animate-in">
+      <span class="module-number">02</span>
+      <h2 class="module-title">认识项目的主角们</h2>
+      <p class="module-subtitle">把项目想象成一个电视剧剧组 — 导演安排场景，演员各司其职，幕后人员默默支撑。我们来认识每一位"剧组成员"。</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN 1 — 项目文件结构：谁住在哪里？
+         ══════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screen-2-1">
+      <h3 class="screen-heading animate-in">项目文件结构 — 谁住在哪里？</h3>
+
+      <p class="animate-in">每个文件都有自己的"家"。就像电视剧片场的不同区域，每个文件夹负责不同的工作。</p>
+
+      <div class="callout callout-accent animate-in">
+        <span class="callout-icon">🎬</span>
+        <div class="callout-content">
+          <span class="callout-title">剧组比喻</span>
+          <p><code>app/</code> 是导演安排的拍摄场景，<code>components/</code> 是道具库，<code>lib/</code> 是幕后工作人员。</p>
+        </div>
+      </div>
+
+      <div class="file-tree animate-in">
+        <!-- app/ -->
+        <div class="ft-folder">
+          <span class="ft-name">app/</span>
+          <span class="ft-desc">页面和<span class="term" data-definition="路由决定用户访问某个网址时看到哪个页面，就像导演安排每个场景在哪里拍">路由</span>（导演安排的场景）</span>
+          <div class="ft-children">
+            <div class="ft-file">
+              <span class="ft-name">page.tsx</span>
+              <span class="ft-desc">首页 — 用户进入应用的第一个画面</span>
+            </div>
+            <div class="ft-folder">
+              <span class="ft-name">form/</span>
+              <span class="ft-desc">表单页场景</span>
+              <div class="ft-children">
+                <div class="ft-file">
+                  <span class="ft-name">page.tsx</span>
+                  <span class="ft-desc">收集用户基本信息的表单</span>
+                </div>
+              </div>
+            </div>
+            <div class="ft-folder">
+              <span class="ft-name">interview/</span>
+              <span class="ft-desc">访谈页场景</span>
+              <div class="ft-children">
+                <div class="ft-file">
+                  <span class="ft-name">page.tsx</span>
+                  <span class="ft-desc">AI 聊天访谈界面</span>
+                </div>
+              </div>
+            </div>
+            <div class="ft-folder">
+              <span class="ft-name">loading/</span>
+              <span class="ft-desc">加载页场景</span>
+              <div class="ft-children">
+                <div class="ft-file">
+                  <span class="ft-name">page.tsx</span>
+                  <span class="ft-desc">等待报告生成时的动画页面</span>
+                </div>
+              </div>
+            </div>
+            <div class="ft-folder">
+              <span class="ft-name">report/</span>
+              <span class="ft-desc">报告页场景</span>
+              <div class="ft-children">
+                <div class="ft-file">
+                  <span class="ft-name">page.tsx</span>
+                  <span class="ft-desc">展示最终的职业定位报告</span>
+                </div>
+              </div>
+            </div>
+            <div class="ft-folder">
+              <span class="ft-name">api/interview/</span>
+              <span class="ft-desc">AI 访谈<span class="term" data-definition="后端是用户看不到的服务器部分，负责处理数据、调用 AI 等幕后工作">后端</span></span>
+              <div class="ft-children">
+                <div class="ft-file">
+                  <span class="ft-name">route.ts</span>
+                  <span class="ft-desc">处理 AI 对话的<span class="term" data-definition="API 是应用程序之间沟通的接口，就像餐厅的服务员在厨房和顾客之间传递信息">API</span> 逻辑</span>
+                </div>
+              </div>
+            </div>
+            <div class="ft-folder">
+              <span class="ft-name">api/report/</span>
+              <span class="ft-desc">报告生成后端</span>
+              <div class="ft-children">
+                <div class="ft-file">
+                  <span class="ft-name">route.ts</span>
+                  <span class="ft-desc">调用 AI 生成完整报告的 API 逻辑</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- components/ -->
+        <div class="ft-folder">
+          <span class="ft-name">components/</span>
+          <span class="ft-desc">可复用的 UI 零件（道具库）</span>
+          <div class="ft-children">
+            <div class="ft-folder">
+              <span class="ft-name">ui/</span>
+              <span class="ft-desc">基础<span class="term" data-definition="组件是页面上可以重复使用的小零件，比如按钮、输入框、对话框，就像乐高积木一样可以拼装">组件</span>（按钮、输入框等）</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- lib/ -->
+        <div class="ft-folder">
+          <span class="ft-name">lib/</span>
+          <span class="ft-desc">工具函数和类型（幕后工作人员）</span>
+          <div class="ft-children">
+            <div class="ft-file">
+              <span class="ft-name">minimax.ts</span>
+              <span class="ft-desc">AI 连接器 — 负责和 <span class="term" data-definition="MiniMax 是一个中国的 AI 大模型服务商，类似于 OpenAI，提供智能对话能力">MiniMax</span> AI 通信</span>
+            </div>
+            <div class="ft-file">
+              <span class="ft-name">types.ts</span>
+              <span class="ft-desc"><span class="term" data-definition="类型定义就像表格的表头，规定每一列应该填什么内容，防止填错">数据类型定义</span> — 规定数据的格式</span>
+            </div>
+            <div class="ft-file">
+              <span class="ft-name">form-options.ts</span>
+              <span class="ft-desc">表单选项数据 — 下拉菜单里的选项</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN 2 — 四个主要页面：舞台上的演员
+         ══════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screen-2-2">
+      <h3 class="screen-heading animate-in">四个主要页面 — 舞台上的演员</h3>
+
+      <p class="animate-in">这四个页面就是舞台上的主角，每个人有自己的戏份和专长。</p>
+
+      <div class="pattern-cards animate-in">
+        <!-- Card 1: 表单页 -->
+        <div class="pattern-card">
+          <div class="pattern-icon" style="background: var(--color-accent-light); color: var(--color-actor-1);">📋</div>
+          <div class="pattern-title">表单页 <code>form/</code></div>
+          <p class="pattern-desc">收集用户的 6 个基本信息。使用 <span class="term" data-definition="react-hook-form 是一个帮你轻松管理表单输入的工具库，自动处理用户填写、修改、提交等操作">react-hook-form</span> 管理输入，<span class="term" data-definition="Zod 是一个数据验证工具，帮你检查用户填的内容是否合格，比如邮箱格式对不对、必填项有没有填">Zod</span> 负责验证数据是否合格。</p>
+        </div>
+
+        <!-- Card 2: 访谈页 -->
+        <div class="pattern-card">
+          <div class="pattern-icon" style="background: var(--color-info-light); color: var(--color-actor-2);">💬</div>
+          <div class="pattern-title">访谈页 <code>interview/</code></div>
+          <p class="pattern-desc">聊天界面，AI 会问 3–5 个深入问题。支持<span class="term" data-definition="多轮对话指 AI 记住之前说过的话，根据上下文继续聊天，而不是每次都从头开始">多轮对话</span>，越聊越了解你。</p>
+        </div>
+
+        <!-- Card 3: 加载页 -->
+        <div class="pattern-card">
+          <div class="pattern-icon" style="background: #F0EBF8; color: var(--color-actor-3);">⏳</div>
+          <div class="pattern-title">加载页 <code>loading/</code></div>
+          <p class="pattern-desc">8 步动画让等待不无聊，同时后台<span class="term" data-definition="并行调用就是同时做多件事，而不是排队一件一件做，这样速度更快">并行调用</span> AI 生成报告。</p>
+        </div>
+
+        <!-- Card 4: 报告页 -->
+        <div class="pattern-card">
+          <div class="pattern-icon" style="background: #FDF5E5; color: var(--color-actor-4);">📊</div>
+          <div class="pattern-title">报告页 <code>report/</code></div>
+          <p class="pattern-desc">展示 7 个报告模块，包含<span class="term" data-definition="雷达图是一种多角形图表，用来展示多个维度的得分，像蜘蛛网一样">雷达图</span>、饼图，还能一键导出 <span class="term" data-definition="PDF 是一种通用文档格式，导出后可以打印或分享给别人">PDF</span>。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN 3 — Group Chat: 组件之间的对话
+         ══════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screen-2-3">
+      <h3 class="screen-heading animate-in">组件之间的对话 — 数据怎么传递？</h3>
+
+      <p class="animate-in">页面之间不能直接"说话"，它们通过 <span class="term" data-definition="sessionStorage 是浏览器提供的临时存储空间，关闭标签页就清空，就像一块临时白板">sessionStorage</span> 这个"信使"来传递数据。</p>
+
+      <div class="chat-window animate-in" id="chat-module2">
+        <div class="chat-messages">
+          <!-- Message 1 -->
+          <div class="chat-message" data-sender="form" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-1)">表</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">表单页</span>
+              <p>用户填完了！我把 formData 存到 sessionStorage 了。</p>
+            </div>
+          </div>
+
+          <!-- Message 2 -->
+          <div class="chat-message" data-sender="interview" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">访</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">访谈页</span>
+              <p>收到！我从 sessionStorage 读到了用户信息，开始和 AI 聊天。</p>
+            </div>
+          </div>
+
+          <!-- Message 3 -->
+          <div class="chat-message" data-sender="interview" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">访</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">访谈页</span>
+              <p>访谈结束了，我把聊天记录也存进 sessionStorage。</p>
+            </div>
+          </div>
+
+          <!-- Message 4 -->
+          <div class="chat-message" data-sender="loading" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-3)">加</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">加载页</span>
+              <p>我来了！一边放动画，一边让后端生成报告。</p>
+            </div>
+          </div>
+
+          <!-- Message 5 -->
+          <div class="chat-message" data-sender="loading" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-3)">加</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">加载页</span>
+              <p>报告生成好了！数据存进 sessionStorage，准备跳转。</p>
+            </div>
+          </div>
+
+          <!-- Message 6 -->
+          <div class="chat-message" data-sender="report" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-4)">报</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">报告页</span>
+              <p>完美！我从 sessionStorage 读出报告数据，开始渲染图表！</p>
+            </div>
+          </div>
+
+          <!-- Typing indicator -->
+          <div class="chat-typing" style="display:none">
+            <div class="chat-avatar" id="chat-module2-typing-avatar" style="background: var(--color-actor-1)">表</div>
+            <div class="chat-typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-controls">
+          <button class="btn chat-next-btn">下一条 ▶</button>
+          <button class="btn chat-all-btn">播放全部 ⏩</button>
+          <button class="btn chat-reset-btn">重置 ↺</button>
+          <span class="chat-progress">0 / 6 messages</span>
+        </div>
+      </div>
+
+      <div class="callout callout-info animate-in">
+        <span class="callout-icon">💡</span>
+        <div class="callout-content">
+          <span class="callout-title">为什么用 sessionStorage？</span>
+          <p>因为这些数据只在当前会话中需要，关闭浏览器就自动清除，不会永久存在用户电脑上。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN 4 — 架构图 + 测验
+         ══════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screen-2-4">
+      <h3 class="screen-heading animate-in">架构全景图 — 一切是怎么连在一起的</h3>
+
+      <p class="animate-in">点击下图中的任意组件，了解它在整个系统中的职责。</p>
+
+      <div class="arch-diagram animate-in">
+        <!-- Zone 1: 浏览器（前端） -->
+        <div class="arch-zone">
+          <div class="arch-zone-label">🌐 浏览器（前端）</div>
+          <div class="arch-component" data-desc="首页是用户进入应用看到的第一个界面，展示产品介绍并引导用户开始填写表单。">
+            <span class="arch-icon">🏠</span>
+            首页
+          </div>
+          <div class="arch-component" data-desc="表单页收集用户的 6 项基本信息（职业、学历、技能等），使用表单验证确保数据完整。">
+            <span class="arch-icon">📋</span>
+            表单页
+          </div>
+          <div class="arch-component" data-desc="访谈页提供聊天界面，用户和 AI 进行 3–5 轮深入对话，帮助 AI 更好地了解用户。">
+            <span class="arch-icon">💬</span>
+            访谈页
+          </div>
+          <div class="arch-component" data-desc="加载页在等待报告生成时播放 8 步动画，同时后台并行调用 AI 生成报告内容。">
+            <span class="arch-icon">⏳</span>
+            加载页
+          </div>
+          <div class="arch-component" data-desc="报告页将 AI 生成的数据渲染成 7 个模块的可视化报告，包含雷达图、饼图，支持 PDF 导出。">
+            <span class="arch-icon">📊</span>
+            报告页
+          </div>
+        </div>
+
+        <!-- Zone 2: 服务器（后端） -->
+        <div class="arch-zone">
+          <div class="arch-zone-label">🖥️ 服务器（后端）</div>
+          <div class="arch-component" data-desc="访谈 API 接收用户消息，把对话历史发送给 AI 模型，返回 AI 的追问。它包含系统提示词，决定 AI 问什么问题。">
+            <span class="arch-icon">🤖</span>
+            访谈 API
+          </div>
+          <div class="arch-component" data-desc="报告 API 接收用户的表单数据和访谈记录，调用 AI 生成完整的职业定位报告（7 个模块的 JSON 数据）。">
+            <span class="arch-icon">📝</span>
+            报告 API
+          </div>
+        </div>
+
+        <!-- Zone 3: 外部服务 -->
+        <div class="arch-zone">
+          <div class="arch-zone-label">☁️ 外部服务</div>
+          <div class="arch-component" data-desc="MiniMax AI 是第三方大语言模型服务，负责理解用户信息并生成智能化的职业建议和分析报告。">
+            <span class="arch-icon">🧠</span>
+            MiniMax AI
+          </div>
+        </div>
+
+        <div class="arch-description">点击任意组件了解它的职责</div>
+      </div>
+
+      <!-- ── QUIZ ─────────────────────────────────────────────── -->
+      <h3 class="screen-heading animate-in">小测验 — 检验你的理解</h3>
+
+      <div class="quiz-container animate-in" id="quiz-module2">
+        <!-- Question 1 -->
+        <div class="quiz-question-block" data-correct="B"
+             data-explanation-right="没错！AI 的回答质量由系统提示词决定，提示词在后端 API 路由文件里。"
+             data-explanation-wrong="AI 回答质量由系统提示词决定。提示词不在前端界面里，而是在后端 API 路由文件 app/api/interview/route.ts 中。">
+          <p class="quiz-question">如果 AI 访谈的回答质量不好，你应该去修改哪个文件？</p>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              app/interview/page.tsx（这是前端界面）
+            </button>
+            <button class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              app/api/interview/route.ts（这里有 AI 的<span class="term" data-definition="系统提示词是给 AI 的"角色说明书"，告诉 AI 应该扮演什么角色、怎么回答问题">系统提示词</span>）
+            </button>
+            <button class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              lib/types.ts（这只是类型定义）
+            </button>
+            <button class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              components/ui/button.tsx（这只是按钮样式）
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="quiz-question-block" data-correct="B"
+             data-explanation-right="对！sessionStorage 就是页面之间的信使，负责在不同页面之间传递数据。"
+             data-explanation-wrong="sessionStorage 不是数据库（关闭浏览器就清空），不是服务器（它在浏览器里），也不是样式表。它的角色是在页面之间传递数据的信使。">
+          <p class="quiz-question">sessionStorage 在这个应用里扮演什么角色？</p>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              数据库 — 永久存储用户数据
+            </button>
+            <button class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              信使 — 在不同页面之间传递数据
+            </button>
+            <button class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              服务器 — 处理 API 请求
+            </button>
+            <button class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              样式表 — 控制页面外观
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div style="display: flex; gap: var(--space-3); margin-top: var(--space-6);">
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module2')">检查答案 ✓</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module2')">重新作答 ↺</button>
+        </div>
+      </div>
+
+  </div>
+</section>
+<section class="module" id="module-3">
+
+  <!-- =========== SCREEN 1: 表单数据 — 接力赛的起跑 =========== -->
+  <div class="screen" id="screen-3-1">
+    <div class="module-header animate-in">
+      <span class="module-number">模块 3</span>
+      <h1 class="module-title">数据的旅程</h1>
+      <p class="module-subtitle">跟踪数据从表单输入到最终报告的完整流转过程 — 一场精密的接力赛</p>
+    </div>
+
+    <div class="module-content">
+      <div class="callout callout-accent animate-in">
+        <p>想象一场接力赛：第一棒选手（表单页）拿着接力棒（数据）起跑，跑完自己的赛段后，把棒传给下一位选手（访谈页），每位选手都会往棒上增加信息，最终冲过终点线（报告页）。</p>
+      </div>
+
+      <h2 class="screen-heading animate-in">第一棒：表单收集 6 个字段</h2>
+
+      <p class="animate-in">接力赛从表单页开始。用户需要填写 6 个关键字段，这些信息构成了整份报告的基础数据。</p>
+
+      <div class="badge-list animate-in">
+        <div class="badge-item">
+          <span class="badge-code">positionName</span>
+          <span class="badge-desc">岗位名称（如"产品经理"）</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">industry</span>
+          <span class="badge-desc">所在行业（27 个选项）</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">companyType</span>
+          <span class="badge-desc">企业类型（民营、国企等 7 种）</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">cityLevel</span>
+          <span class="badge-desc">城市级别（一线到三线）</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">jobLevel</span>
+          <span class="badge-desc">职级（助理到副总裁，13 级）</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">workYears</span>
+          <span class="badge-desc">工作年限（1年以下到10年以上）</span>
+        </div>
+      </div>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <pre><code>const onSubmit = (data: JobFormData) =&gt; {
+  sessionStorage.setItem("formData",
+    JSON.stringify(data));
+  router.push("/interview");
+};</code></pre>
+        </div>
+        <div class="translation-lines">
+          <div class="tl">
+            <span class="translation-label">第 1 行</span>
+            <span class="translation-english">当用户点击提交，触发这个<span class="term" data-definition="一段可复用的代码块，接收输入（参数），返回输出（结果）">函数</span>，data 就是用户填的所有表单数据</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 2-3 行</span>
+            <span class="translation-english">把表单数据用 <span class="term" data-definition="JSON.stringify 把 JavaScript 对象转成文本字符串，方便存储和传输">JSON.stringify</span> 转成文本格式，存进浏览器的<span class="term" data-definition="浏览器提供的临时存储空间，关闭标签页后数据就会消失">sessionStorage</span>（临时储物柜）</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 4 行</span>
+            <span class="translation-english">然后用 <span class="term" data-definition="Next.js 提供的路由跳转工具，可以在不刷新整个页面的情况下切换到另一个页面">router.push</span> 跳转到访谈页面</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 2: 表单验证 — 守门员 =========== -->
+  <div class="screen" id="screen-3-2">
+    <h2 class="screen-heading animate-in">表单验证 — 守门员</h2>
+
+    <div class="module-content">
+      <p class="animate-in">数据在出发前，必须先过"守门员"这一关。<span class="term" data-definition="一个流行的 React 表单处理库，简化表单状态管理、验证和提交逻辑">react-hook-form</span> 负责管理表单状态，<span class="term" data-definition="一个 TypeScript 优先的数据验证库，用来定义数据必须满足的规则，不符合规则的数据会被拦截">Zod</span> 负责定义验证规则。</p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <pre><code>const formSchema = z.object({
+  positionName: z.string()
+    .min(1, "请输入岗位名称"),
+  industry: z.string()
+    .min(1, "请选择行业"),
+  companyType: z.string()
+    .min(1, "请选择企业类型"),
+});</code></pre>
+        </div>
+        <div class="translation-lines">
+          <div class="tl">
+            <span class="translation-label">第 1 行</span>
+            <span class="translation-english">定义一个验证规则<span class="term" data-definition="Schema 是数据的「模板」，规定了数据必须长什么样、包含哪些字段、每个字段是什么类型">Schema</span>，描述表单数据必须满足的条件</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 2-3 行</span>
+            <span class="translation-english">岗位名称：必须是文字，至少 1 个字，否则提示"请输入岗位名称"</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 4-5 行</span>
+            <span class="translation-english">行业：必须选一个，否则提示"请选择行业"</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 6-7 行</span>
+            <span class="translation-english">企业类型：同上，必须选择，否则提示"请选择企业类型"</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-accent animate-in">
+        <p>验证就像门卫 — 只有带齐了所有材料才能进门。这防止了残缺数据流入后续流程，是软件工程中<span class="term" data-definition="在数据进入系统之前先检查它是否合法，防止无效数据导致后续出错。也叫输入验证">边界校验</span>的典型实践。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 3: 数据流动画 =========== -->
+  <div class="screen" id="screen-3-3">
+    <h2 class="screen-heading animate-in">数据在页面间的传递</h2>
+
+    <div class="module-content">
+      <p class="animate-in">点击下方的"下一步"按钮，观察数据如何像接力棒一样在四个页面之间流转。</p>
+
+      <div class="flow-animation animate-in"
+           data-steps='[
+             {"highlight":"flow-actor-1","label":"用户填写 6 个字段，点击提交"},
+             {"highlight":"flow-actor-1","label":"formData 存入 sessionStorage","packet":true,"from":"actor-1","to":"actor-2"},
+             {"highlight":"flow-actor-2","label":"访谈页读取 formData，发送给 AI API"},
+             {"highlight":"flow-actor-2","label":"AI 返回问题，用户回答，循环 3-5 轮"},
+             {"highlight":"flow-actor-2","label":"访谈记录存入 sessionStorage","packet":true,"from":"actor-2","to":"actor-3"},
+             {"highlight":"flow-actor-3","label":"加载页把 formData + 访谈记录发给报告 API"},
+             {"highlight":"flow-actor-3","label":"API 返回结构化报告数据","packet":true,"from":"actor-3","to":"actor-4"},
+             {"highlight":"flow-actor-4","label":"报告页渲染图表和分析结果"}
+           ]'>
+
+        <div class="flow-actors">
+          <div class="flow-actor" id="flow-actor-1">
+            <div class="flow-actor-icon">📝</div>
+            <span>表单页</span>
+          </div>
+          <div class="flow-actor" id="flow-actor-2">
+            <div class="flow-actor-icon">🤖</div>
+            <span>访谈页</span>
+          </div>
+          <div class="flow-actor" id="flow-actor-3">
+            <div class="flow-actor-icon">⏳</div>
+            <span>加载页</span>
+          </div>
+          <div class="flow-actor" id="flow-actor-4">
+            <div class="flow-actor-icon">📊</div>
+            <span>报告页</span>
+          </div>
+        </div>
+
+        <div class="flow-packet">📦</div>
+        <div class="flow-step-label">点击"下一步"开始</div>
+
+        <div class="flow-controls">
+          <div class="flow-progress">Step 0 / 8</div>
+          <button class="btn flow-next-btn">下一步</button>
+          <button class="btn flow-reset-btn">重置</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 4: sessionStorage 详解 =========== -->
+  <div class="screen" id="screen-3-4">
+    <h2 class="screen-heading animate-in">sessionStorage 详解 — 数据的临时储物柜</h2>
+
+    <div class="module-content">
+      <p class="animate-in"><span class="term" data-definition="浏览器提供的临时存储空间，关闭标签页后数据就会消失">sessionStorage</span> 是浏览器内置的临时储物柜。这个应用用它来在不同页面之间传递数据，而不需要后端<span class="term" data-definition="专门用来长期存储和管理数据的软件，如 MySQL、PostgreSQL，数据不会因关闭浏览器而丢失">数据库</span>。</p>
+
+      <div class="step-cards animate-in">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>临时性</h3>
+            <p>关闭标签页数据就没了，不像数据库会永久保存。就像超市的临时寄存柜 — 你走了，柜子就清空了。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>隔离性</h3>
+            <p>每个标签页的数据互不影响。你在 A 标签页填的表单，B 标签页看不到。就像每个人有自己独立的柜子。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>隐私性</h3>
+            <p>数据只在你的浏览器里，不会发到服务器存储。你的职业信息不会被留在任何人的服务器上。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-info animate-in">
+        <p><strong>设计决策</strong></p>
+        <p>选择 sessionStorage 而不是数据库，是一个有意的设计决策。对于这种一次性使用的工具，不需要永久保存数据，反而保护了用户隐私。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 5: 小测验 =========== -->
+  <div class="screen" id="screen-3-5">
+    <h2 class="screen-heading animate-in">小测验</h2>
+
+    <div class="module-content">
+      <div class="quiz-container animate-in" id="quiz-module3">
+
+        <!-- Question 1 -->
+        <div class="quiz-question-block" data-correct="C">
+          <p class="quiz-question">Q1：用户在表单页填写信息后，数据经过了几个"接力手"才到达报告页？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：1 个 — 表单直接到报告</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：2 个 — 表单 → 访谈 → 报告</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：3 个 — 表单 → 访谈 → 加载 → 报告</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：4 个 — 每个页面都处理一遍</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="quiz-question-block" data-correct="B">
+          <p class="quiz-question">Q2：如果用户在访谈过程中不小心关闭了浏览器标签页，会发生什么？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：数据安全保存，重新打开可以继续</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：所有数据丢失，需要重新开始</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：系统自动保存到云端</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：只丢失访谈数据，表单数据还在</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- Question 3 -->
+        <div class="quiz-question-block" data-correct="A">
+          <p class="quiz-question">Q3：你想让这个应用支持"保存草稿，下次继续"功能。你会怎么改？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：把 sessionStorage 换成 localStorage</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：增加更多页面</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：换一个 AI 模型</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：修改 CSS 样式</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module3')">检查答案</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module3')">重新作答</button>
+      </div>
+    </div>
+  </div>
+
+</section>
+<section class="module" id="module-4">
+
+  <!-- =========== SCREEN 1: API 路由 — 前端和 AI 之间的翻译官 =========== -->
+  <div class="screen" id="screen-4-1">
+    <div class="module-header animate-in">
+      <span class="module-number">模块 4</span>
+      <h1 class="module-title">AI 的幕后工作</h1>
+      <p class="module-subtitle">API 路由就像一位"翻译官" — 把用户的日常对话翻译成 AI 能理解的结构化指令，再把 AI 的回复翻译成用户能看懂的内容。</p>
+    </div>
+
+    <div class="module-content">
+      <h2 class="screen-heading animate-in">API 路由 — 前端和 AI 之间的翻译官</h2>
+
+      <p class="animate-in">你在访谈页打字回答问题时，你的文字其实经历了一段旅程：从浏览器 → 服务器 → AI 模型 → 服务器 → 浏览器。<span class="term" data-definition="API 路由是服务器端的代码入口，负责接收前端请求、处理逻辑、调用外部服务，再把结果返回给前端">API 路由</span>就是这个旅程的中转站。</p>
+
+      <div class="step-cards animate-in">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>用户输入回答</h3>
+            <p>用户在访谈页的输入框里打字，写下对问题的回答。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>浏览器发送请求</h3>
+            <p>浏览器把回答打包成一个 <span class="term" data-definition="POST 是 HTTP 请求的一种方式，用于向服务器发送数据。就像寄一封带内容的信，而不是只写收件地址">POST 请求</span>，发送到 <code>/api/interview</code> 这个地址。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>服务器构建消息</h3>
+            <p>服务器收到请求后，把系统提示词、用户背景和对话历史组装好，调用 <span class="term" data-definition="MiniMax 是一家中国 AI 公司，提供大语言模型 API 服务。开发者可以通过 API 调用它的 AI 能力">MiniMax API</span>。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>AI 返回回复</h3>
+            <p>MiniMax 分析所有信息后，生成下一个访谈问题返回给服务器。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>清理并返回</h3>
+            <p>服务器清理 AI 回复中的多余标签，把干净的问题返回给浏览器显示。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-info animate-in">
+        <p>整个过程就像外交场合的同声传译 — 翻译官（API 路由）在两方之间来回沟通，确保双方都能理解对方的意思。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 2: 系统提示词 — 给 AI 的剧本 =========== -->
+  <div class="screen" id="screen-4-2">
+    <h2 class="screen-heading animate-in">系统提示词 — 给 AI 的剧本</h2>
+
+    <div class="module-content">
+      <p class="animate-in"><span class="term" data-definition="系统提示词是发送给 AI 模型的第一条指令，用来设定 AI 的角色、行为规则和任务目标。用户看不到这条指令">系统提示词</span>就像导演在开拍前给演员的剧本 — 告诉 AI 它是谁、要做什么、怎么做。写得好，AI 表现就好；写得差，AI 就会跑偏。</p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <pre><code>const systemPrompt = `你是一位资深职业咨询顾问。
+你的任务是通过访谈了解用户的职业情况。
+请围绕以下主题提问：
+1. 日常工作内容和职责
+2. 核心能力和技能水平
+3. 工作中的挑战和痛点
+4. 职业期望和发展方向
+5. 行业趋势的看法
+
+每次只问一个问题，语气专业友好。
+当已充分了解后，以"[访谈结束]"结尾。`;</code></pre>
+        </div>
+        <div class="translation-lines">
+          <div class="tl">
+            <span class="translation-label">第 1 行</span>
+            <span class="translation-english">告诉 AI 它扮演什么角色 — 一位资深职业咨询顾问</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 2 行</span>
+            <span class="translation-english">明确任务：通过访谈了解用户</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 3-8 行</span>
+            <span class="translation-english">给出 5 个提问方向，确保全面覆盖</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 10 行</span>
+            <span class="translation-english">设定行为规范：一次一个问题，语气友好</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 11 行</span>
+            <span class="translation-english">定义结束信号：用特殊标记告诉前端访谈完了</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-accent animate-in">
+        <p>系统提示词是 AI 应用最核心的部分之一。它就像给演员的剧本 — 写得好，AI 表现就好；写得差，AI 就会跑偏。这就是为什么"<span class="term" data-definition="提示词工程是设计和优化发送给 AI 的指令的技能，目标是让 AI 给出更准确、更有用的回答">提示词工程</span>"是一个重要技能。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 3: Group Chat — 前端和后端的对话 =========== -->
+  <div class="screen" id="screen-4-3">
+    <h2 class="screen-heading animate-in">前端和后端的对话</h2>
+
+    <div class="module-content">
+      <p class="animate-in">让我们用一段"群聊"来还原一次完整的访谈 API 调用过程，看看浏览器、API 路由和 MiniMax 之间是怎么配合的。</p>
+
+      <div class="chat-window animate-in" id="chat-module4">
+        <div class="chat-messages">
+
+          <div class="chat-message" data-sender="browser" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-1)">浏</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">浏览器</span>
+              <p>用户回答了一个问题，我把 <span class="term" data-definition="formData 是表单页收集的用户基本信息，包括岗位、行业、职级等 6 个字段">formData</span> 和聊天记录打包发给你。</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-sender="api" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">路</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">API 路由</span>
+              <p>收到。让我把系统提示词、用户背景信息和对话历史组装好。</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-sender="api" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">路</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">API 路由</span>
+              <p>好了，打包完成。发给 MiniMax，<span class="term" data-definition="温度（temperature）控制 AI 回复的随机程度。0 表示完全确定性，1 表示最大随机性。0.7 是一个平衡创造力和稳定性的常用值">温度</span>设 0.7，最多 500 个 <span class="term" data-definition="Token 是 AI 处理文本的基本单位，大约相当于一个汉字或半个英文单词。限制 token 数可以控制回复长度和费用">token</span>。</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-sender="minimax" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-3)">M</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">MiniMax</span>
+              <p>&lt;think&gt;用户是产品经理...&lt;/think&gt; 请问您在日常工作中最大的挑战是什么？</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-sender="api" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">路</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">API 路由</span>
+              <p>等等，回复里有<span class="term" data-definition="&lt;think&gt; 标签是某些 AI 模型在生成回复时展示内部推理过程的标记，属于模型的'草稿纸'，不应展示给最终用户">思考过程标签</span>，我得清理掉，只保留正式回答。</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-sender="api" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">路</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">API 路由</span>
+              <p>检查一下有没有 <code>[访谈结束]</code> 标记... 没有，说明还没聊完。</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-sender="browser" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-1)">浏</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">浏览器</span>
+              <p>收到干净的回复了！显示给用户，等待下一轮回答。</p>
+            </div>
+          </div>
+
+          <div class="chat-typing" style="display:none">
+            <div class="chat-avatar" id="chat-module4-typing-avatar" style="background: var(--color-actor-1)">浏</div>
+            <div class="chat-typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-controls">
+          <button class="btn chat-next-btn">下一条 ▶</button>
+          <button class="btn chat-all-btn">播放全部 ⏩</button>
+          <button class="btn chat-reset-btn">重置 ↺</button>
+          <span class="chat-progress">0 / 7 messages</span>
+        </div>
+      </div>
+
+      <div class="callout callout-info animate-in">
+        <p>注意 API 路由扮演了多少角色 — 它不只是简单地转发消息，还负责组装、清理和检查。这就是"翻译官"的价值。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 4: 报告生成 — JSON 的魔法 =========== -->
+  <div class="screen" id="screen-4-4">
+    <h2 class="screen-heading animate-in">报告生成 — JSON 的魔法</h2>
+
+    <div class="module-content">
+      <p class="animate-in">访谈结束后，另一个 API 路由 <code>/api/report</code> 负责生成报告。它要求 AI 把分析结果以 <span class="term" data-definition="JSON（JavaScript Object Notation）是一种通用的数据格式，用键值对来描述结构化信息，程序和人都能读懂">JSON</span> 格式返回 — 这样前端才能用图表展示。</p>
+
+      <div class="badge-list animate-in">
+        <div class="badge-item">
+          <span class="badge-code">meta</span>
+          <span class="badge-desc">报告元信息（标题、日期）</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">summary</span>
+          <span class="badge-desc">一段话的定位总结</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">jobOverview</span>
+          <span class="badge-desc">职责分布（3-5 项，权重加起来 = 100）</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">competencyProfile</span>
+          <span class="badge-desc">能力画像（5 个维度，<span class="term" data-definition="雷达图是一种用多角形展示多维度数据的图表，每个角代表一个维度，数值越大离中心越远">雷达图</span>数据）</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">developmentPath</span>
+          <span class="badge-desc">发展路径（向上/横向/短期/中期建议）</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">supplementary</span>
+          <span class="badge-desc">薪资范围（低/中/高）+ 对标岗位</span>
+        </div>
+      </div>
+
+      <p class="animate-in">但 AI 返回的文本不一定完全"干净"，有时候会多出代码块标记。所以需要一段清理代码：</p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <pre><code>let content = response.choices[0]
+  .message.content || "";
+content = content
+  .replace(/```json\n?/g, "")
+  .replace(/```\n?/g, "");
+const reportBody = JSON.parse(content);</code></pre>
+        </div>
+        <div class="translation-lines">
+          <div class="tl">
+            <span class="translation-label">第 1-2 行</span>
+            <span class="translation-english">从 AI 的回复中取出内容</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 3-5 行</span>
+            <span class="translation-english">有时 AI 会用代码块标记包裹 JSON，需要去掉这些标记</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 6 行</span>
+            <span class="translation-english">清理干净后，把文本转成程序能理解的<span class="term" data-definition="结构化数据是按照固定格式组织的数据，程序可以直接读取和使用其中的每个字段，而不用猜测内容的含义">结构化数据</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-warning animate-in">
+        <p>AI 的输出并不总是完美的 — 它可能多加标记、格式不对、甚至返回无效的 JSON。所以"清理和修复 AI 输出"是 AI 应用开发中的常见工作。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 5: 小测验 =========== -->
+  <div class="screen" id="screen-4-5">
+    <h2 class="screen-heading animate-in">小测验</h2>
+
+    <div class="module-content">
+      <div class="quiz-container animate-in" id="quiz-module4">
+
+        <!-- Question 1 -->
+        <div class="quiz-question-block" data-correct="B">
+          <p class="quiz-question">Q1：如果 AI 在访谈中总是问重复的问题，你最应该修改什么？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：前端的聊天界面样式</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：API 路由中的系统提示词</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：MiniMax 的 API 密钥</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：sessionStorage 的存储方式</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="quiz-question-block" data-correct="B">
+          <p class="quiz-question">Q2：你发现生成的报告中，薪资数据经常不准确。作为排查的第一步，你会？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：换一个 AI 模型</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：检查报告 API 的系统提示词，看对薪资的要求是否够具体</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：修改前端的图表组件</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：增加更多的表单字段</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- Question 3 -->
+        <div class="quiz-question-block" data-correct="B">
+          <p class="quiz-question">Q3：为什么 API 路由要清理 AI 回复中的 &lt;think&gt; 标签？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：这些标签会让页面崩溃</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：这是 AI 模型的内部思考过程，不应该展示给用户</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：这些标签会占用太多存储空间</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：这是一种安全漏洞</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module4')">检查答案</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module4')">重新作答</button>
+      </div>
+    </div>
+  </div>
+
+</section>
+<section class="module" id="module-5">
+
+  <!-- =========== SCREEN 1: 动画的秘密 — Framer Motion =========== -->
+  <div class="screen" id="screen-5-1">
+    <div class="module-header animate-in">
+      <span class="module-number">模块 5</span>
+      <h1 class="module-title">让一切动起来</h1>
+      <p class="module-subtitle">动画、图表、PDF 导出与设计模式 — 舞台灯光师的艺术</p>
+    </div>
+
+    <div class="module-content">
+      <div class="callout callout-accent animate-in">
+        <p>动画和视觉效果就像舞台灯光：戏（功能）没有灯光也能演，但好的灯光能把体验从"还行"变成"哇塞"。代码是剧本，动画就是灯光设计。</p>
+      </div>
+
+      <h2 class="screen-heading animate-in">动画的秘密 — Framer Motion</h2>
+
+      <p class="animate-in">打开这个应用的首页，你会看到文字优雅地浮现、数字自动跳动、卡片错落有致地出现。这些不是魔法——它们是用代码精心编排的"灯光效果"。</p>
+
+      <div class="pattern-cards animate-in">
+        <div class="pattern-card">
+          <div class="pattern-icon">⬆️</div>
+          <h3 class="pattern-title">fadeUp</h3>
+          <p class="pattern-desc">从下往上浮现（文字、标题常用）</p>
+        </div>
+        <div class="pattern-card">
+          <div class="pattern-icon">🔍</div>
+          <h3 class="pattern-title">scaleReveal</h3>
+          <p class="pattern-desc">从小变大出现（卡片、图表常用）</p>
+        </div>
+        <div class="pattern-card">
+          <div class="pattern-icon">🔢</div>
+          <h3 class="pattern-title">AnimatedCounter</h3>
+          <p class="pattern-desc">数字从 0 跳到目标值（统计数据常用）</p>
+        </div>
+        <div class="pattern-card">
+          <div class="pattern-icon">🎭</div>
+          <h3 class="pattern-title">stagger</h3>
+          <p class="pattern-desc">子元素依次出场（列表项常用）</p>
+        </div>
+      </div>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <pre><code><span class="code-keyword">const</span> <span class="code-function">fadeUp</span> <span class="code-operator">=</span> {
+  <span class="code-property">hidden</span>: { <span class="code-property">opacity</span>: <span class="code-number">0</span>, <span class="code-property">y</span>: <span class="code-number">20</span> },
+  <span class="code-property">visible</span>: {
+    <span class="code-property">opacity</span>: <span class="code-number">1</span>,
+    <span class="code-property">y</span>: <span class="code-number">0</span>,
+    <span class="code-property">transition</span>: {
+      <span class="code-property">duration</span>: <span class="code-number">0.6</span>,
+      <span class="code-property">ease</span>: [<span class="code-number">0.22</span>, <span class="code-number">1</span>, <span class="code-number">0.36</span>, <span class="code-number">1</span>]
+    }
+  }
+};</code></pre>
+        </div>
+        <div class="translation-lines">
+          <div class="tl">
+            <span class="translation-label">第 1 行</span>
+            <span class="translation-english">定义一个<span class="term" data-definition="一组预设好的动画参数，告诉元素从什么状态变到什么状态">动画效果</span>叫 fadeUp...</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 2 行</span>
+            <span class="translation-english">隐藏状态：完全透明（<span class="term" data-definition="透明度，0 表示完全透明看不见，1 表示完全不透明">opacity</span> 为 0），位置往下偏 20 像素</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 3-5 行</span>
+            <span class="translation-english">可见状态：完全显示（opacity 为 1），回到原来的位置（y 为 0）</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 6-7 行</span>
+            <span class="translation-english">过渡设置：花 0.6 秒完成</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 8 行</span>
+            <span class="translation-english">使用自定义<span class="term" data-definition="控制动画速度变化的曲线，决定动画是匀速、先快后慢还是先慢后快">缓动曲线</span> — 开始快、结束慢，看起来更自然</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 2: 加载页的精妙设计 — 并行操作 =========== -->
+  <div class="screen" id="screen-5-2">
+    <h2 class="screen-heading animate-in">加载页的精妙设计 — 并行操作</h2>
+
+    <div class="module-content">
+      <p class="animate-in">加载页是整个应用最巧妙的设计之一：它同时运行动画和 API 调用，用视觉效果掩盖等待时间。</p>
+
+      <div class="step-cards animate-in">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>开始</h3>
+            <p>同时启动两个任务 — 就像左手画圆、右手画方，两件事同时进行。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>任务 A（前台）</h3>
+            <p>播放 8 步动画，总共约 38 秒。用户看到的是精心设计的进度展示。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>任务 B（后台）</h3>
+            <p>调用 AI 生成报告，时间不确定。用户看不到这个过程。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>等待</h3>
+            <p>两个任务都完成后才跳转到报告页 — 缺一不可。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>保险机制</h3>
+            <p>如果动画放完了 API 还没好，显示"正在等待..." — 不让用户干等着不知道发生了什么。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-accent animate-in">
+        <p><span class="term" data-definition="同时执行多个任务，而不是等一个完成了再做下一个。就像厨师在等水烧开的时候切菜">并行操作</span>是软件工程中非常重要的概念。就像厨师可以在等水烧开的时候切菜一样，程序也可以同时做多件事。这里用动画掩盖了等待时间，让用户感觉一切都在有序进行。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 3: 数据可视化 — Recharts 图表 =========== -->
+  <div class="screen" id="screen-5-3">
+    <h2 class="screen-heading animate-in">数据可视化 — Recharts 图表</h2>
+
+    <div class="module-content">
+      <p class="animate-in">报告页里有两种图表，它们让枯燥的数据变成直观的视觉呈现。这两种图表都来自 <span class="term" data-definition="一个基于 React 的图表库，封装了常用图表类型，用几行代码就能画出专业的图表">Recharts</span> 库。</p>
+
+      <div class="icon-rows animate-in">
+        <div class="icon-row">
+          <div class="icon-circle">🕸️</div>
+          <div>
+            <h3><span class="term" data-definition="一种多维数据图表，用多个从中心发散的轴来展示不同维度的数据，整体形状像蜘蛛网">RadarChart</span>（雷达图）</h3>
+            <p>展示 5 个能力维度的得分，像蜘蛛网一样。每个角代表一个维度，线条围出的面积越大，综合能力越强。</p>
+          </div>
+        </div>
+        <div class="icon-row">
+          <div class="icon-circle">🥧</div>
+          <div>
+            <h3><span class="term" data-definition="一种用扇形面积表示各部分占整体比例的图表，整体是一个圆形，每块代表一个类别">PieChart</span>（饼图）</h3>
+            <p>展示职责分布的权重，每块大小代表占比。一眼就能看出哪部分最重要。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <pre><code><span class="code-tag">&lt;ResponsiveContainer</span> <span class="code-property">width</span>=<span class="code-string">"100%"</span> <span class="code-property">height</span>={<span class="code-number">300</span>}<span class="code-tag">&gt;</span>
+  <span class="code-tag">&lt;RadarChart</span> <span class="code-property">data</span>={<span class="code-function">dimensions</span>}<span class="code-tag">&gt;</span>
+    <span class="code-tag">&lt;PolarGrid /&gt;</span>
+    <span class="code-tag">&lt;PolarAngleAxis</span> <span class="code-property">dataKey</span>=<span class="code-string">"name"</span> <span class="code-tag">/&gt;</span>
+    <span class="code-tag">&lt;Radar</span> <span class="code-property">dataKey</span>=<span class="code-string">"score"</span>
+      <span class="code-property">fill</span>=<span class="code-string">"#3b82f6"</span>
+      <span class="code-property">fillOpacity</span>={<span class="code-number">0.3</span>} <span class="code-tag">/&gt;</span>
+  <span class="code-tag">&lt;/RadarChart&gt;</span>
+<span class="code-tag">&lt;/ResponsiveContainer&gt;</span></code></pre>
+        </div>
+        <div class="translation-lines">
+          <div class="tl">
+            <span class="translation-label">第 1 行</span>
+            <span class="translation-english">创建一个自适应大小的容器，高 300 像素</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 2 行</span>
+            <span class="translation-english">在容器里放一个<span class="term" data-definition="雷达图组件，接收一个数据数组，自动把数据画成蜘蛛网形状的图表">雷达图</span>，数据来自 dimensions <span class="term" data-definition="一组有序的数据集合，用方括号 [] 表示，比如 [{name: '沟通', score: 85}, {name: '技术', score: 90}]">数组</span></span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 3 行</span>
+            <span class="translation-english">画网格线（蜘蛛网的骨架）</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 4 行</span>
+            <span class="translation-english">在每个角标上维度名称（如"沟通能力"、"技术能力"）</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 5-7 行</span>
+            <span class="translation-english">画数据区域，蓝色填充，30% 透明度</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 4: PDF 导出 — 把网页变成文件 =========== -->
+  <div class="screen" id="screen-5-4">
+    <h2 class="screen-heading animate-in">PDF 导出 — 把网页变成文件</h2>
+
+    <div class="module-content">
+      <p class="animate-in">报告生成后，用户可以导出 PDF 文件。这个过程用到两个工具：<span class="term" data-definition="一个 JavaScript 库，能把网页上的 HTML 元素截图成一张画布（canvas），相当于给网页拍照">html2canvas</span> 负责"拍照"，<span class="term" data-definition="一个 JavaScript 库，能创建 PDF 文件，可以往里面添加图片、文字等内容">jsPDF</span> 负责"装进相册"。</p>
+
+      <div class="flow-steps animate-in">
+        <div class="flow-step">
+          <div class="flow-step-num">1</div>
+          <span>用户点击"导出 PDF"</span>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-step-num">2</div>
+          <span>html2canvas 把报告 <span class="term" data-definition="Document Object Model，浏览器把网页 HTML 解析成的树形结构，JavaScript 通过它来操作页面元素">DOM</span> 截图成画布</span>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-step-num">3</div>
+          <span>计算 A4 纸需要几页</span>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-step-num">4</div>
+          <span>jsPDF 把画布切片放入每一页</span>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-step-num">5</div>
+          <span>自动下载 PDF 文件</span>
+        </div>
+      </div>
+
+      <h3 class="animate-in">找 Bug 挑战</h3>
+      <p class="animate-in">下面的 PDF 导出代码有一个隐藏的 bug，点击你认为有问题的那一行。</p>
+
+      <div class="bug-challenge animate-in">
+        <h3>这段代码能导出 PDF，但有一个问题...</h3>
+        <div class="bug-code">
+          <div class="bug-line" onclick="checkBugLine(this, false)" data-hint="这行没问题 — 正常截图">
+            <span class="line-num">1</span>
+            <code><span class="code-keyword">const</span> canvas <span class="code-operator">=</span> <span class="code-keyword">await</span> <span class="code-function">html2canvas</span>(element);</code>
+          </div>
+          <div class="bug-line" onclick="checkBugLine(this, false)" data-hint="A4 宽度是 210mm，没问题">
+            <span class="line-num">2</span>
+            <code><span class="code-keyword">const</span> imgWidth <span class="code-operator">=</span> <span class="code-number">210</span>;</code>
+          </div>
+          <div class="bug-line" onclick="checkBugLine(this, false)" data-hint="A4 高度是 295mm，没问题">
+            <span class="line-num">3</span>
+            <code><span class="code-keyword">const</span> pageHeight <span class="code-operator">=</span> <span class="code-number">295</span>;</code>
+          </div>
+          <div class="bug-line" onclick="checkBugLine(this, false)" data-hint="比例计算没问题">
+            <span class="line-num">4</span>
+            <code><span class="code-keyword">const</span> imgHeight <span class="code-operator">=</span> canvas.height <span class="code-operator">*</span> imgWidth <span class="code-operator">/</span> canvas.width;</code>
+          </div>
+          <div class="bug-line" onclick="checkBugLine(this, false)" data-hint="创建 PDF 文档，没问题">
+            <span class="line-num">5</span>
+            <code><span class="code-keyword">const</span> pdf <span class="code-operator">=</span> <span class="code-keyword">new</span> <span class="code-function">jsPDF</span>(<span class="code-string">"p"</span>, <span class="code-string">"mm"</span>, <span class="code-string">"a4"</span>);</code>
+          </div>
+          <div class="bug-line" onclick="checkBugLine(this, true)" data-explanation="找到了！如果报告内容超过一页 A4 纸的高度，这行只会把所有内容压缩到一页里。正确的做法是检查 imgHeight 是否大于 pageHeight，如果是，就循环添加多页。实际代码中就是这样处理的 — 用一个 while 循环逐页添加。">
+            <span class="line-num">6</span>
+            <code>pdf.<span class="code-function">addImage</span>(canvas, <span class="code-string">"PNG"</span>, <span class="code-number">0</span>, <span class="code-number">0</span>, imgWidth, imgHeight);</code>
+          </div>
+          <div class="bug-line" onclick="checkBugLine(this, false)" data-hint="保存文件，没问题">
+            <span class="line-num">7</span>
+            <code>pdf.<span class="code-function">save</span>(<span class="code-string">"report.pdf"</span>);</code>
+          </div>
+        </div>
+        <div class="bug-feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 5: 小测验 =========== -->
+  <div class="screen" id="screen-5-5">
+    <h2 class="screen-heading animate-in">小测验</h2>
+
+    <div class="module-content">
+      <div class="quiz-container animate-in" id="quiz-module5">
+
+        <!-- Question 1 -->
+        <div class="quiz-question-block" data-correct="C">
+          <p class="quiz-question">Q1：为什么加载页要同时运行动画和 API 调用，而不是先调 API 再放动画？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：因为 API 调用很快不需要等</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：为了节省服务器资源</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：为了用动画掩盖等待时间，提升用户体验</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：因为代码写起来更简单</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="quiz-question-block" data-correct="B">
+          <p class="quiz-question">Q2：你想在报告页添加一个柱状图来展示薪资对比，你需要？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：安装一个新的图表库</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：用 Recharts 的 BarChart 组件，项目已经有这个库了</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：用 CSS 手动画柱子</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：用截图插入静态图片</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- Question 3 -->
+        <div class="quiz-question-block" data-correct="C">
+          <p class="quiz-question">Q3：如果用户反馈"导出的 PDF 只有第一页有内容"，最可能的原因是？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：浏览器不支持 PDF</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：html2canvas 截图失败</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：多页分割逻辑有问题，没有正确循环添加后续页面</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：报告内容太少不够一页</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module5')">检查答案</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module5')">重新作答</button>
+      </div>
+    </div>
+  </div>
+
+</section>
+  </main>
+
+</body>
+</html>

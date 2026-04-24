@@ -1,0 +1,355 @@
+<section class="module" id="module-5">
+
+  <!-- =========== SCREEN 1: 动画的秘密 — Framer Motion =========== -->
+  <div class="screen" id="screen-5-1">
+    <div class="module-header animate-in">
+      <span class="module-number">模块 5</span>
+      <h1 class="module-title">让一切动起来</h1>
+      <p class="module-subtitle">动画、图表、PDF 导出与设计模式 — 舞台灯光师的艺术</p>
+    </div>
+
+    <div class="module-content">
+      <div class="callout callout-accent animate-in">
+        <p>动画和视觉效果就像舞台灯光：戏（功能）没有灯光也能演，但好的灯光能把体验从"还行"变成"哇塞"。代码是剧本，动画就是灯光设计。</p>
+      </div>
+
+      <h2 class="screen-heading animate-in">动画的秘密 — Framer Motion</h2>
+
+      <p class="animate-in">打开这个应用的首页，你会看到文字优雅地浮现、数字自动跳动、卡片错落有致地出现。这些不是魔法——它们是用代码精心编排的"灯光效果"。</p>
+
+      <div class="pattern-cards animate-in">
+        <div class="pattern-card">
+          <div class="pattern-icon">⬆️</div>
+          <h3 class="pattern-title">fadeUp</h3>
+          <p class="pattern-desc">从下往上浮现（文字、标题常用）</p>
+        </div>
+        <div class="pattern-card">
+          <div class="pattern-icon">🔍</div>
+          <h3 class="pattern-title">scaleReveal</h3>
+          <p class="pattern-desc">从小变大出现（卡片、图表常用）</p>
+        </div>
+        <div class="pattern-card">
+          <div class="pattern-icon">🔢</div>
+          <h3 class="pattern-title">AnimatedCounter</h3>
+          <p class="pattern-desc">数字从 0 跳到目标值（统计数据常用）</p>
+        </div>
+        <div class="pattern-card">
+          <div class="pattern-icon">🎭</div>
+          <h3 class="pattern-title">stagger</h3>
+          <p class="pattern-desc">子元素依次出场（列表项常用）</p>
+        </div>
+      </div>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <pre><code><span class="code-keyword">const</span> <span class="code-function">fadeUp</span> <span class="code-operator">=</span> {
+  <span class="code-property">hidden</span>: { <span class="code-property">opacity</span>: <span class="code-number">0</span>, <span class="code-property">y</span>: <span class="code-number">20</span> },
+  <span class="code-property">visible</span>: {
+    <span class="code-property">opacity</span>: <span class="code-number">1</span>,
+    <span class="code-property">y</span>: <span class="code-number">0</span>,
+    <span class="code-property">transition</span>: {
+      <span class="code-property">duration</span>: <span class="code-number">0.6</span>,
+      <span class="code-property">ease</span>: [<span class="code-number">0.22</span>, <span class="code-number">1</span>, <span class="code-number">0.36</span>, <span class="code-number">1</span>]
+    }
+  }
+};</code></pre>
+        </div>
+        <div class="translation-lines">
+          <div class="tl">
+            <span class="translation-label">第 1 行</span>
+            <span class="translation-english">定义一个<span class="term" data-definition="一组预设好的动画参数，告诉元素从什么状态变到什么状态">动画效果</span>叫 fadeUp...</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 2 行</span>
+            <span class="translation-english">隐藏状态：完全透明（<span class="term" data-definition="透明度，0 表示完全透明看不见，1 表示完全不透明">opacity</span> 为 0），位置往下偏 20 像素</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 3-5 行</span>
+            <span class="translation-english">可见状态：完全显示（opacity 为 1），回到原来的位置（y 为 0）</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 6-7 行</span>
+            <span class="translation-english">过渡设置：花 0.6 秒完成</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 8 行</span>
+            <span class="translation-english">使用自定义<span class="term" data-definition="控制动画速度变化的曲线，决定动画是匀速、先快后慢还是先慢后快">缓动曲线</span> — 开始快、结束慢，看起来更自然</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 2: 加载页的精妙设计 — 并行操作 =========== -->
+  <div class="screen" id="screen-5-2">
+    <h2 class="screen-heading animate-in">加载页的精妙设计 — 并行操作</h2>
+
+    <div class="module-content">
+      <p class="animate-in">加载页是整个应用最巧妙的设计之一：它同时运行动画和 API 调用，用视觉效果掩盖等待时间。</p>
+
+      <div class="step-cards animate-in">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>开始</h3>
+            <p>同时启动两个任务 — 就像左手画圆、右手画方，两件事同时进行。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>任务 A（前台）</h3>
+            <p>播放 8 步动画，总共约 38 秒。用户看到的是精心设计的进度展示。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>任务 B（后台）</h3>
+            <p>调用 AI 生成报告，时间不确定。用户看不到这个过程。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>等待</h3>
+            <p>两个任务都完成后才跳转到报告页 — 缺一不可。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>保险机制</h3>
+            <p>如果动画放完了 API 还没好，显示"正在等待..." — 不让用户干等着不知道发生了什么。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-accent animate-in">
+        <p><span class="term" data-definition="同时执行多个任务，而不是等一个完成了再做下一个。就像厨师在等水烧开的时候切菜">并行操作</span>是软件工程中非常重要的概念。就像厨师可以在等水烧开的时候切菜一样，程序也可以同时做多件事。这里用动画掩盖了等待时间，让用户感觉一切都在有序进行。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 3: 数据可视化 — Recharts 图表 =========== -->
+  <div class="screen" id="screen-5-3">
+    <h2 class="screen-heading animate-in">数据可视化 — Recharts 图表</h2>
+
+    <div class="module-content">
+      <p class="animate-in">报告页里有两种图表，它们让枯燥的数据变成直观的视觉呈现。这两种图表都来自 <span class="term" data-definition="一个基于 React 的图表库，封装了常用图表类型，用几行代码就能画出专业的图表">Recharts</span> 库。</p>
+
+      <div class="icon-rows animate-in">
+        <div class="icon-row">
+          <div class="icon-circle">🕸️</div>
+          <div>
+            <h3><span class="term" data-definition="一种多维数据图表，用多个从中心发散的轴来展示不同维度的数据，整体形状像蜘蛛网">RadarChart</span>（雷达图）</h3>
+            <p>展示 5 个能力维度的得分，像蜘蛛网一样。每个角代表一个维度，线条围出的面积越大，综合能力越强。</p>
+          </div>
+        </div>
+        <div class="icon-row">
+          <div class="icon-circle">🥧</div>
+          <div>
+            <h3><span class="term" data-definition="一种用扇形面积表示各部分占整体比例的图表，整体是一个圆形，每块代表一个类别">PieChart</span>（饼图）</h3>
+            <p>展示职责分布的权重，每块大小代表占比。一眼就能看出哪部分最重要。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <pre><code><span class="code-tag">&lt;ResponsiveContainer</span> <span class="code-property">width</span>=<span class="code-string">"100%"</span> <span class="code-property">height</span>={<span class="code-number">300</span>}<span class="code-tag">&gt;</span>
+  <span class="code-tag">&lt;RadarChart</span> <span class="code-property">data</span>={<span class="code-function">dimensions</span>}<span class="code-tag">&gt;</span>
+    <span class="code-tag">&lt;PolarGrid /&gt;</span>
+    <span class="code-tag">&lt;PolarAngleAxis</span> <span class="code-property">dataKey</span>=<span class="code-string">"name"</span> <span class="code-tag">/&gt;</span>
+    <span class="code-tag">&lt;Radar</span> <span class="code-property">dataKey</span>=<span class="code-string">"score"</span>
+      <span class="code-property">fill</span>=<span class="code-string">"#3b82f6"</span>
+      <span class="code-property">fillOpacity</span>={<span class="code-number">0.3</span>} <span class="code-tag">/&gt;</span>
+  <span class="code-tag">&lt;/RadarChart&gt;</span>
+<span class="code-tag">&lt;/ResponsiveContainer&gt;</span></code></pre>
+        </div>
+        <div class="translation-lines">
+          <div class="tl">
+            <span class="translation-label">第 1 行</span>
+            <span class="translation-english">创建一个自适应大小的容器，高 300 像素</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 2 行</span>
+            <span class="translation-english">在容器里放一个<span class="term" data-definition="雷达图组件，接收一个数据数组，自动把数据画成蜘蛛网形状的图表">雷达图</span>，数据来自 dimensions <span class="term" data-definition="一组有序的数据集合，用方括号 [] 表示，比如 [{name: '沟通', score: 85}, {name: '技术', score: 90}]">数组</span></span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 3 行</span>
+            <span class="translation-english">画网格线（蜘蛛网的骨架）</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 4 行</span>
+            <span class="translation-english">在每个角标上维度名称（如"沟通能力"、"技术能力"）</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 5-7 行</span>
+            <span class="translation-english">画数据区域，蓝色填充，30% 透明度</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 4: PDF 导出 — 把网页变成文件 =========== -->
+  <div class="screen" id="screen-5-4">
+    <h2 class="screen-heading animate-in">PDF 导出 — 把网页变成文件</h2>
+
+    <div class="module-content">
+      <p class="animate-in">报告生成后，用户可以导出 PDF 文件。这个过程用到两个工具：<span class="term" data-definition="一个 JavaScript 库，能把网页上的 HTML 元素截图成一张画布（canvas），相当于给网页拍照">html2canvas</span> 负责"拍照"，<span class="term" data-definition="一个 JavaScript 库，能创建 PDF 文件，可以往里面添加图片、文字等内容">jsPDF</span> 负责"装进相册"。</p>
+
+      <div class="flow-steps animate-in">
+        <div class="flow-step">
+          <div class="flow-step-num">1</div>
+          <span>用户点击"导出 PDF"</span>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-step-num">2</div>
+          <span>html2canvas 把报告 <span class="term" data-definition="Document Object Model，浏览器把网页 HTML 解析成的树形结构，JavaScript 通过它来操作页面元素">DOM</span> 截图成画布</span>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-step-num">3</div>
+          <span>计算 A4 纸需要几页</span>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-step-num">4</div>
+          <span>jsPDF 把画布切片放入每一页</span>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-step-num">5</div>
+          <span>自动下载 PDF 文件</span>
+        </div>
+      </div>
+
+      <h3 class="animate-in">找 Bug 挑战</h3>
+      <p class="animate-in">下面的 PDF 导出代码有一个隐藏的 bug，点击你认为有问题的那一行。</p>
+
+      <div class="bug-challenge animate-in">
+        <h3>这段代码能导出 PDF，但有一个问题...</h3>
+        <div class="bug-code">
+          <div class="bug-line" onclick="checkBugLine(this, false)" data-hint="这行没问题 — 正常截图">
+            <span class="line-num">1</span>
+            <code><span class="code-keyword">const</span> canvas <span class="code-operator">=</span> <span class="code-keyword">await</span> <span class="code-function">html2canvas</span>(element);</code>
+          </div>
+          <div class="bug-line" onclick="checkBugLine(this, false)" data-hint="A4 宽度是 210mm，没问题">
+            <span class="line-num">2</span>
+            <code><span class="code-keyword">const</span> imgWidth <span class="code-operator">=</span> <span class="code-number">210</span>;</code>
+          </div>
+          <div class="bug-line" onclick="checkBugLine(this, false)" data-hint="A4 高度是 295mm，没问题">
+            <span class="line-num">3</span>
+            <code><span class="code-keyword">const</span> pageHeight <span class="code-operator">=</span> <span class="code-number">295</span>;</code>
+          </div>
+          <div class="bug-line" onclick="checkBugLine(this, false)" data-hint="比例计算没问题">
+            <span class="line-num">4</span>
+            <code><span class="code-keyword">const</span> imgHeight <span class="code-operator">=</span> canvas.height <span class="code-operator">*</span> imgWidth <span class="code-operator">/</span> canvas.width;</code>
+          </div>
+          <div class="bug-line" onclick="checkBugLine(this, false)" data-hint="创建 PDF 文档，没问题">
+            <span class="line-num">5</span>
+            <code><span class="code-keyword">const</span> pdf <span class="code-operator">=</span> <span class="code-keyword">new</span> <span class="code-function">jsPDF</span>(<span class="code-string">"p"</span>, <span class="code-string">"mm"</span>, <span class="code-string">"a4"</span>);</code>
+          </div>
+          <div class="bug-line" onclick="checkBugLine(this, true)" data-explanation="找到了！如果报告内容超过一页 A4 纸的高度，这行只会把所有内容压缩到一页里。正确的做法是检查 imgHeight 是否大于 pageHeight，如果是，就循环添加多页。实际代码中就是这样处理的 — 用一个 while 循环逐页添加。">
+            <span class="line-num">6</span>
+            <code>pdf.<span class="code-function">addImage</span>(canvas, <span class="code-string">"PNG"</span>, <span class="code-number">0</span>, <span class="code-number">0</span>, imgWidth, imgHeight);</code>
+          </div>
+          <div class="bug-line" onclick="checkBugLine(this, false)" data-hint="保存文件，没问题">
+            <span class="line-num">7</span>
+            <code>pdf.<span class="code-function">save</span>(<span class="code-string">"report.pdf"</span>);</code>
+          </div>
+        </div>
+        <div class="bug-feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 5: 小测验 =========== -->
+  <div class="screen" id="screen-5-5">
+    <h2 class="screen-heading animate-in">小测验</h2>
+
+    <div class="module-content">
+      <div class="quiz-container animate-in" id="quiz-module5">
+
+        <!-- Question 1 -->
+        <div class="quiz-question-block" data-correct="C">
+          <p class="quiz-question">Q1：为什么加载页要同时运行动画和 API 调用，而不是先调 API 再放动画？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：因为 API 调用很快不需要等</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：为了节省服务器资源</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：为了用动画掩盖等待时间，提升用户体验</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：因为代码写起来更简单</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="quiz-question-block" data-correct="B">
+          <p class="quiz-question">Q2：你想在报告页添加一个柱状图来展示薪资对比，你需要？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：安装一个新的图表库</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：用 Recharts 的 BarChart 组件，项目已经有这个库了</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：用 CSS 手动画柱子</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：用截图插入静态图片</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- Question 3 -->
+        <div class="quiz-question-block" data-correct="C">
+          <p class="quiz-question">Q3：如果用户反馈"导出的 PDF 只有第一页有内容"，最可能的原因是？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：浏览器不支持 PDF</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：html2canvas 截图失败</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：多页分割逻辑有问题，没有正确循环添加后续页面</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：报告内容太少不够一页</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module5')">检查答案</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module5')">重新作答</button>
+      </div>
+    </div>
+  </div>
+
+</section>

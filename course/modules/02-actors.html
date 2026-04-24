@@ -1,0 +1,387 @@
+<section class="module" id="module-2">
+  <div class="module-content">
+
+    <!-- ── MODULE HEADER ─────────────────────────────────────── -->
+    <div class="module-header animate-in">
+      <span class="module-number">02</span>
+      <h2 class="module-title">认识项目的主角们</h2>
+      <p class="module-subtitle">把项目想象成一个电视剧剧组 — 导演安排场景，演员各司其职，幕后人员默默支撑。我们来认识每一位"剧组成员"。</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN 1 — 项目文件结构：谁住在哪里？
+         ══════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screen-2-1">
+      <h3 class="screen-heading animate-in">项目文件结构 — 谁住在哪里？</h3>
+
+      <p class="animate-in">每个文件都有自己的"家"。就像电视剧片场的不同区域，每个文件夹负责不同的工作。</p>
+
+      <div class="callout callout-accent animate-in">
+        <span class="callout-icon">🎬</span>
+        <div class="callout-content">
+          <span class="callout-title">剧组比喻</span>
+          <p><code>app/</code> 是导演安排的拍摄场景，<code>components/</code> 是道具库，<code>lib/</code> 是幕后工作人员。</p>
+        </div>
+      </div>
+
+      <div class="file-tree animate-in">
+        <!-- app/ -->
+        <div class="ft-folder">
+          <span class="ft-name">app/</span>
+          <span class="ft-desc">页面和<span class="term" data-definition="路由决定用户访问某个网址时看到哪个页面，就像导演安排每个场景在哪里拍">路由</span>（导演安排的场景）</span>
+          <div class="ft-children">
+            <div class="ft-file">
+              <span class="ft-name">page.tsx</span>
+              <span class="ft-desc">首页 — 用户进入应用的第一个画面</span>
+            </div>
+            <div class="ft-folder">
+              <span class="ft-name">form/</span>
+              <span class="ft-desc">表单页场景</span>
+              <div class="ft-children">
+                <div class="ft-file">
+                  <span class="ft-name">page.tsx</span>
+                  <span class="ft-desc">收集用户基本信息的表单</span>
+                </div>
+              </div>
+            </div>
+            <div class="ft-folder">
+              <span class="ft-name">interview/</span>
+              <span class="ft-desc">访谈页场景</span>
+              <div class="ft-children">
+                <div class="ft-file">
+                  <span class="ft-name">page.tsx</span>
+                  <span class="ft-desc">AI 聊天访谈界面</span>
+                </div>
+              </div>
+            </div>
+            <div class="ft-folder">
+              <span class="ft-name">loading/</span>
+              <span class="ft-desc">加载页场景</span>
+              <div class="ft-children">
+                <div class="ft-file">
+                  <span class="ft-name">page.tsx</span>
+                  <span class="ft-desc">等待报告生成时的动画页面</span>
+                </div>
+              </div>
+            </div>
+            <div class="ft-folder">
+              <span class="ft-name">report/</span>
+              <span class="ft-desc">报告页场景</span>
+              <div class="ft-children">
+                <div class="ft-file">
+                  <span class="ft-name">page.tsx</span>
+                  <span class="ft-desc">展示最终的职业定位报告</span>
+                </div>
+              </div>
+            </div>
+            <div class="ft-folder">
+              <span class="ft-name">api/interview/</span>
+              <span class="ft-desc">AI 访谈<span class="term" data-definition="后端是用户看不到的服务器部分，负责处理数据、调用 AI 等幕后工作">后端</span></span>
+              <div class="ft-children">
+                <div class="ft-file">
+                  <span class="ft-name">route.ts</span>
+                  <span class="ft-desc">处理 AI 对话的<span class="term" data-definition="API 是应用程序之间沟通的接口，就像餐厅的服务员在厨房和顾客之间传递信息">API</span> 逻辑</span>
+                </div>
+              </div>
+            </div>
+            <div class="ft-folder">
+              <span class="ft-name">api/report/</span>
+              <span class="ft-desc">报告生成后端</span>
+              <div class="ft-children">
+                <div class="ft-file">
+                  <span class="ft-name">route.ts</span>
+                  <span class="ft-desc">调用 AI 生成完整报告的 API 逻辑</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- components/ -->
+        <div class="ft-folder">
+          <span class="ft-name">components/</span>
+          <span class="ft-desc">可复用的 UI 零件（道具库）</span>
+          <div class="ft-children">
+            <div class="ft-folder">
+              <span class="ft-name">ui/</span>
+              <span class="ft-desc">基础<span class="term" data-definition="组件是页面上可以重复使用的小零件，比如按钮、输入框、对话框，就像乐高积木一样可以拼装">组件</span>（按钮、输入框等）</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- lib/ -->
+        <div class="ft-folder">
+          <span class="ft-name">lib/</span>
+          <span class="ft-desc">工具函数和类型（幕后工作人员）</span>
+          <div class="ft-children">
+            <div class="ft-file">
+              <span class="ft-name">minimax.ts</span>
+              <span class="ft-desc">AI 连接器 — 负责和 <span class="term" data-definition="MiniMax 是一个中国的 AI 大模型服务商，类似于 OpenAI，提供智能对话能力">MiniMax</span> AI 通信</span>
+            </div>
+            <div class="ft-file">
+              <span class="ft-name">types.ts</span>
+              <span class="ft-desc"><span class="term" data-definition="类型定义就像表格的表头，规定每一列应该填什么内容，防止填错">数据类型定义</span> — 规定数据的格式</span>
+            </div>
+            <div class="ft-file">
+              <span class="ft-name">form-options.ts</span>
+              <span class="ft-desc">表单选项数据 — 下拉菜单里的选项</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN 2 — 四个主要页面：舞台上的演员
+         ══════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screen-2-2">
+      <h3 class="screen-heading animate-in">四个主要页面 — 舞台上的演员</h3>
+
+      <p class="animate-in">这四个页面就是舞台上的主角，每个人有自己的戏份和专长。</p>
+
+      <div class="pattern-cards animate-in">
+        <!-- Card 1: 表单页 -->
+        <div class="pattern-card">
+          <div class="pattern-icon" style="background: var(--color-accent-light); color: var(--color-actor-1);">📋</div>
+          <div class="pattern-title">表单页 <code>form/</code></div>
+          <p class="pattern-desc">收集用户的 6 个基本信息。使用 <span class="term" data-definition="react-hook-form 是一个帮你轻松管理表单输入的工具库，自动处理用户填写、修改、提交等操作">react-hook-form</span> 管理输入，<span class="term" data-definition="Zod 是一个数据验证工具，帮你检查用户填的内容是否合格，比如邮箱格式对不对、必填项有没有填">Zod</span> 负责验证数据是否合格。</p>
+        </div>
+
+        <!-- Card 2: 访谈页 -->
+        <div class="pattern-card">
+          <div class="pattern-icon" style="background: var(--color-info-light); color: var(--color-actor-2);">💬</div>
+          <div class="pattern-title">访谈页 <code>interview/</code></div>
+          <p class="pattern-desc">聊天界面，AI 会问 3–5 个深入问题。支持<span class="term" data-definition="多轮对话指 AI 记住之前说过的话，根据上下文继续聊天，而不是每次都从头开始">多轮对话</span>，越聊越了解你。</p>
+        </div>
+
+        <!-- Card 3: 加载页 -->
+        <div class="pattern-card">
+          <div class="pattern-icon" style="background: #F0EBF8; color: var(--color-actor-3);">⏳</div>
+          <div class="pattern-title">加载页 <code>loading/</code></div>
+          <p class="pattern-desc">8 步动画让等待不无聊，同时后台<span class="term" data-definition="并行调用就是同时做多件事，而不是排队一件一件做，这样速度更快">并行调用</span> AI 生成报告。</p>
+        </div>
+
+        <!-- Card 4: 报告页 -->
+        <div class="pattern-card">
+          <div class="pattern-icon" style="background: #FDF5E5; color: var(--color-actor-4);">📊</div>
+          <div class="pattern-title">报告页 <code>report/</code></div>
+          <p class="pattern-desc">展示 7 个报告模块，包含<span class="term" data-definition="雷达图是一种多角形图表，用来展示多个维度的得分，像蜘蛛网一样">雷达图</span>、饼图，还能一键导出 <span class="term" data-definition="PDF 是一种通用文档格式，导出后可以打印或分享给别人">PDF</span>。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN 3 — Group Chat: 组件之间的对话
+         ══════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screen-2-3">
+      <h3 class="screen-heading animate-in">组件之间的对话 — 数据怎么传递？</h3>
+
+      <p class="animate-in">页面之间不能直接"说话"，它们通过 <span class="term" data-definition="sessionStorage 是浏览器提供的临时存储空间，关闭标签页就清空，就像一块临时白板">sessionStorage</span> 这个"信使"来传递数据。</p>
+
+      <div class="chat-window animate-in" id="chat-module2">
+        <div class="chat-messages">
+          <!-- Message 1 -->
+          <div class="chat-message" data-sender="form" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-1)">表</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">表单页</span>
+              <p>用户填完了！我把 formData 存到 sessionStorage 了。</p>
+            </div>
+          </div>
+
+          <!-- Message 2 -->
+          <div class="chat-message" data-sender="interview" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">访</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">访谈页</span>
+              <p>收到！我从 sessionStorage 读到了用户信息，开始和 AI 聊天。</p>
+            </div>
+          </div>
+
+          <!-- Message 3 -->
+          <div class="chat-message" data-sender="interview" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">访</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">访谈页</span>
+              <p>访谈结束了，我把聊天记录也存进 sessionStorage。</p>
+            </div>
+          </div>
+
+          <!-- Message 4 -->
+          <div class="chat-message" data-sender="loading" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-3)">加</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">加载页</span>
+              <p>我来了！一边放动画，一边让后端生成报告。</p>
+            </div>
+          </div>
+
+          <!-- Message 5 -->
+          <div class="chat-message" data-sender="loading" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-3)">加</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">加载页</span>
+              <p>报告生成好了！数据存进 sessionStorage，准备跳转。</p>
+            </div>
+          </div>
+
+          <!-- Message 6 -->
+          <div class="chat-message" data-sender="report" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-4)">报</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">报告页</span>
+              <p>完美！我从 sessionStorage 读出报告数据，开始渲染图表！</p>
+            </div>
+          </div>
+
+          <!-- Typing indicator -->
+          <div class="chat-typing" style="display:none">
+            <div class="chat-avatar" id="chat-module2-typing-avatar" style="background: var(--color-actor-1)">表</div>
+            <div class="chat-typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-controls">
+          <button class="btn chat-next-btn">下一条 ▶</button>
+          <button class="btn chat-all-btn">播放全部 ⏩</button>
+          <button class="btn chat-reset-btn">重置 ↺</button>
+          <span class="chat-progress">0 / 6 messages</span>
+        </div>
+      </div>
+
+      <div class="callout callout-info animate-in">
+        <span class="callout-icon">💡</span>
+        <div class="callout-content">
+          <span class="callout-title">为什么用 sessionStorage？</span>
+          <p>因为这些数据只在当前会话中需要，关闭浏览器就自动清除，不会永久存在用户电脑上。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN 4 — 架构图 + 测验
+         ══════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screen-2-4">
+      <h3 class="screen-heading animate-in">架构全景图 — 一切是怎么连在一起的</h3>
+
+      <p class="animate-in">点击下图中的任意组件，了解它在整个系统中的职责。</p>
+
+      <div class="arch-diagram animate-in">
+        <!-- Zone 1: 浏览器（前端） -->
+        <div class="arch-zone">
+          <div class="arch-zone-label">🌐 浏览器（前端）</div>
+          <div class="arch-component" data-desc="首页是用户进入应用看到的第一个界面，展示产品介绍并引导用户开始填写表单。">
+            <span class="arch-icon">🏠</span>
+            首页
+          </div>
+          <div class="arch-component" data-desc="表单页收集用户的 6 项基本信息（职业、学历、技能等），使用表单验证确保数据完整。">
+            <span class="arch-icon">📋</span>
+            表单页
+          </div>
+          <div class="arch-component" data-desc="访谈页提供聊天界面，用户和 AI 进行 3–5 轮深入对话，帮助 AI 更好地了解用户。">
+            <span class="arch-icon">💬</span>
+            访谈页
+          </div>
+          <div class="arch-component" data-desc="加载页在等待报告生成时播放 8 步动画，同时后台并行调用 AI 生成报告内容。">
+            <span class="arch-icon">⏳</span>
+            加载页
+          </div>
+          <div class="arch-component" data-desc="报告页将 AI 生成的数据渲染成 7 个模块的可视化报告，包含雷达图、饼图，支持 PDF 导出。">
+            <span class="arch-icon">📊</span>
+            报告页
+          </div>
+        </div>
+
+        <!-- Zone 2: 服务器（后端） -->
+        <div class="arch-zone">
+          <div class="arch-zone-label">🖥️ 服务器（后端）</div>
+          <div class="arch-component" data-desc="访谈 API 接收用户消息，把对话历史发送给 AI 模型，返回 AI 的追问。它包含系统提示词，决定 AI 问什么问题。">
+            <span class="arch-icon">🤖</span>
+            访谈 API
+          </div>
+          <div class="arch-component" data-desc="报告 API 接收用户的表单数据和访谈记录，调用 AI 生成完整的职业定位报告（7 个模块的 JSON 数据）。">
+            <span class="arch-icon">📝</span>
+            报告 API
+          </div>
+        </div>
+
+        <!-- Zone 3: 外部服务 -->
+        <div class="arch-zone">
+          <div class="arch-zone-label">☁️ 外部服务</div>
+          <div class="arch-component" data-desc="MiniMax AI 是第三方大语言模型服务，负责理解用户信息并生成智能化的职业建议和分析报告。">
+            <span class="arch-icon">🧠</span>
+            MiniMax AI
+          </div>
+        </div>
+
+        <div class="arch-description">点击任意组件了解它的职责</div>
+      </div>
+
+      <!-- ── QUIZ ─────────────────────────────────────────────── -->
+      <h3 class="screen-heading animate-in">小测验 — 检验你的理解</h3>
+
+      <div class="quiz-container animate-in" id="quiz-module2">
+        <!-- Question 1 -->
+        <div class="quiz-question-block" data-correct="B"
+             data-explanation-right="没错！AI 的回答质量由系统提示词决定，提示词在后端 API 路由文件里。"
+             data-explanation-wrong="AI 回答质量由系统提示词决定。提示词不在前端界面里，而是在后端 API 路由文件 app/api/interview/route.ts 中。">
+          <p class="quiz-question">如果 AI 访谈的回答质量不好，你应该去修改哪个文件？</p>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              app/interview/page.tsx（这是前端界面）
+            </button>
+            <button class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              app/api/interview/route.ts（这里有 AI 的<span class="term" data-definition="系统提示词是给 AI 的"角色说明书"，告诉 AI 应该扮演什么角色、怎么回答问题">系统提示词</span>）
+            </button>
+            <button class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              lib/types.ts（这只是类型定义）
+            </button>
+            <button class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              components/ui/button.tsx（这只是按钮样式）
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="quiz-question-block" data-correct="B"
+             data-explanation-right="对！sessionStorage 就是页面之间的信使，负责在不同页面之间传递数据。"
+             data-explanation-wrong="sessionStorage 不是数据库（关闭浏览器就清空），不是服务器（它在浏览器里），也不是样式表。它的角色是在页面之间传递数据的信使。">
+          <p class="quiz-question">sessionStorage 在这个应用里扮演什么角色？</p>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              数据库 — 永久存储用户数据
+            </button>
+            <button class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              信使 — 在不同页面之间传递数据
+            </button>
+            <button class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              服务器 — 处理 API 请求
+            </button>
+            <button class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              样式表 — 控制页面外观
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div style="display: flex; gap: var(--space-3); margin-top: var(--space-6);">
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module2')">检查答案 ✓</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module2')">重新作答 ↺</button>
+        </div>
+      </div>
+
+  </div>
+</section>

@@ -1,0 +1,353 @@
+<section class="module" id="module-4">
+
+  <!-- =========== SCREEN 1: API 路由 — 前端和 AI 之间的翻译官 =========== -->
+  <div class="screen" id="screen-4-1">
+    <div class="module-header animate-in">
+      <span class="module-number">模块 4</span>
+      <h1 class="module-title">AI 的幕后工作</h1>
+      <p class="module-subtitle">API 路由就像一位"翻译官" — 把用户的日常对话翻译成 AI 能理解的结构化指令，再把 AI 的回复翻译成用户能看懂的内容。</p>
+    </div>
+
+    <div class="module-content">
+      <h2 class="screen-heading animate-in">API 路由 — 前端和 AI 之间的翻译官</h2>
+
+      <p class="animate-in">你在访谈页打字回答问题时，你的文字其实经历了一段旅程：从浏览器 → 服务器 → AI 模型 → 服务器 → 浏览器。<span class="term" data-definition="API 路由是服务器端的代码入口，负责接收前端请求、处理逻辑、调用外部服务，再把结果返回给前端">API 路由</span>就是这个旅程的中转站。</p>
+
+      <div class="step-cards animate-in">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>用户输入回答</h3>
+            <p>用户在访谈页的输入框里打字，写下对问题的回答。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>浏览器发送请求</h3>
+            <p>浏览器把回答打包成一个 <span class="term" data-definition="POST 是 HTTP 请求的一种方式，用于向服务器发送数据。就像寄一封带内容的信，而不是只写收件地址">POST 请求</span>，发送到 <code>/api/interview</code> 这个地址。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>服务器构建消息</h3>
+            <p>服务器收到请求后，把系统提示词、用户背景和对话历史组装好，调用 <span class="term" data-definition="MiniMax 是一家中国 AI 公司，提供大语言模型 API 服务。开发者可以通过 API 调用它的 AI 能力">MiniMax API</span>。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>AI 返回回复</h3>
+            <p>MiniMax 分析所有信息后，生成下一个访谈问题返回给服务器。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>清理并返回</h3>
+            <p>服务器清理 AI 回复中的多余标签，把干净的问题返回给浏览器显示。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-info animate-in">
+        <p>整个过程就像外交场合的同声传译 — 翻译官（API 路由）在两方之间来回沟通，确保双方都能理解对方的意思。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 2: 系统提示词 — 给 AI 的剧本 =========== -->
+  <div class="screen" id="screen-4-2">
+    <h2 class="screen-heading animate-in">系统提示词 — 给 AI 的剧本</h2>
+
+    <div class="module-content">
+      <p class="animate-in"><span class="term" data-definition="系统提示词是发送给 AI 模型的第一条指令，用来设定 AI 的角色、行为规则和任务目标。用户看不到这条指令">系统提示词</span>就像导演在开拍前给演员的剧本 — 告诉 AI 它是谁、要做什么、怎么做。写得好，AI 表现就好；写得差，AI 就会跑偏。</p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <pre><code>const systemPrompt = `你是一位资深职业咨询顾问。
+你的任务是通过访谈了解用户的职业情况。
+请围绕以下主题提问：
+1. 日常工作内容和职责
+2. 核心能力和技能水平
+3. 工作中的挑战和痛点
+4. 职业期望和发展方向
+5. 行业趋势的看法
+
+每次只问一个问题，语气专业友好。
+当已充分了解后，以"[访谈结束]"结尾。`;</code></pre>
+        </div>
+        <div class="translation-lines">
+          <div class="tl">
+            <span class="translation-label">第 1 行</span>
+            <span class="translation-english">告诉 AI 它扮演什么角色 — 一位资深职业咨询顾问</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 2 行</span>
+            <span class="translation-english">明确任务：通过访谈了解用户</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 3-8 行</span>
+            <span class="translation-english">给出 5 个提问方向，确保全面覆盖</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 10 行</span>
+            <span class="translation-english">设定行为规范：一次一个问题，语气友好</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 11 行</span>
+            <span class="translation-english">定义结束信号：用特殊标记告诉前端访谈完了</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-accent animate-in">
+        <p>系统提示词是 AI 应用最核心的部分之一。它就像给演员的剧本 — 写得好，AI 表现就好；写得差，AI 就会跑偏。这就是为什么"<span class="term" data-definition="提示词工程是设计和优化发送给 AI 的指令的技能，目标是让 AI 给出更准确、更有用的回答">提示词工程</span>"是一个重要技能。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 3: Group Chat — 前端和后端的对话 =========== -->
+  <div class="screen" id="screen-4-3">
+    <h2 class="screen-heading animate-in">前端和后端的对话</h2>
+
+    <div class="module-content">
+      <p class="animate-in">让我们用一段"群聊"来还原一次完整的访谈 API 调用过程，看看浏览器、API 路由和 MiniMax 之间是怎么配合的。</p>
+
+      <div class="chat-window animate-in" id="chat-module4">
+        <div class="chat-messages">
+
+          <div class="chat-message" data-sender="browser" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-1)">浏</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">浏览器</span>
+              <p>用户回答了一个问题，我把 <span class="term" data-definition="formData 是表单页收集的用户基本信息，包括岗位、行业、职级等 6 个字段">formData</span> 和聊天记录打包发给你。</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-sender="api" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">路</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">API 路由</span>
+              <p>收到。让我把系统提示词、用户背景信息和对话历史组装好。</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-sender="api" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">路</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">API 路由</span>
+              <p>好了，打包完成。发给 MiniMax，<span class="term" data-definition="温度（temperature）控制 AI 回复的随机程度。0 表示完全确定性，1 表示最大随机性。0.7 是一个平衡创造力和稳定性的常用值">温度</span>设 0.7，最多 500 个 <span class="term" data-definition="Token 是 AI 处理文本的基本单位，大约相当于一个汉字或半个英文单词。限制 token 数可以控制回复长度和费用">token</span>。</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-sender="minimax" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-3)">M</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">MiniMax</span>
+              <p>&lt;think&gt;用户是产品经理...&lt;/think&gt; 请问您在日常工作中最大的挑战是什么？</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-sender="api" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">路</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">API 路由</span>
+              <p>等等，回复里有<span class="term" data-definition="&lt;think&gt; 标签是某些 AI 模型在生成回复时展示内部推理过程的标记，属于模型的'草稿纸'，不应展示给最终用户">思考过程标签</span>，我得清理掉，只保留正式回答。</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-sender="api" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">路</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">API 路由</span>
+              <p>检查一下有没有 <code>[访谈结束]</code> 标记... 没有，说明还没聊完。</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-sender="browser" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-1)">浏</div>
+            <div class="chat-bubble">
+              <span class="chat-sender">浏览器</span>
+              <p>收到干净的回复了！显示给用户，等待下一轮回答。</p>
+            </div>
+          </div>
+
+          <div class="chat-typing" style="display:none">
+            <div class="chat-avatar" id="chat-module4-typing-avatar" style="background: var(--color-actor-1)">浏</div>
+            <div class="chat-typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-controls">
+          <button class="btn chat-next-btn">下一条 ▶</button>
+          <button class="btn chat-all-btn">播放全部 ⏩</button>
+          <button class="btn chat-reset-btn">重置 ↺</button>
+          <span class="chat-progress">0 / 7 messages</span>
+        </div>
+      </div>
+
+      <div class="callout callout-info animate-in">
+        <p>注意 API 路由扮演了多少角色 — 它不只是简单地转发消息，还负责组装、清理和检查。这就是"翻译官"的价值。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 4: 报告生成 — JSON 的魔法 =========== -->
+  <div class="screen" id="screen-4-4">
+    <h2 class="screen-heading animate-in">报告生成 — JSON 的魔法</h2>
+
+    <div class="module-content">
+      <p class="animate-in">访谈结束后，另一个 API 路由 <code>/api/report</code> 负责生成报告。它要求 AI 把分析结果以 <span class="term" data-definition="JSON（JavaScript Object Notation）是一种通用的数据格式，用键值对来描述结构化信息，程序和人都能读懂">JSON</span> 格式返回 — 这样前端才能用图表展示。</p>
+
+      <div class="badge-list animate-in">
+        <div class="badge-item">
+          <span class="badge-code">meta</span>
+          <span class="badge-desc">报告元信息（标题、日期）</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">summary</span>
+          <span class="badge-desc">一段话的定位总结</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">jobOverview</span>
+          <span class="badge-desc">职责分布（3-5 项，权重加起来 = 100）</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">competencyProfile</span>
+          <span class="badge-desc">能力画像（5 个维度，<span class="term" data-definition="雷达图是一种用多角形展示多维度数据的图表，每个角代表一个维度，数值越大离中心越远">雷达图</span>数据）</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">developmentPath</span>
+          <span class="badge-desc">发展路径（向上/横向/短期/中期建议）</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-code">supplementary</span>
+          <span class="badge-desc">薪资范围（低/中/高）+ 对标岗位</span>
+        </div>
+      </div>
+
+      <p class="animate-in">但 AI 返回的文本不一定完全"干净"，有时候会多出代码块标记。所以需要一段清理代码：</p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <pre><code>let content = response.choices[0]
+  .message.content || "";
+content = content
+  .replace(/```json\n?/g, "")
+  .replace(/```\n?/g, "");
+const reportBody = JSON.parse(content);</code></pre>
+        </div>
+        <div class="translation-lines">
+          <div class="tl">
+            <span class="translation-label">第 1-2 行</span>
+            <span class="translation-english">从 AI 的回复中取出内容</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 3-5 行</span>
+            <span class="translation-english">有时 AI 会用代码块标记包裹 JSON，需要去掉这些标记</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 6 行</span>
+            <span class="translation-english">清理干净后，把文本转成程序能理解的<span class="term" data-definition="结构化数据是按照固定格式组织的数据，程序可以直接读取和使用其中的每个字段，而不用猜测内容的含义">结构化数据</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-warning animate-in">
+        <p>AI 的输出并不总是完美的 — 它可能多加标记、格式不对、甚至返回无效的 JSON。所以"清理和修复 AI 输出"是 AI 应用开发中的常见工作。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 5: 小测验 =========== -->
+  <div class="screen" id="screen-4-5">
+    <h2 class="screen-heading animate-in">小测验</h2>
+
+    <div class="module-content">
+      <div class="quiz-container animate-in" id="quiz-module4">
+
+        <!-- Question 1 -->
+        <div class="quiz-question-block" data-correct="B">
+          <p class="quiz-question">Q1：如果 AI 在访谈中总是问重复的问题，你最应该修改什么？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：前端的聊天界面样式</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：API 路由中的系统提示词</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：MiniMax 的 API 密钥</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：sessionStorage 的存储方式</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="quiz-question-block" data-correct="B">
+          <p class="quiz-question">Q2：你发现生成的报告中，薪资数据经常不准确。作为排查的第一步，你会？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：换一个 AI 模型</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：检查报告 API 的系统提示词，看对薪资的要求是否够具体</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：修改前端的图表组件</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：增加更多的表单字段</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- Question 3 -->
+        <div class="quiz-question-block" data-correct="B">
+          <p class="quiz-question">Q3：为什么 API 路由要清理 AI 回复中的 &lt;think&gt; 标签？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-value="A" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：这些标签会让页面崩溃</span>
+            </div>
+            <div class="quiz-option" data-value="B" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：这是 AI 模型的内部思考过程，不应该展示给用户</span>
+            </div>
+            <div class="quiz-option" data-value="C" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：这些标签会占用太多存储空间</span>
+            </div>
+            <div class="quiz-option" data-value="D" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：这是一种安全漏洞</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module4')">检查答案</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module4')">重新作答</button>
+      </div>
+    </div>
+  </div>
+
+</section>

@@ -1,0 +1,246 @@
+<section class="module" id="module-1">
+
+  <!-- =========== SCREEN 1: 欢迎 =========== -->
+  <div class="screen" id="screen-1-1">
+    <div class="module-header animate-in">
+      <span class="module-number">模块 1</span>
+      <h1 class="module-title">这个应用做了什么？</h1>
+      <p class="module-subtitle">从零认识「AI 职业定位报告」——它的功能、用户体验和技术工具</p>
+    </div>
+
+    <div class="module-content">
+      <div class="callout callout-accent animate-in">
+        <p>想象你走进社保局，想了解自己的职业定位。一位 AI 顾问接待了你——它问你几个问题，然后生成一份专业的职业分析报告。这就是这个应用做的事。</p>
+      </div>
+
+      <h2 class="screen-heading animate-in">四大核心功能</h2>
+
+      <div class="pattern-cards animate-in">
+        <div class="pattern-card">
+          <div class="icon-circle">📝</div>
+          <h3>智能表单</h3>
+          <p>收集你的基本信息——年龄、学历、工作经历等，就像体检时的「登记表」。</p>
+        </div>
+        <div class="pattern-card">
+          <div class="icon-circle">🤖</div>
+          <h3>AI 访谈</h3>
+          <p>AI 会像真人顾问一样追问你的细节，深入了解你的职业情况。</p>
+        </div>
+        <div class="pattern-card">
+          <div class="icon-circle">⏳</div>
+          <h3>等待动画</h3>
+          <p>AI 在后台分析时，页面会显示优美的加载动画，让你知道它正在「思考」。</p>
+        </div>
+        <div class="pattern-card">
+          <div class="icon-circle">📊</div>
+          <h3>专业报告</h3>
+          <p>最终输出一份带图表的职业分析报告，包括雷达图、饼图和具体建议。</p>
+        </div>
+      </div>
+
+      <div class="callout callout-info animate-in">
+        <p><strong>💡 类比：就像体检</strong></p>
+        <p>登记信息 → 医生问诊 → 等待化验 → 拿到报告。这个应用的流程一模一样，只不过「医生」换成了 AI。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 2: 用户旅程 =========== -->
+  <div class="screen" id="screen-1-2">
+    <h2 class="screen-heading animate-in">用户旅程 — 从点击到报告</h2>
+
+    <div class="module-content">
+      <p class="animate-in">打开应用后，你会依次经历以下四个步骤。每一步都对应一个独立的页面。</p>
+
+      <div class="flow-steps animate-in">
+        <div class="flow-step">
+          <div class="flow-step-num">1</div>
+          <h3>填写表单</h3>
+          <p>输入你的姓名、年龄、学历、工作年限等基本信息。表单会自动校验，确保信息完整。</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-num">2</div>
+          <h3>AI 访谈</h3>
+          <p>AI 根据你的信息提出 3-5 个针对性问题。你用文字回答，就像和真人聊天一样。</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-num">3</div>
+          <h3>加载等待</h3>
+          <p>AI 在后台综合分析你的所有数据。页面显示动画和进度提示，大约需要 30-60 秒。</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-num">4</div>
+          <h3>查看报告</h3>
+          <p>一份完整的职业定位报告呈现在你面前——包含评分、图表和个性化建议。</p>
+        </div>
+      </div>
+
+      <div class="callout callout-info animate-in">
+        <p>整个过程大约 5-10 分钟。数据存在浏览器的 <span class="term" data-definition="浏览器提供的临时存储空间，关闭标签页后数据就会消失">sessionStorage</span> 中，关闭页面后不会保留。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 3: 技术栈一览 =========== -->
+  <div class="screen" id="screen-1-3">
+    <h2 class="screen-heading animate-in">技术栈一览 — 搭建这个应用用了什么工具？</h2>
+
+    <div class="module-content">
+      <p class="animate-in">这个应用由 6 个核心工具搭建而成。现在不需要全部理解，后面的模块会逐一拆解。</p>
+
+      <div class="icon-rows animate-in">
+        <div class="icon-row">
+          <div class="icon-circle">⚡</div>
+          <div>
+            <h3><span class="term" data-definition="一个基于 React 的全栈 Web 框架，提供路由、服务端渲染等功能，是整个应用的骨架">Next.js</span></h3>
+            <p>框架 — 应用的骨架。它决定了页面怎么组织、怎么跳转。</p>
+          </div>
+        </div>
+        <div class="icon-row">
+          <div class="icon-circle">🔒</div>
+          <div>
+            <h3><span class="term" data-definition="JavaScript 的超集，添加了类型检查功能，能在写代码时就发现错误，而不是等到运行时才出 bug">TypeScript</span></h3>
+            <p>语言 — 更安全的 <span class="term" data-definition="Web 世界最通用的编程语言，浏览器原生支持">JavaScript</span>。像给代码加了「拼写检查」。</p>
+          </div>
+        </div>
+        <div class="icon-row">
+          <div class="icon-circle">🎨</div>
+          <div>
+            <h3><span class="term" data-definition="一个实用优先的 CSS 框架，通过在 HTML 中直接写类名来设置样式，不用单独写 CSS 文件">Tailwind CSS</span></h3>
+            <p>样式 — 让页面变好看。用预设的类名快速美化界面。</p>
+          </div>
+        </div>
+        <div class="icon-row">
+          <div class="icon-circle">🧠</div>
+          <div>
+            <h3><span class="term" data-definition="MiniMax 公司提供的 AI 大模型接口，应用通过调用它来实现智能访谈和报告生成">MiniMax API</span></h3>
+            <p>AI 大脑 — 生成访谈问题和职业报告的核心引擎。</p>
+          </div>
+        </div>
+        <div class="icon-row">
+          <div class="icon-circle">📈</div>
+          <div>
+            <h3><span class="term" data-definition="一个基于 React 的图表库，用来绘制雷达图、饼图、柱状图等数据可视化图表">Recharts</span></h3>
+            <p>图表库 — 画雷达图和饼图，让报告数据一目了然。</p>
+          </div>
+        </div>
+        <div class="icon-row">
+          <div class="icon-circle">✨</div>
+          <div>
+            <h3><span class="term" data-definition="一个 React 动画库，可以轻松给页面元素添加入场、退场、拖拽等动画效果">Framer Motion</span></h3>
+            <p>动画库 — 让页面动起来，提供流畅的过渡效果。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SCREEN 4: 代码翻译 + 小测验 =========== -->
+  <div class="screen" id="screen-1-4">
+    <h2 class="screen-heading animate-in">代码翻译 — 读懂第一段代码</h2>
+
+    <div class="module-content">
+      <p class="animate-in">下面是这个应用的「根布局」代码——整个应用的最外层壳子。我们把每一行翻译成大白话。</p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <pre><code>export default function RootLayout({
+  children,
+}: Readonly&lt;{
+  children: React.ReactNode;
+}&gt;) {
+  return (
+    &lt;html lang="zh-CN"&gt;
+      &lt;body className={`${geistSans.variable} antialiased`}&gt;
+        {children}
+      &lt;/body&gt;
+    &lt;/html&gt;
+  );
+}</code></pre>
+        </div>
+        <div class="translation-lines">
+          <div class="tl">
+            <span class="translation-label">第 1 行</span>
+            <span class="translation-english">导出一个叫 <span class="term" data-definition="根布局组件，是整个应用共享的最外层结构，所有页面都会被包裹在它里面">RootLayout</span> 的<span class="term" data-definition="一段可复用的代码块，接收输入（参数），返回输出（结果）">函数</span> — 它是整个应用的「外壳」</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 2-4 行</span>
+            <span class="translation-english">它接收一个叫 <span class="term" data-definition="子组件，指要显示在布局内部的页面内容。不同页面会传入不同的 children">children</span> 的<span class="term" data-definition="函数接收的输入值，就像你告诉一个计算器'请算 3+5'，3 和 5 就是参数">参数</span> — 就是要显示在里面的内容</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 5-6 行</span>
+            <span class="translation-english">返回 <span class="term" data-definition="超文本标记语言，网页的基本结构语言，用标签（如 &lt;div&gt;、&lt;p&gt;）来组织页面内容">HTML</span> 结构，设置语言为中文</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 7 行</span>
+            <span class="translation-english">给页面设置字体和<span class="term" data-definition="一种字体渲染技术，让文字边缘更平滑、更好看，避免出现锯齿状的粗糙边缘">抗锯齿</span>效果</span>
+          </div>
+          <div class="tl">
+            <span class="translation-label">第 8 行</span>
+            <span class="translation-english">把子内容放进去 — 不同的页面会替换这里</span>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="screen-heading animate-in">小测验</h2>
+
+      <div class="quiz-container animate-in" id="quiz-module1">
+
+        <!-- Question 1 -->
+        <div class="quiz-question-block" data-correct="C">
+          <p class="quiz-question">Q1：如果你想给这个应用添加一个「收藏报告」功能，你觉得最可能需要用到哪个技术？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：Tailwind CSS（只管样式）</span>
+            </div>
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：MiniMax API（只管 AI）</span>
+            </div>
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：Next.js + TypeScript（需要前后端逻辑）</span>
+            </div>
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：Recharts（只管图表）</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="quiz-question-block" data-correct="B">
+          <p class="quiz-question">Q2：这个应用的数据（用户填的表单、访谈记录）存在哪里？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>A：发送到远程服务器永久保存</span>
+            </div>
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>B：存在浏览器的 sessionStorage 中，关闭标签页就没了</span>
+            </div>
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>C：存在用户的硬盘上</span>
+            </div>
+            <div class="quiz-option" onclick="selectOption(this)">
+              <span class="quiz-option-radio"></span>
+              <span>D：存在 AI 模型里</span>
+            </div>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module1')">检查答案</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module1')">重新作答</button>
+      </div>
+    </div>
+  </div>
+
+</section>
