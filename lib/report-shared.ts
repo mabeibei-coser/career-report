@@ -1,6 +1,7 @@
 import client, { MINIMAX_MODEL } from "@/lib/minimax";
 import iflytek, { IFLYTEK_MODEL } from "@/lib/iflytek";
 import type { JobFormData, QuizAnswer } from "@/lib/types";
+import { inferIndustry } from "@/lib/industry-resolver";
 
 export const APPLICANT_BASELINE = `用户是应届校招生（无正式工作经验，可能有实习）。
 - 薪资按校招起薪：一线 8-10K、新一线 6-8K、二线 5-6K、三线 4K 左右，勿虚高
@@ -10,12 +11,17 @@ export function buildBaseContext(
   formData: JobFormData,
   quizAnswers?: QuizAnswer[]
 ): string {
+  // 系统预推断行业，注入给所有 section；各章节 prompt 应以此为准、不要自行再推断
+  // 避免出现第 2 章说"建筑"、第 6 章说"金融"这种章节间矛盾
+  const { industry, confidence } = inferIndustry(formData.targetCompany);
+
   const parts = [
     "求职意向信息：",
     `- 意向岗位：${formData.targetPosition}`,
     `- 意向学历：${formData.targetEducation}`,
     `- 意向公司/类型：${formData.targetCompany}`,
     `- 意向城市能级：${formData.targetCityTier}`,
+    `- 系统推断行业：${industry}（置信度：${confidence}；各章节必须与此保持一致，不要跨行业联想）`,
   ];
 
   if (quizAnswers && quizAnswers.length > 0) {

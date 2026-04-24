@@ -91,7 +91,8 @@ export async function POST(req: NextRequest) {
       try {
         aiQuiz = await callIflytekJson<AiQuizResponse>({
           ...baseOpts,
-          timeoutMs: 25000,
+          // 真机 5G 下讯飞 >25s 很常见；40s 给移动网络足够余量，仍比 50s 默认早
+          timeoutMs: 40000,
         });
       } catch (iflytekErr) {
         console.warn(

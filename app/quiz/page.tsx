@@ -59,25 +59,53 @@ export default function QuizPage() {
         } catch {}
       }
 
-      // Fetch quiz —— 优先消费表单页提交时的预拉取结果
+      // Fetch quiz —— 优先消费表单页提交时的预拉取结果；失败则带一次自动重试的现场 fetch
+      // 真机 5G 下讯飞偶尔 timeout，自动重试一次能把"开门黑"场景兜住，不让用户看错误页
+      const fetchFreshWithRetry = async (): Promise<QuizQuestion[]> => {
+        const attempt = async (): Promise<QuizQuestion[]> => {
+          const res = await fetch("/api/quiz/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ formData: parsed }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.questions) {
+            throw new Error(data.error ?? "测评题获取失败");
+          }
+          return data.questions as QuizQuestion[];
+        };
+        try {
+          return await attempt();
+        } catch (firstErr) {
+          console.warn(
+            "[quiz] first attempt failed, retrying in 2s:",
+            firstErr instanceof Error ? firstErr.message : firstErr
+          );
+          await new Promise((r) => setTimeout(r, 2000));
+          return await attempt(); // 第二次仍失败抛给外层
+        }
+      };
+
       (async () => {
         try {
           const prefetched = consumeQuizPrefetch(parsed);
+          let qs: QuizQuestion[];
           if (prefetched) {
-            const data = await prefetched.promise;
-            setQuestions(data.questions);
-          } else {
-            const res = await fetch("/api/quiz/generate", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ formData: parsed }),
-            });
-            const data = await res.json();
-            if (!res.ok || !data.questions) {
-              throw new Error(data.error ?? "测评题获取失败");
+            try {
+              const data = await prefetched.promise;
+              qs = data.questions;
+            } catch (prefetchErr) {
+              // 预拉取结果失败（讯飞超时等）→ 降级走带重试的现场 fetch
+              console.warn(
+                "[quiz] prefetch failed, doing fresh fetch with retry:",
+                prefetchErr instanceof Error ? prefetchErr.message : prefetchErr
+              );
+              qs = await fetchFreshWithRetry();
             }
-            setQuestions(data.questions);
+          } else {
+            qs = await fetchFreshWithRetry();
           }
+          setQuestions(qs);
         } catch (e) {
           setLoadError(e instanceof Error ? e.message : "无法加载测评题");
         } finally {
