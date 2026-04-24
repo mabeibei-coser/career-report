@@ -77,27 +77,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const callOpts = {
+    const baseOpts = {
       systemPrompt: QUIZ_SYSTEM_PROMPT,
       userPrompt: buildQuizUserPrompt(formData),
       temperature: 0.7,
       maxTokens: 2200, // 骨架化后输出约 1400 tokens（中文），留 60% 余量防尾部被截断
     };
 
-    // 讯飞 astron-code 主、MiniMax 兜底（避免和章节抢 MiniMax 并发）
+    // 讯飞主、MiniMax 兜底。讯飞经常 25s+，超时拉短让 fallback 提前介入：
+    // 常态下 5-20s 返回；>25s 说明 slow path，快速切 MiniMax（~30s）总比 50s+30s 快
     let aiQuiz: AiQuizResponse;
     if (hasIflytek) {
       try {
-        aiQuiz = await callIflytekJson<AiQuizResponse>(callOpts);
+        aiQuiz = await callIflytekJson<AiQuizResponse>({
+          ...baseOpts,
+          timeoutMs: 25000,
+        });
       } catch (iflytekErr) {
         console.warn(
           "iFlytek quiz generate failed, falling back to MiniMax:",
           iflytekErr
         );
-        aiQuiz = await callMiniMaxJson<AiQuizResponse>(callOpts);
+        // MiniMax fallback 用默认 50s 超时（节省 token 模式下通常 20-35s）
+        aiQuiz = await callMiniMaxJson<AiQuizResponse>(baseOpts);
       }
     } else {
-      aiQuiz = await callMiniMaxJson<AiQuizResponse>(callOpts);
+      aiQuiz = await callMiniMaxJson<AiQuizResponse>(baseOpts);
     }
 
     // 服务端合并骨架：id / dimension / scoreMap 补齐
