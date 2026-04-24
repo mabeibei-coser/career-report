@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { ReportData } from "@/lib/types";
-import { takeReportData } from "@/lib/pdf-token-store";
+import { peekReportData, takeReportData } from "@/lib/pdf-token-store";
+import { getJob } from "@/lib/pdf-job-store";
 
 export const runtime = "nodejs";
 export const maxDuration = 180; // dev 模式 Turbopack 冷编译 /report + Puppeteer 启动 + 渲染合计可能 ~90-120s
@@ -17,7 +18,13 @@ function todayYYYYMMDD(): string {
   return `${y}${m}${day}`;
 }
 
-async function renderPdf(reportData: ReportData): Promise<NextResponse> {
+/**
+ * 核心渲染：启 Puppeteer → 打开 /report?pdf=1 → 导出 Buffer。
+ *
+ * 纯 Buffer 输出（不包 NextResponse），好给 pdf-job-store 缓存 Promise<Buffer>，
+ * 也让 POST / GET 两个入口都复用同一份逻辑。
+ */
+export async function renderPdfBuffer(reportData: ReportData): Promise<Buffer> {
   // 动态 import puppeteer，避免构建期被静态分析报错
   const puppeteer = await import("puppeteer");
 
@@ -51,9 +58,7 @@ async function renderPdf(reportData: ReportData): Promise<NextResponse> {
     await page.setViewport({ width: 1024, height: 1400, deviceScaleFactor: 2 });
 
     // 关键：用 evaluateOnNewDocument 让"写 sessionStorage"脚本在每个页面加载
-    // 最早期运行，**早于任何页面 JS**。比起原来"先跳 404 页再 evaluate 再跳真页"
-    // 三步流程更稳，不会因 navigation 之间 sessionStorage 被清空而失败。
-    // 注意：这个脚本会在每次 navigation 前运行，所以直接 goto 即可。
+    // 最早期运行，**早于任何页面 JS**。
     const reportDataStr = JSON.stringify(reportData);
     await page.evaluateOnNewDocument((dataStr: string) => {
       try {
@@ -64,7 +69,6 @@ async function renderPdf(reportData: ReportData): Promise<NextResponse> {
     }, reportDataStr);
 
     // 直接跳 /report 页面，sessionStorage 在任何页面 JS 执行前已注入
-    // dev 模式 Turbopack 首次编译 /report 可能 30-60s
     const url = `${INTERNAL_BASE}/report?pdf=1`;
     // waitUntil: "load"（比 domcontentloaded 晚，等所有资源加载完；
     // 不用 networkidle0 因为 dev 模式 HMR websocket 永远不 idle）
@@ -91,21 +95,7 @@ async function renderPdf(reportData: ReportData): Promise<NextResponse> {
       `,
     });
 
-    const position = reportData.meta.formData.targetPosition;
-    const filename = `校招定位报告_${position}_${todayYYYYMMDD()}.pdf`;
-
-    return new NextResponse(new Uint8Array(pdfBuffer), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
-        "Cache-Control": "no-store",
-      },
-    });
-  } catch (e) {
-    console.error("[pdf] generation failed:", e);
-    const message = e instanceof Error ? e.message : "PDF 生成失败";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return Buffer.from(pdfBuffer);
   } finally {
     if (browser) {
       try {
@@ -117,6 +107,36 @@ async function renderPdf(reportData: ReportData): Promise<NextResponse> {
   }
 }
 
+function buildPdfResponse(buffer: Buffer, filename: string): NextResponse {
+  return new NextResponse(new Uint8Array(buffer), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
+function filenameFor(reportData: ReportData | null): string {
+  const position = reportData?.meta?.formData?.targetPosition ?? "报告";
+  return `校招定位报告_${position}_${todayYYYYMMDD()}.pdf`;
+}
+
+async function renderAndRespond(reportData: ReportData): Promise<NextResponse> {
+  try {
+    const buffer = await renderPdfBuffer(reportData);
+    return buildPdfResponse(buffer, filenameFor(reportData));
+  } catch (e) {
+    console.error("[pdf] generation failed:", e);
+    const message = e instanceof Error ? e.message : "PDF 生成失败";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+/**
+ * POST：旧接口（直接接 reportData，现场渲染返回）。保留向后兼容。
+ */
 export async function POST(req: NextRequest) {
   let body: { reportData?: ReportData };
   try {
@@ -130,20 +150,48 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "缺少 reportData" }, { status: 400 });
   }
 
-  return renderPdf(reportData);
+  return renderAndRespond(reportData);
 }
 
+/**
+ * GET：带 token 的主下载路径。优先复用 pdf-job-store 的缓存 Promise；
+ * 若 job 不存在/失败，用 peekReportData 做一次兜底现场渲染。
+ */
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
   if (!token) {
     return NextResponse.json({ error: "缺少 token" }, { status: 400 });
   }
-  const reportData = takeReportData(token);
+
+  // 优先命中 job：已就绪秒回；未就绪 HTTP 长连接天然 hold 住 await
+  const job = getJob(token);
+  if (job) {
+    try {
+      const buffer = await job.promise;
+      // reportData 仅用来拼文件名；job 可能比 token TTL 活得久，拿不到就降级通用文件名
+      const reportData = peekReportData(token);
+      return buildPdfResponse(buffer, filenameFor(reportData));
+    } catch (jobErr) {
+      // job 渲染失败 → 落到下面 fallback 现场渲染兜底一次
+      console.warn(
+        "[pdf] job promise rejected, falling back to on-demand render:",
+        jobErr instanceof Error ? jobErr.message : String(jobErr)
+      );
+    }
+  }
+
+  // Fallback：job 不存在/失败，用非消费性 peek 拿 reportData 现场渲染。
+  // 不用 take 消费是因为下载可能要重试；TTL 到期自然清理。
+  let reportData = peekReportData(token);
+  if (!reportData) {
+    // peek 为空再试 take（处理极端遗留场景；takeReportData 保留向后兼容）
+    reportData = takeReportData(token);
+  }
   if (!reportData) {
     return NextResponse.json(
       { error: "链接已过期或已被使用，请回报告页重新下载" },
       { status: 404 }
     );
   }
-  return renderPdf(reportData);
+  return renderAndRespond(reportData);
 }

@@ -38,3 +38,17 @@ export function takeReportData(token: string): ReportData | null {
   if (entry.expiresAt < Date.now()) return null;
   return entry.data;
 }
+
+/**
+ * 非消费读取：pdf/route.ts 的 GET 在 job 未命中时兜底渲染需要读 reportData，
+ * 但下载可能失败重试，不能消费掉 token。TTL 到期自然清理。
+ */
+export function peekReportData(token: string): ReportData | null {
+  const entry = store.get(token);
+  if (!entry) return null;
+  if (entry.expiresAt < Date.now()) {
+    store.delete(token); // 过期即清
+    return null;
+  }
+  return entry.data;
+}
