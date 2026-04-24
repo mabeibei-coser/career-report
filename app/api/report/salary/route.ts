@@ -39,7 +39,7 @@ ${buildSalaryAnchorPrompt(position, education, resumeText)}
 规则：
 1. quartiles 基于锚点微调（含学历/简历加成后），应届真实水平，不虚高
 2. industryComparison 恰好 5 条，**严格按 avgSalary 从高到低排序**（不要把用户意向塞到第 1 位），5 条的 industry 名称互不重复
-3. userIndustry 单独输出：基于用户 targetCompany 推断其所属行业（例"互联网大厂"→"互联网/软件"、"某保险公司"→"金融/保险"），给出该行业应届薪资 avgSalary，以及 note 一句 15-30 字的定位话（例"高于行业中位约 XX%"、"稀缺但稳定"、"岗位波动较大需谨慎"）。如果用户意向行业就是 industryComparison 的某一条，userIndustry.industry 要与之完全一致，avgSalary 用同一个数字
+3. userIndustry 的 industry 字段**必须直接使用上下文里"系统推断行业"的值**，不要再基于公司名字面重新推断（例如上下文推断行业是"金融/银行"，哪怕公司名含"建设"二字也写"金融/银行"，不要写"建筑"）。avgSalary 给该行业应届水平、note 一句 15-30 字的定位话（例"高于行业中位约 XX%"、"稀缺但稳定"、"岗位波动较大需谨慎"）。若 industryComparison 里已有同名条目，avgSalary 必须与之一致
 4. 全部数字取整（8500, 12000, 15000 这类）
 5. 不要写城市系数（后端合成）`;
 }

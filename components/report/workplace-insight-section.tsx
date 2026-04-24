@@ -8,6 +8,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { SectionWrapper } from "./section-wrapper";
+import { asText } from "@/lib/text-normalize";
 import type { WorkplaceInsight } from "@/lib/types";
 
 export function WorkplaceInsightSection({
@@ -43,7 +44,7 @@ export function WorkplaceInsightSection({
             </span>
           </div>
           <p className="text-[13.5px] leading-[1.8] text-[var(--navy-800)]">
-            {data.companyInsight.developmentSummary}
+            {asText(data.companyInsight.developmentSummary)}
           </p>
         </div>
       )}
@@ -58,7 +59,7 @@ export function WorkplaceInsightSection({
             </span>
           </div>
           <p className="text-[12px] leading-[1.7] text-[var(--report-ink-muted)] mb-4">
-            {data.companyInsight.summary}
+            {asText(data.companyInsight.summary)}
           </p>
 
           {Array.isArray(data.companyInsight.observations) && data.companyInsight.observations.length > 0 && (
@@ -75,7 +76,7 @@ export function WorkplaceInsightSection({
                     </span>
                   </div>
                   <p className="text-[13px] leading-[1.7] text-[var(--navy-800)]">
-                    {ob.voice}
+                    {asText(ob.voice)}
                   </p>
                 </div>
               ))}
@@ -97,7 +98,7 @@ export function WorkplaceInsightSection({
                     className="flex gap-2 text-[13px] leading-[1.7] text-[var(--navy-800)]"
                   >
                     <span className="text-[var(--blue-600)] shrink-0">✓</span>
-                    <span>{a}</span>
+                    <span>{asText(a)}</span>
                   </li>
                 ))}
               </ul>
@@ -115,7 +116,7 @@ export function WorkplaceInsightSection({
           </span>
         </div>
         <p className="text-[13.5px] leading-[1.75] text-[var(--navy-800)]">
-          {data.industryAdvice?.summary}
+          {asText(data.industryAdvice?.summary)}
         </p>
       </div>
 
@@ -128,7 +129,7 @@ export function WorkplaceInsightSection({
           </span>
         </div>
         <p className="text-[13.5px] leading-[1.8] text-[var(--navy-800)]">
-          {data.synthesis}
+          {asText(data.synthesis)}
         </p>
       </div>
     </SectionWrapper>
