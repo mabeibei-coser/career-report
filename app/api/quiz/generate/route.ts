@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       systemPrompt: QUIZ_SYSTEM_PROMPT,
       userPrompt: buildQuizUserPrompt(formData),
       temperature: 0.7,
-      maxTokens: 1500, // 骨架化后输出减半，1500 有余量
+      maxTokens: 2200, // 骨架化后输出约 1400 tokens（中文），留 60% 余量防尾部被截断
     };
 
     // 讯飞 astron-code 主、MiniMax 兜底（避免和章节抢 MiniMax 并发）
