@@ -6,53 +6,62 @@ import {
 } from "@/lib/report-shared";
 import { hasIflytek } from "@/lib/iflytek";
 import type { JobFormData, QuizQuestion } from "@/lib/types";
+import {
+  mergeQuizSkeleton,
+  isMergedQuizComplete,
+  type AiQuizResponse,
+} from "@/lib/quiz-skeleton";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const QUIZ_SYSTEM_PROMPT = `你是一位资深校招心理测评设计师。请为一名应届大学生设计 6 道职业性格 + 职业选择快测题。
+// 骨架化版本：LLM 只出 question 文本和 options.{A,B,C,D} 文本；
+// id / dimension / scoreMap 由服务端 mergeQuizSkeleton 合入。token 输出减半。
+const QUIZ_SYSTEM_PROMPT = `你是一位资深校招心理测评设计师。为一名应届大学生设计 6 道职业性格快测题。
 
 ${APPLICANT_BASELINE}
 
-要求：
-1. 题目必须结合用户的意向岗位，措辞贴近应届生语境（如"实习中""小组作业里""校招投递时"）
-2. 每道题覆盖一个维度，顺序固定：
-   - Q1 dimension="E-I" 外倾/内倾
-   - Q2 dimension="S-N" 感觉/直觉
-   - Q3 dimension="T-F" 思考/情感
-   - Q4 dimension="J-P" 判断/知觉
-   - Q5 dimension="risk" 风险偏好（稳定大厂 vs 快速增长创业）
-   - Q6 dimension="value" 价值取向（薪资/兴趣/影响力/生活平衡）
-3. 每题 4 个选项（A/B/C/D），无对错，区分度要清晰
-4. score 字段按维度给分：例如 E-I 维度下，偏 E 的选项 score: {E: 2}，偏 I 的选项 score: {I: 2}；value 维度选项应标记 {salary:2} / {interest:2} / {impact:2} / {balance:2} 之一
+6 题顺序固定：
+- Q1：外倾 vs 内倾（E/I）
+- Q2：感觉 vs 直觉（S/N）
+- Q3：思考 vs 情感（T/F）
+- Q4：判断 vs 知觉（J/P）
+- Q5：风险偏好（稳定大厂 vs 快速增长创业）
+- Q6：价值取向（薪资 / 兴趣 / 影响力 / 生活平衡）
 
-严格按下列 JSON 输出（不要额外文字和 markdown 围栏）：
+要求：
+1. 题目必须结合用户的意向岗位，措辞贴近应届场景（"实习中""小组作业里""校招投递时""秋招签约时"）
+2. 每题 4 个选项（A/B/C/D），无对错，区分度要清晰
+3. 选项文本 20-35 字为宜，不要堆砌修辞
+4. **只输出题目文本和选项文本**——不要输出 id、dimension、score 等字段，这些由系统自动补齐
+
+严格按下列 JSON 输出（不加 markdown 围栏，不加解释文字）：
 
 {
   "questions": [
     {
-      "id": "q1",
-      "dimension": "E-I",
       "question": "题目文本",
-      "options": [
-        {"key":"A","label":"选项文本","score":{"E":2}},
-        {"key":"B","label":"选项文本","score":{"I":2}},
-        {"key":"C","label":"选项文本","score":{"E":1}},
-        {"key":"D","label":"选项文本","score":{"I":1}}
-      ]
-    }
+      "options": {
+        "A": "选项文本",
+        "B": "选项文本",
+        "C": "选项文本",
+        "D": "选项文本"
+      }
+    },
+    ... 共 6 题 ...
   ]
 }`;
 
 function buildQuizUserPrompt(formData: JobFormData): string {
+  // 静态指令前置，动态意向信息后置 —— 吃 MiniMax 自动前缀缓存（Part B）
   return [
+    `请基于用户的意向岗位生成 6 道个性化快测题，题目要体现岗位的校招场景。按骨架 JSON 严格输出。`,
+    ``,
     `应届生求职意向：`,
     `- 意向岗位：${formData.targetPosition}`,
     `- 意向学历：${formData.targetEducation}`,
     `- 意向公司/类型：${formData.targetCompany}`,
     `- 意向城市能级：${formData.targetCityTier}`,
-    ``,
-    `请基于该意向生成 6 道个性化快测题，题目要体现"${formData.targetPosition}"的校招场景。输出严格 JSON。`,
   ].join("\n");
 }
 
@@ -72,30 +81,35 @@ export async function POST(req: NextRequest) {
       systemPrompt: QUIZ_SYSTEM_PROMPT,
       userPrompt: buildQuizUserPrompt(formData),
       temperature: 0.7,
-      maxTokens: 3000, // 6道中文题+4选项每题，实测需要2000-2500 token，给足余量
+      maxTokens: 1500, // 骨架化后输出减半，1500 有余量
     };
 
-    let data: { questions: QuizQuestion[] };
+    // 讯飞 astron-code 主、MiniMax 兜底（避免和章节抢 MiniMax 并发）
+    let aiQuiz: AiQuizResponse;
     if (hasIflytek) {
       try {
-        data = await callIflytekJson<{ questions: QuizQuestion[] }>(callOpts);
+        aiQuiz = await callIflytekJson<AiQuizResponse>(callOpts);
       } catch (iflytekErr) {
-        console.warn("iFlytek quiz generate failed, falling back to MiniMax:", iflytekErr);
-        data = await callMiniMaxJson<{ questions: QuizQuestion[] }>(callOpts);
+        console.warn(
+          "iFlytek quiz generate failed, falling back to MiniMax:",
+          iflytekErr
+        );
+        aiQuiz = await callMiniMaxJson<AiQuizResponse>(callOpts);
       }
     } else {
-      data = await callMiniMaxJson<{ questions: QuizQuestion[] }>(callOpts);
+      aiQuiz = await callMiniMaxJson<AiQuizResponse>(callOpts);
     }
 
-    if (!data?.questions || data.questions.length < 6) {
-      throw new Error("AI 返回的测评题不完整");
-    }
+    // 服务端合并骨架：id / dimension / scoreMap 补齐
+    const questions = mergeQuizSkeleton(aiQuiz);
 
-    // Ensure IDs exist and are stable
-    const questions = data.questions.slice(0, 6).map((q, i) => ({
-      ...q,
-      id: q.id || `q${i + 1}`,
-    }));
+    // AI 漏字段 → 降级静态题库，保证前端仍有题可做
+    if (!isMergedQuizComplete(questions)) {
+      console.warn("[quiz] merged quiz incomplete, falling back to static:", {
+        returnedQuestions: aiQuiz?.questions?.length ?? 0,
+      });
+      return NextResponse.json({ questions: getFallbackQuiz() });
+    }
 
     return NextResponse.json({ questions });
   } catch (error: unknown) {

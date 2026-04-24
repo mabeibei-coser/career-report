@@ -63,7 +63,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ data: null });
     }
 
-    const userPrompt = `${buildBaseContext(formData, quizAnswers)}\n\n请基于以上简历内容输出 JSON 形式的简历诊断（3 条建议，含从简历摘取的原文片段）。`;
+    // 静态指令前置，buildBaseContext 的动态简历内容后置 —— 吃 MiniMax 自动前缀缓存
+    const userPrompt = `请基于下面的简历内容输出 JSON 形式的简历诊断（3 条建议，含从简历摘取的原文片段）。\n\n${buildBaseContext(formData, quizAnswers)}`;
     const data = await callWithFallback<ResumeDiagnosis>({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,

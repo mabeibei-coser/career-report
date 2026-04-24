@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
     if (!formData?.targetPosition) {
       return NextResponse.json({ error: "缺少意向信息" }, { status: 400 });
     }
-    const userPrompt = `${buildBaseContext(formData, quizAnswers)}\n\n请为"${formData.targetPosition}"这个意向岗位生成岗位信息 JSON（2 个细分岗位 + 每个 5 维能力）。`;
+    // 静态指令前置，buildBaseContext 的动态内容后置 —— 吃 MiniMax 自动前缀缓存
+    const userPrompt = `请为用户的意向岗位生成岗位信息 JSON（2 个细分岗位 + 每个 5 维能力）。\n\n${buildBaseContext(formData, quizAnswers)}`;
     const data = await callWithFallback<PositionInfo>({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
