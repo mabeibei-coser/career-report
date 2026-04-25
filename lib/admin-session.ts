@@ -11,7 +11,9 @@ const sessionOptions: SessionOptions = {
   password: process.env.ADMIN_SESSION_PASSWORD!,
   cookieName: "career_admin_session",
   cookieOptions: {
-    secure: process.env.NODE_ENV === "production",
+    secure:
+      process.env.ADMIN_COOKIE_SECURE !== "false" &&
+      process.env.NODE_ENV === "production",
     httpOnly: true,
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 7,
