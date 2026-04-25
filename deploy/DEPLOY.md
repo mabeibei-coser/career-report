@@ -103,6 +103,44 @@ pm2 stop career-report
 pm2 delete career-report
 ```
 
+## 管理员后台初始化
+
+首次部署完成后，初始化管理员密码和 session 密钥：
+
+```bash
+cd /var/www/career-report
+
+# 运行初始化脚本（交互式，按提示输入密码）
+node scripts/init-admin.mjs
+```
+
+脚本会输出两行内容，填入 `.env.production.local`：
+
+```env
+ADMIN_PASSWORD_HASH=<bcrypt hash 的 base64 编码，无 $ 号>
+ADMIN_SESSION_PASSWORD=<随机 base64url 字符串>
+```
+
+**注意：**
+- `ADMIN_PASSWORD_HASH` 是 bcrypt hash 的 base64 编码（脚本自动生成），不要手动填写原始 hash
+- `ADMIN_SESSION_PASSWORD` 长度必须 ≥ 32 字符，否则 iron-session 会报错
+- 修改环境变量后必须重启 pm2：`pm2 restart career-report`
+- 数据目录权限：`chmod -R 750 /var/www/career-report/data`（防止 Nginx 直接访问）
+
+**可选：Nginx 限制 /admin 路径仅内网访问**
+
+在 `nginx.conf` 的 server 块中加：
+
+```nginx
+location /admin {
+    allow 10.0.0.0/8;      # 内网 IP 段（按实际情况修改）
+    allow 127.0.0.1;
+    deny all;
+    proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+}
+```
+
 ## 故障排查
 
 - **启动失败**：`pm2 logs career-report --err` 看错误日志
@@ -113,3 +151,4 @@ pm2 delete career-report
   mkswap /swapfile && swapon /swapfile
   ```
 - **API 超时**：.env.production.local 里 MINIMAX_BASE_URL 配置正确？MiniMax 账号余额？
+- **管理员登录失败**：确认 `.env.production.local` 中 `ADMIN_PASSWORD_HASH` 和 `SESSION_SECRET` 已填，pm2 已重启

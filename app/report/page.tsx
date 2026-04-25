@@ -116,6 +116,7 @@ export default function ReportPage() {
       sessionDataLen: sessionStorage.getItem("reportData")?.length || 0,
     });
     const sp = new URLSearchParams(window.location.search);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (sp.get("pdf") === "1") setIsPdfMode(true);
     const r = loadReportFromSession();
     clientLog("report-loaded", {

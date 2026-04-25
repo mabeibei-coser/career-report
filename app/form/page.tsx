@@ -155,6 +155,10 @@ export default function FormPage() {
     sessionStorage.setItem("formData", JSON.stringify(payload));
     sessionStorage.removeItem("quizAnswers");
     sessionStorage.removeItem("reportData");
+    if (resume?.resumeRef) sessionStorage.setItem("resumeRef", resume.resumeRef);
+    else sessionStorage.removeItem("resumeRef");
+    if (resume?.resumeFilename) sessionStorage.setItem("resumeFilename", resume.resumeFilename);
+    else sessionStorage.removeItem("resumeFilename");
     // 提前预拉测评题：利用导航 + React mount 的 0.5-1.5s 消化掉一部分 MiniMax 等待
     startQuizPrefetch(payload);
     // 提前预拉不依赖测评画像的 4 个章节（答题期间并行跑）

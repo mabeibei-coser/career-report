@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { consumeQuizPrefetch } from "@/lib/quiz-prefetch";
+import { pickStaticQ1, PLACEHOLDER_Q2_TO_Q6 } from "@/lib/quiz-skeleton";
 import type {
   JobFormData,
   QuizAnswer,
@@ -44,6 +45,7 @@ export default function QuizPage() {
         router.replace("/form");
         return;
       }
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(parsed);
 
       // Restore existing selections
@@ -59,57 +61,71 @@ export default function QuizPage() {
         } catch {}
       }
 
-      // Fetch quiz —— 优先消费表单页提交时的预拉取结果；失败则带一次自动重试的现场 fetch
-      // 真机 5G 下讯飞偶尔 timeout，自动重试一次能把"开门黑"场景兜住，不让用户看错误页
-      const fetchFreshWithRetry = async (): Promise<QuizQuestion[]> => {
-        const attempt = async (): Promise<QuizQuestion[]> => {
-          const res = await fetch("/api/quiz/generate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ formData: parsed }),
-          });
-          const data = await res.json();
-          if (!res.ok || !data.questions) {
-            throw new Error(data.error ?? "测评题获取失败");
-          }
-          return data.questions as QuizQuestion[];
-        };
-        try {
-          return await attempt();
-        } catch (firstErr) {
-          console.warn(
-            "[quiz] first attempt failed, retrying in 2s:",
-            firstErr instanceof Error ? firstErr.message : firstErr
-          );
-          await new Promise((r) => setTimeout(r, 2000));
-          return await attempt(); // 第二次仍失败抛给外层
-        }
-      };
+      // 立即展示静态 Q1 + 占位 Q2-Q6，无需等 LLM
+      const staticQ1 = pickStaticQ1(parsed);
+      setQuestions([staticQ1, ...PLACEHOLDER_Q2_TO_Q6]);
+      setQuizLoading(false);
 
+      // 后台异步拉取个性化题目（最多等 8s）
       (async () => {
         try {
           const prefetched = consumeQuizPrefetch(parsed);
-          let qs: QuizQuestion[];
+          let fullQuestions: QuizQuestion[] | null = null;
+
+          // 优先消费预拉取（最多等 8s）
           if (prefetched) {
             try {
-              const data = await prefetched.promise;
-              qs = data.questions;
-            } catch (prefetchErr) {
-              // 预拉取结果失败（讯飞超时等）→ 降级走带重试的现场 fetch
-              console.warn(
-                "[quiz] prefetch failed, doing fresh fetch with retry:",
-                prefetchErr instanceof Error ? prefetchErr.message : prefetchErr
-              );
-              qs = await fetchFreshWithRetry();
-            }
-          } else {
-            qs = await fetchFreshWithRetry();
+              fullQuestions = await Promise.race([
+                prefetched.promise.then((d) => d.questions),
+                new Promise<never>((_, reject) =>
+                  setTimeout(() => reject(new Error("prefetch timeout")), 8000)
+                ),
+              ]);
+            } catch { /* 超时/失败 */ }
           }
-          setQuestions(qs);
+
+          // 预拉取没结果 → 现场 fetch（最多 8s）
+          if (!fullQuestions) {
+            try {
+              const ctrl = new AbortController();
+              const tid = setTimeout(() => ctrl.abort(), 8000);
+              const res = await fetch("/api/quiz/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ formData: parsed }),
+                signal: ctrl.signal,
+              });
+              clearTimeout(tid);
+              const data = await res.json();
+              if (res.ok && data.questions?.length) {
+                fullQuestions = data.questions as QuizQuestion[];
+              }
+            } catch { /* 全量 fetch 超时/失败 */ }
+          }
+
+          if (fullQuestions) {
+            setQuestions(fullQuestions);
+            return;
+          }
+
+          // 全量失败 → from=2 只拉 Q2-Q6
+          try {
+            const res = await fetch("/api/quiz/generate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ formData: parsed, from: 2 }),
+            });
+            const data = await res.json();
+            if (res.ok && data.questions?.length) {
+              const q2to6 = data.questions as QuizQuestion[];
+              setQuestions((prev) => [prev[0], ...q2to6]);
+              return;
+            }
+          } catch { /* from=2 也失败 */ }
+
+          console.warn("[quiz] all fetch attempts failed, keeping static Q1 + placeholders");
         } catch (e) {
-          setLoadError(e instanceof Error ? e.message : "无法加载测评题");
-        } finally {
-          setQuizLoading(false);
+          console.warn("[quiz] unexpected error in background fetch:", e);
         }
       })();
     } catch (e) {
@@ -257,39 +273,46 @@ export default function QuizPage() {
               </div>
 
               {/* Options */}
-              <div className="grid gap-3">
-                {currentQ.options.map((opt) => {
-                  const active = selectedKey === opt.key;
-                  return (
-                    <button
-                      type="button"
-                      key={opt.key}
-                      onClick={() => handleSelect(opt.key)}
-                      className={cn(
-                        "group flex items-start gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all",
-                        "min-h-[52px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue-500)]/40",
-                        active
-                          ? "border-[var(--blue-500)] bg-[var(--blue-500)]/5 shadow-sm"
-                          : "border-[var(--blue-100)] bg-white/70 hover:border-[var(--blue-300)] hover:bg-white"
-                      )}
-                    >
-                      <div
+              {currentQ.options.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-12">
+                  <Loader2 className="size-8 animate-spin text-blue-400" />
+                  <p className="text-sm text-blue-200/60">AI 正在为你定制此题，约 3-8 秒...</p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {currentQ.options.map((opt) => {
+                    const active = selectedKey === opt.key;
+                    return (
+                      <button
+                        type="button"
+                        key={opt.key}
+                        onClick={() => handleSelect(opt.key)}
                         className={cn(
-                          "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold",
+                          "group flex items-start gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all",
+                          "min-h-[52px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue-500)]/40",
                           active
-                            ? "border-[var(--blue-500)] bg-[var(--blue-500)] text-white"
-                            : "border-[var(--blue-200)] text-[var(--navy-700)]"
+                            ? "border-[var(--blue-500)] bg-[var(--blue-500)]/5 shadow-sm"
+                            : "border-[var(--blue-100)] bg-white/70 hover:border-[var(--blue-300)] hover:bg-white"
                         )}
                       >
-                        {active ? <CheckCircle2 className="size-4" /> : opt.key}
-                      </div>
-                      <div className="flex-1 text-sm sm:text-base leading-relaxed text-[var(--navy-800)]">
-                        {opt.label}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+                        <div
+                          className={cn(
+                            "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold",
+                            active
+                              ? "border-[var(--blue-500)] bg-[var(--blue-500)] text-white"
+                              : "border-[var(--blue-200)] text-[var(--navy-700)]"
+                          )}
+                        >
+                          {active ? <CheckCircle2 className="size-4" /> : opt.key}
+                        </div>
+                        <div className="flex-1 text-sm sm:text-base leading-relaxed text-[var(--navy-800)]">
+                          {opt.label}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
 
@@ -308,7 +331,7 @@ export default function QuizPage() {
               <Button
                 type="button"
                 onClick={goNext}
-                disabled={!selectedKey}
+                disabled={!selectedKey || currentQ.options.length === 0}
                 className="h-10 px-6 bg-[var(--blue-500)] hover:bg-[var(--blue-600)]"
               >
                 下一题
@@ -373,6 +396,7 @@ function QuizLoadingScreen() {
 
   // 给当前 step label 打字机
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTypedLabel("");
     const text = LOADING_STEPS[stepIdx]?.label ?? "";
     let i = 0;

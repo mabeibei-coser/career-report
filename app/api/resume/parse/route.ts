@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
+import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -9,6 +12,15 @@ const ALLOWED_MIMES = new Set([
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/msword",
 ]);
+
+function sanitizeFilename(raw: string): string {
+  return (
+    raw
+      .replace(/[/\\<>:"|?*\x00-\x1f]/g, "_")
+      .replace(/^\.+/, "_")
+      .slice(0, 200) || "resume"
+  );
+}
 
 function cleanText(raw: string): string {
   return raw
@@ -104,16 +116,41 @@ export async function POST(req: NextRequest) {
 
     const text = truncate(cleaned);
 
+    const tempId = randomUUID();
+    const cleanName = sanitizeFilename(file.name);
+    const tempDir = path.join(process.cwd(), "data", "temp", tempId);
+    fs.mkdirSync(tempDir, { recursive: true });
+    fs.writeFileSync(path.join(tempDir, cleanName), buffer);
+
     return NextResponse.json({
       text,
       fileName: file.name,
       charCount: cleaned.length,
       truncated: cleaned.length > text.length,
+      resumeRef: tempId,
+      resumeFilename: cleanName,
     });
   } catch (error: unknown) {
     console.error("Resume parse error:", error);
     const message =
       error instanceof Error ? error.message : "简历解析失败";
     return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export function cleanupOldTemp(maxAgeMs = 30 * 60 * 1000): void {
+  const tempDir = path.join(process.cwd(), "data", "temp");
+  if (!fs.existsSync(tempDir)) return;
+  const now = Date.now();
+  for (const entry of fs.readdirSync(tempDir)) {
+    const entryPath = path.join(tempDir, entry);
+    try {
+      const stat = fs.statSync(entryPath);
+      if (now - stat.mtimeMs > maxAgeMs) {
+        fs.rmSync(entryPath, { recursive: true, force: true });
+      }
+    } catch {
+      // ignore
+    }
   }
 }
