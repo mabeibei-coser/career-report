@@ -13,6 +13,8 @@ export interface FileUploadValue {
   text: string;
   charCount?: number;
   truncated?: boolean;
+  resumeRef?: string;
+  resumeFilename?: string;
 }
 
 export interface FileUploadProps {
@@ -94,6 +96,8 @@ export function FileUpload({
         text: data.text,
         charCount: data.charCount,
         truncated: data.truncated,
+        resumeRef: data.resumeRef,
+        resumeFilename: data.resumeFilename,
       };
       setStatus("success");
       onChange?.(next);

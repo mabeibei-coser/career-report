@@ -65,3 +65,16 @@ tencent_key*
 **/.ssh/
 # Windows 路径在 Git Bash 里被错误解析时留下的残片（如 "C:Users..."）
 C\:*
+
+# admin data (DB + files, keep directory structure but not content)
+/data/*
+!/data/.gitkeep
+!/data/reports/
+/data/reports/*
+!/data/reports/.gitkeep
+!/data/resumes/
+/data/resumes/*
+!/data/resumes/.gitkeep
+!/data/temp/
+/data/temp/*
+!/data/temp/.gitkeep

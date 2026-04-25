@@ -73,8 +73,8 @@ export interface AiQuizResponse {
  * AI 输出 + 骨架合并为完整 QuizQuestion[]。
  * 字段缺失时兜底为空串，上游用 isMergedQuizComplete 判断是否降级静态题库。
  */
-export function mergeQuizSkeleton(ai: AiQuizResponse): QuizQuestion[] {
-  return QUIZ_SKELETON.map((slot, i) => {
+export function mergeQuizSkeleton(ai: AiQuizResponse, startIdx = 0): QuizQuestion[] {
+  return QUIZ_SKELETON.slice(startIdx).map((slot, i) => {
     const q = ai?.questions?.[i];
     return {
       id: slot.id,
@@ -98,3 +98,68 @@ export function isMergedQuizComplete(questions: QuizQuestion[]): boolean {
     return q.options.every((opt) => opt.label.trim().length > 0);
   });
 }
+
+export const STATIC_Q1_VARIANTS: Record<
+  "default" | "tech" | "product" | "operation",
+  QuizQuestion
+> = {
+  tech: {
+    id: "q1",
+    dimension: "E-I",
+    question: "面对一个复杂的技术难题，你倾向于？",
+    options: [
+      { key: "A", label: "先自己深入研究，形成方案后再与团队讨论", score: { I: 2 } },
+      { key: "B", label: "立刻拉上同事头脑风暴，一起找解法", score: { E: 2 } },
+      { key: "C", label: "查阅文档和案例，再根据实际情况决定", score: { I: 1 } },
+      { key: "D", label: "根据紧急程度灵活调整，没有固定偏好", score: { E: 1 } },
+    ],
+  },
+  product: {
+    id: "q1",
+    dimension: "E-I",
+    question: "你在做产品决策时，更倾向于？",
+    options: [
+      { key: "A", label: "独立思考，形成清晰逻辑后再推进", score: { I: 2 } },
+      { key: "B", label: "广泛收集用户和团队反馈，集思广益", score: { E: 2 } },
+      { key: "C", label: "结合数据和直觉综合判断", score: { I: 1 } },
+      { key: "D", label: "视项目阶段和资源灵活选择", score: { E: 1 } },
+    ],
+  },
+  operation: {
+    id: "q1",
+    dimension: "E-I",
+    question: "处理运营问题时，你更倾向于？",
+    options: [
+      { key: "A", label: "先分析数据，独立拟定方案再执行", score: { I: 2 } },
+      { key: "B", label: "马上与相关方沟通，协同推进", score: { E: 2 } },
+      { key: "C", label: "根据问题性质和紧急度决定策略", score: { I: 1 } },
+      { key: "D", label: "没有明显偏好，视情况而定", score: { E: 1 } },
+    ],
+  },
+  default: {
+    id: "q1",
+    dimension: "E-I",
+    question: "在工作中遇到新项目，你通常会？",
+    options: [
+      { key: "A", label: "先独立研究，建立自己的理解框架", score: { I: 2 } },
+      { key: "B", label: "积极与团队交流，快速建立共识", score: { E: 2 } },
+      { key: "C", label: "根据项目类型和规模灵活调整", score: { I: 1 } },
+      { key: "D", label: "没有特别偏好，随机应变", score: { E: 1 } },
+    ],
+  },
+};
+
+export function pickStaticQ1(formData: { targetPosition?: string }): QuizQuestion {
+  const pos = (formData.targetPosition ?? "").toLowerCase();
+  if (/开发|工程师|架构|前端|后端|算法|数据/.test(pos)) return STATIC_Q1_VARIANTS.tech;
+  if (/产品|pm|需求|体验/.test(pos)) return STATIC_Q1_VARIANTS.product;
+  if (/运营|增长|推广|渠道|市场/.test(pos)) return STATIC_Q1_VARIANTS.operation;
+  return STATIC_Q1_VARIANTS.default;
+}
+
+export const PLACEHOLDER_Q2_TO_Q6: QuizQuestion[] = QUIZ_SKELETON.slice(1).map((q) => ({
+  id: q.id,
+  dimension: q.dimension,
+  question: "正在为你定制题目...",
+  options: [] as QuizQuestion["options"],
+}));

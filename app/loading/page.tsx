@@ -123,11 +123,25 @@ export default function LoadingPage() {
     if (!formData) return;
 
     (async () => {
+      const startTime = Date.now();
       try {
         const report = await generateReport(formData, quizAnswers, {
           onProgress: (p) => setProgress(p),
         });
         sessionStorage.setItem("reportData", JSON.stringify(report));
+        fetch("/api/report/finalize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            formData,
+            quizAnswers,
+            reportData: report,
+            sectionsStatus: {},
+            durationMs: Date.now() - startTime,
+            resumeRef: sessionStorage.getItem("resumeRef") ?? undefined,
+            resumeFilename: sessionStorage.getItem("resumeFilename") ?? undefined,
+          }),
+        }).catch((e) => console.warn("[finalize] failed (ignored):", e));
         setDone(true);
         setTimeout(() => router.push("/report"), 700);
       } catch (e) {
@@ -316,6 +330,7 @@ function FloatingParticles() {
       delay: Math.random() * 4,
       dur: 8 + Math.random() * 6,
     }));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDots(arr);
   }, []);
   return (

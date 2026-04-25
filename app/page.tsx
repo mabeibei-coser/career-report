@@ -442,16 +442,14 @@ export default function HomePage() {
                 custom={4}
                 className="mt-10 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start"
               >
-                <Link href="/form">
-                  <div className="border-beam rounded-2xl">
-                    <Button
-                      size="lg"
-                      className="relative h-14 px-10 text-base font-semibold bg-white text-[var(--navy-900)] hover:bg-blue-50 border-0 rounded-2xl transition-all duration-300 cursor-pointer z-10"
-                    >
-                      开始职业分析
-                      <ArrowRight className="ml-2 size-5 transition-transform group-hover/button:translate-x-1" />
-                    </Button>
-                  </div>
+                <Link href="/form" className="w-full sm:w-auto">
+                  <Button
+                    size="lg"
+                    className="animate-cta-pulse w-full sm:w-auto h-16 px-12 text-lg font-bold bg-[var(--blue-500)] text-white hover:bg-[var(--blue-600)] border-0 rounded-2xl ring-2 ring-white/20 hover:ring-white/40 shadow-2xl shadow-blue-500/40 transition-all duration-300 cursor-pointer"
+                  >
+                    开始职业分析
+                    <ArrowRight className="ml-2 size-6 transition-transform group-hover/button:translate-x-1" />
+                  </Button>
                 </Link>
                 <span className="text-xs text-blue-200/30 font-light">
                   无需注册 &middot; 即刻体验
@@ -680,7 +678,7 @@ export default function HomePage() {
                 size="lg"
                 className="btn-glow h-12 px-8 text-sm font-medium bg-white text-[var(--navy-900)] hover:bg-blue-50 border-0 rounded-xl cursor-pointer"
               >
-                立即体验
+                立即开始分析
                 <ArrowRight className="ml-2 size-4" />
               </Button>
             </Link>
@@ -708,6 +706,40 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+      <MobileStickyCTA />
     </div>
+  );
+}
+
+function MobileStickyCTA() {
+  const [hidden, setHidden] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 800);
+    const footer = document.querySelector("footer");
+    if (!footer) return () => clearTimeout(t);
+    const io = new IntersectionObserver(
+      ([e]) => setHidden(e.isIntersecting),
+      { threshold: 0.1 }
+    );
+    io.observe(footer);
+    return () => {
+      clearTimeout(t);
+      io.disconnect();
+    };
+  }, []);
+  return (
+    <motion.div
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: mounted && !hidden ? 0 : 100, opacity: mounted && !hidden ? 1 : 0 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 bg-gradient-to-t from-white via-white/95 to-transparent backdrop-blur-md"
+    >
+      <Link href="/form" className="block">
+        <Button className="w-full h-14 text-base font-bold bg-[var(--blue-500)] text-white hover:bg-[var(--blue-600)] rounded-2xl shadow-2xl shadow-blue-500/40">
+          开始职业分析 <ArrowRight className="ml-2 size-5" />
+        </Button>
+      </Link>
+    </motion.div>
   );
 }
