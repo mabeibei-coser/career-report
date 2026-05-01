@@ -16,8 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { FileUpload, type FileUploadValue } from "@/components/ui/file-upload";
+import { StepIndicator } from "@/components/ui/step-indicator";
 import { educationLevels, cityTiers } from "@/lib/form-options";
 import { startQuizPrefetch } from "@/lib/quiz-prefetch";
 import { startReportPrefetch, clearReportPrefetch } from "@/lib/report-prefetch";
@@ -146,6 +146,7 @@ export default function FormPage() {
   });
 
   const onSubmit = (data: FormValues) => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
     const payload: JobFormData = {
       ...data,
@@ -169,13 +170,11 @@ export default function FormPage() {
   useEffect(() => {
     // 用户返回表单重新填写：清理旧的预拉取，防止提交新表单后拿到旧数据
     clearReportPrefetch();
-  }, []);
+    // 后台预编译 /quiz 路由（dev 模式消除首次跳转的"Compiling..."等待）
+    router.prefetch("/quiz");
+  }, [router]);
 
   const watchedValues = watch();
-  const filledCount = Object.values(watchedValues).filter(
-    (v) => v && v.length > 0
-  ).length;
-  const progress = (filledCount / 4) * 100;
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -215,17 +214,11 @@ export default function FormPage() {
             返回首页
           </button>
 
-          <div className="flex items-center gap-3 mb-5">
-            <Badge
-              variant="secondary"
-              className="bg-[var(--blue-500)] text-white px-3 py-1 text-xs font-medium tracking-wide"
-            >
-              第 1 步 / 共 3 步
-            </Badge>
-            <span className="text-sm text-[var(--muted-foreground)]">
-              填写求职意向
-            </span>
-          </div>
+          <p className="text-xs sm:text-sm text-[var(--blue-500)] font-medium mb-3 tracking-wide">
+            5 分钟完成职业定位自测
+          </p>
+
+          <StepIndicator currentStep={0} compact className="mb-6" />
 
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--navy-950)] tracking-tight mb-3">
             你的求职意向
@@ -234,31 +227,6 @@ export default function FormPage() {
             面向应届大学生的校招定位工具。填写岗位、学历、公司、城市四项意向，可选上传简历，AI
             将据此完成 6 题快测并生成个性化报告。
           </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scaleX: 0 }}
-          animate={{ opacity: 1, scaleX: 1 }}
-          transition={{ duration: 0.5, delay: 0.2, ease: cubicEase }}
-          className="mb-6 sm:mb-8"
-          style={{ transformOrigin: "left" }}
-        >
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs text-[var(--muted-foreground)]">
-              完成进度
-            </span>
-            <span className="text-xs font-medium text-[var(--navy-700)]">
-              {filledCount}/4
-            </span>
-          </div>
-          <div className="h-1.5 bg-[var(--blue-100)] rounded-full overflow-hidden">
-            <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-[var(--blue-500)] to-[var(--blue-400)]"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.4, ease: cubicEase }}
-            />
-          </div>
         </motion.div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
@@ -299,7 +267,7 @@ export default function FormPage() {
                   >
                     <SelectTrigger
                       id={field.name}
-                      className="h-11 text-base md:text-sm bg-white/60 border-[var(--blue-200)] focus:border-[var(--blue-400)] focus:ring-2 focus:ring-[var(--blue-500)]/20 transition-all data-[placeholder]:text-[var(--muted-foreground)]/50"
+                      className="w-full h-11 text-base md:text-sm bg-white/60 border-[var(--blue-200)] focus:border-[var(--blue-400)] focus:ring-2 focus:ring-[var(--blue-500)]/20 transition-all data-[placeholder]:text-[var(--muted-foreground)]/50"
                     >
                       <SelectValue placeholder={field.placeholder} />
                     </SelectTrigger>
@@ -374,48 +342,20 @@ export default function FormPage() {
           >
             <Button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full h-12 text-base font-medium bg-[var(--navy-900)] hover:bg-[var(--navy-800)] text-white rounded-xl btn-glow transition-all duration-300 disabled:opacity-50"
+              className="w-full h-12 text-base font-medium bg-[var(--navy-900)] hover:bg-[var(--navy-800)] text-white rounded-xl btn-glow transition-all duration-300"
             >
-              {isSubmitting ? (
-                <span className="flex items-center gap-2">
-                  <svg
-                    className="animate-spin h-4 w-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      className="opacity-25"
-                    />
-                    <path
-                      d="M12 2a10 10 0 0 1 10 10"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      className="opacity-75"
-                    />
-                  </svg>
-                  准备测评中...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  开始 6 题快测
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                    <path
-                      d="M6.5 4L12 9l-5.5 5"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-              )}
+              <span className="flex items-center gap-2">
+                下一步
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path
+                    d="M6.5 4L12 9l-5.5 5"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
             </Button>
 
             <p className="text-center text-xs text-[var(--muted-foreground)] mt-4">

@@ -36,15 +36,16 @@ ${APPLICANT_BASELINE}
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { formData, quizAnswers } = body as {
+    const { formData, quizAnswers, interviewSummary } = body as {
       formData: JobFormData;
       quizAnswers: QuizAnswer[];
+      interviewSummary?: string;
     };
     if (!formData?.targetPosition) {
       return NextResponse.json({ error: "缺少意向信息" }, { status: 400 });
     }
     // 静态指令前置，buildBaseContext 的动态内容后置 —— 吃 MiniMax 自动前缀缓存
-    const userPrompt = `请基于公开网络对用户意向公司的反馈（脉脉/小红书/知乎/校招贴吧），给出 companyInsight.observations；targetLabel 必须原样回显用户填写的意向公司名称。\n\n${buildBaseContext(formData, quizAnswers)}`;
+    const userPrompt = `请基于公开网络对用户意向公司的反馈（脉脉/小红书/知乎/校招贴吧），给出 companyInsight.observations；targetLabel 必须原样回显用户填写的意向公司名称。\n\n${buildBaseContext(formData, quizAnswers, interviewSummary)}`;
     const data = await callWithFallback<WorkplaceInsight>({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,

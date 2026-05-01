@@ -9,6 +9,7 @@ import {
   type SectionProgress,
 } from "@/lib/report-client";
 import { cn } from "@/lib/utils";
+import { StepIndicator } from "@/components/ui/step-indicator";
 import type { JobFormData, QuizAnswer } from "@/lib/types";
 
 const cubicEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
@@ -99,12 +100,17 @@ export default function LoadingPage() {
     if (started.current) return;
     started.current = true;
 
+    // 后台预编译 /report 路由（dev 模式消除首次跳转的"Compiling..."等待）
+    router.prefetch("/report");
+
     let formData: JobFormData | null = null;
     let quizAnswers: QuizAnswer[] = [];
+    let interviewSummary: string | undefined;
 
     try {
       const fd = sessionStorage.getItem("formData");
       const qa = sessionStorage.getItem("quizAnswers");
+      const id = sessionStorage.getItem("interviewData");
       if (!fd) {
         router.replace("/form");
         return;
@@ -115,6 +121,12 @@ export default function LoadingPage() {
         return;
       }
       quizAnswers = qa ? (JSON.parse(qa) as QuizAnswer[]) : [];
+      if (id) {
+        try {
+          const parsed = JSON.parse(id) as { summary?: string };
+          interviewSummary = parsed.summary || undefined;
+        } catch { /* ignore */ }
+      }
     } catch {
       router.replace("/form");
       return;
@@ -127,6 +139,7 @@ export default function LoadingPage() {
       try {
         const report = await generateReport(formData, quizAnswers, {
           onProgress: (p) => setProgress(p),
+          interviewSummary,
         });
         sessionStorage.setItem("reportData", JSON.stringify(report));
         fetch("/api/report/finalize", {
@@ -168,9 +181,18 @@ export default function LoadingPage() {
 
       <div className="relative z-10 max-w-xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: cubicEase }}
+          className="mb-6"
+        >
+          <StepIndicator currentStep={2} compact />
+        </motion.div>
+
+        <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: cubicEase }}
+          transition={{ duration: 0.5, ease: cubicEase, delay: 0.05 }}
           className="mb-6 text-center"
         >
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--navy-950)] tracking-tight mb-3">

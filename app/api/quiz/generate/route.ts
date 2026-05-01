@@ -86,10 +86,44 @@ ${APPLICANT_BASELINE}
   ]
 }`;
 
-function buildQuizUserPrompt(formData: JobFormData): string {
+const QUIZ_SYSTEM_PROMPT_FROM_Q3 = `你是一位资深校招心理测评设计师。为一名应届大学生设计 4 道职业性格快测题（第 3-6 题）。
+
+${APPLICANT_BASELINE}
+
+4 题顺序固定：
+- Q3：思考 vs 情感（T/F）
+- Q4：判断 vs 知觉（J/P）
+- Q5：风险偏好（稳定大厂 vs 快速增长创业）
+- Q6：价值取向（薪资 / 兴趣 / 影响力 / 生活平衡）
+
+要求：
+1. 题目必须结合用户的意向岗位，措辞贴近应届场景（"实习中""小组作业里""校招投递时""秋招签约时"）
+2. 每题 4 个选项（A/B/C/D），无对错，区分度要清晰
+3. 选项文本 20-35 字为宜，不要堆砌修辞
+4. **只输出题目文本和选项文本**——不要输出 id、dimension、score 等字段，这些由系统自动补齐
+
+严格按下列 JSON 输出（不加 markdown 围栏，不加解释文字）：
+
+{
+  "questions": [
+    {
+      "question": "题目文本",
+      "options": {
+        "A": "选项文本",
+        "B": "选项文本",
+        "C": "选项文本",
+        "D": "选项文本"
+      }
+    },
+    ... 共 4 题 ...
+  ]
+}`;
+
+function buildQuizUserPrompt(formData: JobFormData, from = 1): string {
+  const count = from === 3 ? 4 : from === 2 ? 5 : 6;
   // 静态指令前置，动态意向信息后置 —— 吃 MiniMax 自动前缀缓存（Part B）
   return [
-    `请基于用户的意向岗位生成 6 道个性化快测题，题目要体现岗位的校招场景。按骨架 JSON 严格输出。`,
+    `请基于用户的意向岗位生成 ${count} 道个性化快测题，题目要体现岗位的校招场景。按骨架 JSON 严格输出。`,
     ``,
     `应届生求职意向：`,
     `- 意向岗位：${formData.targetPosition}`,
@@ -103,7 +137,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const formData = body?.formData as JobFormData | undefined;
-    const from = body?.from === 2 ? 2 : 1;
+    const from = body?.from === 3 ? 3 : body?.from === 2 ? 2 : 1;
 
     if (!formData?.targetPosition) {
       return NextResponse.json(
@@ -113,10 +147,10 @@ export async function POST(req: NextRequest) {
     }
 
     const baseOpts = {
-      systemPrompt: from === 2 ? QUIZ_SYSTEM_PROMPT_FROM_Q2 : QUIZ_SYSTEM_PROMPT,
-      userPrompt: buildQuizUserPrompt(formData),
+      systemPrompt: from === 3 ? QUIZ_SYSTEM_PROMPT_FROM_Q3 : from === 2 ? QUIZ_SYSTEM_PROMPT_FROM_Q2 : QUIZ_SYSTEM_PROMPT,
+      userPrompt: buildQuizUserPrompt(formData, from),
       temperature: 0.7,
-      maxTokens: from === 2 ? 1900 : 2200,
+      maxTokens: from === 3 ? 1500 : from === 2 ? 1900 : 2200,
     };
 
     // 讯飞主、MiniMax 兜底。讯飞经常 25s+，超时拉短让 fallback 提前介入：
@@ -142,7 +176,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 服务端合并骨架：id / dimension / scoreMap 补齐
-    const questions = mergeQuizSkeleton(aiQuiz, from === 2 ? 1 : 0);
+    const questions = mergeQuizSkeleton(aiQuiz, from === 3 ? 2 : from === 2 ? 1 : 0);
 
     if (from === 2) {
       const complete =
@@ -156,6 +190,22 @@ export async function POST(req: NextRequest) {
       if (!complete) {
         console.warn("[quiz] from=2 merged quiz incomplete, using fallback");
         return NextResponse.json({ questions: getFallbackQuiz().slice(1) });
+      }
+      return NextResponse.json({ questions });
+    }
+
+    if (from === 3) {
+      const complete =
+        questions.length === 4 &&
+        questions.every(
+          (q) =>
+            q.question.trim() &&
+            q.options.length === 4 &&
+            q.options.every((o) => o.label.trim().length > 0)
+        );
+      if (!complete) {
+        console.warn("[quiz] from=3 merged quiz incomplete, using fallback");
+        return NextResponse.json({ questions: getFallbackQuiz().slice(2) });
       }
       return NextResponse.json({ questions });
     }

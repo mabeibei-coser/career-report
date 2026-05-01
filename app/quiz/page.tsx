@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { StepIndicator } from "@/components/ui/step-indicator";
 import { cn } from "@/lib/utils";
 import { consumeQuizPrefetch } from "@/lib/quiz-prefetch";
-import { pickStaticQ1, PLACEHOLDER_Q2_TO_Q6 } from "@/lib/quiz-skeleton";
+import { pickStaticQ1, pickStaticQ2, PLACEHOLDER_Q3_TO_Q6, STATIC_FALLBACK_Q3_TO_Q6 } from "@/lib/quiz-skeleton";
 import type {
   JobFormData,
   QuizAnswer,
@@ -22,60 +22,82 @@ interface SelectionMap {
   [questionId: string]: "A" | "B" | "C" | "D";
 }
 
+// Synchronously read formData from sessionStorage so static Q1 can render on first paint
+function readInitialQuizState(): {
+  formData: JobFormData | null;
+  questions: QuizQuestion[];
+  selections: SelectionMap;
+  quizLoading: boolean;
+} {
+  if (typeof window === "undefined") {
+    return { formData: null, questions: [], selections: {}, quizLoading: true };
+  }
+  try {
+    const saved = sessionStorage.getItem("formData");
+    if (!saved) {
+      return { formData: null, questions: [], selections: {}, quizLoading: true };
+    }
+    const parsed = JSON.parse(saved) as JobFormData;
+    if (!parsed.targetPosition) {
+      return { formData: null, questions: [], selections: {}, quizLoading: true };
+    }
+    const staticQ1 = pickStaticQ1();
+    const staticQ2 = pickStaticQ2();
+    const initialQuestions = [staticQ1, staticQ2, ...PLACEHOLDER_Q3_TO_Q6];
+    let initialSelections: SelectionMap = {};
+    const savedAnswers = sessionStorage.getItem("quizAnswers");
+    if (savedAnswers) {
+      try {
+        const answers = JSON.parse(savedAnswers) as QuizAnswer[];
+        const map: SelectionMap = {};
+        for (const a of answers) {
+          map[a.questionId] = a.selectedKey;
+        }
+        initialSelections = map;
+      } catch {}
+    }
+    return {
+      formData: parsed,
+      questions: initialQuestions,
+      selections: initialSelections,
+      quizLoading: false,
+    };
+  } catch {
+    return { formData: null, questions: [], selections: {}, quizLoading: true };
+  }
+}
+
 export default function QuizPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState<JobFormData | null>(null);
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const initialState = readInitialQuizState();
+  const [formData] = useState<JobFormData | null>(initialState.formData);
+  const [questions, setQuestions] = useState<QuizQuestion[]>(initialState.questions);
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [selections, setSelections] = useState<SelectionMap>({});
+  const [selections, setSelections] = useState<SelectionMap>(initialState.selections);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [quizLoading, setQuizLoading] = useState(true);
+  const [quizLoading, setQuizLoading] = useState(initialState.quizLoading);
 
-  // Load form data and fetch quiz
+  // 后台拉取个性化题目（formData 已在 initializer 中读取）
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!formData) {
+      router.replace("/form");
+      return;
+    }
+    // 后台预编译 /interview 路由（dev 模式消除首次跳转的"Compiling..."等待）
+    router.prefetch("/interview");
+    const parsed = formData;
     try {
-      const saved = sessionStorage.getItem("formData");
-      if (!saved) {
-        router.replace("/form");
-        return;
-      }
-      const parsed = JSON.parse(saved) as JobFormData;
-      if (!parsed.targetPosition) {
-        router.replace("/form");
-        return;
-      }
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setFormData(parsed);
-
-      // Restore existing selections
-      const savedAnswers = sessionStorage.getItem("quizAnswers");
-      if (savedAnswers) {
-        try {
-          const answers = JSON.parse(savedAnswers) as QuizAnswer[];
-          const map: SelectionMap = {};
-          for (const a of answers) {
-            map[a.questionId] = a.selectedKey;
-          }
-          setSelections(map);
-        } catch {}
-      }
-
-      // 立即展示静态 Q1 + 占位 Q2-Q6，无需等 LLM
-      const staticQ1 = pickStaticQ1(parsed);
-      setQuestions([staticQ1, ...PLACEHOLDER_Q2_TO_Q6]);
-      setQuizLoading(false);
-
-      // 后台异步拉取个性化题目（最多等 8s）
+      // 后台异步拉取 Q3-Q6 个性化题目（Q1+Q2 已从题库静态展示）
       (async () => {
         try {
           const prefetched = consumeQuizPrefetch(parsed);
-          let fullQuestions: QuizQuestion[] | null = null;
+          let q3to6: QuizQuestion[] | null = null;
 
           // 优先消费预拉取（最多等 8s）
           if (prefetched) {
             try {
-              fullQuestions = await Promise.race([
+              q3to6 = await Promise.race([
                 prefetched.promise.then((d) => d.questions),
                 new Promise<never>((_, reject) =>
                   setTimeout(() => reject(new Error("prefetch timeout")), 8000)
@@ -84,55 +106,44 @@ export default function QuizPage() {
             } catch { /* 超时/失败 */ }
           }
 
-          // 预拉取没结果 → 现场 fetch（最多 8s）
-          if (!fullQuestions) {
+          // 预拉取没结果 → 现场 fetch from=3（最多 8s）
+          if (!q3to6) {
             try {
               const ctrl = new AbortController();
               const tid = setTimeout(() => ctrl.abort(), 8000);
               const res = await fetch("/api/quiz/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ formData: parsed }),
+                body: JSON.stringify({ formData: parsed, from: 3 }),
                 signal: ctrl.signal,
               });
               clearTimeout(tid);
               const data = await res.json();
               if (res.ok && data.questions?.length) {
-                fullQuestions = data.questions as QuizQuestion[];
+                q3to6 = data.questions as QuizQuestion[];
               }
-            } catch { /* 全量 fetch 超时/失败 */ }
+            } catch { /* fetch 超时/失败 */ }
           }
 
-          if (fullQuestions) {
-            setQuestions(fullQuestions);
+          if (q3to6?.length) {
+            setQuestions((prev) => [prev[0], prev[1], ...q3to6!]);
             return;
           }
 
-          // 全量失败 → from=2 只拉 Q2-Q6
-          try {
-            const res = await fetch("/api/quiz/generate", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ formData: parsed, from: 2 }),
-            });
-            const data = await res.json();
-            if (res.ok && data.questions?.length) {
-              const q2to6 = data.questions as QuizQuestion[];
-              setQuestions((prev) => [prev[0], ...q2to6]);
-              return;
-            }
-          } catch { /* from=2 也失败 */ }
-
-          console.warn("[quiz] all fetch attempts failed, keeping static Q1 + placeholders");
+          // 全部失败 → 客户端静态兜底 Q3-Q6
+          console.warn("[quiz] all fetch failed, using client fallback Q3-Q6");
+          setQuestions((prev) => [prev[0], prev[1], ...STATIC_FALLBACK_Q3_TO_Q6]);
         } catch (e) {
           console.warn("[quiz] unexpected error in background fetch:", e);
         }
       })();
     } catch (e) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoadError(e instanceof Error ? e.message : "加载失败");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuizLoading(false);
     }
-  }, [router]);
+  }, [router, formData]);
 
   const currentQ = questions[currentIdx];
   const selectedKey = currentQ ? selections[currentQ.id] : undefined;
@@ -178,11 +189,11 @@ export default function QuizPage() {
     if (!allAnswered) return;
     persistAnswers(selections);
     sessionStorage.removeItem("reportData");
-    router.push("/loading");
+    router.push("/interview");
   };
 
   if (quizLoading) {
-    return <QuizLoadingScreen />;
+    return null; // formData 缺失时 useEffect 会 redirect 到 /form
   }
 
   if (loadError) {
@@ -222,17 +233,7 @@ export default function QuizPage() {
           transition={{ duration: 0.5, ease: cubicEase }}
           className="mb-6"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <Badge
-              variant="secondary"
-              className="bg-[var(--blue-500)] text-white px-3 py-1 text-xs font-medium tracking-wide"
-            >
-              第 2 步 / 共 3 步
-            </Badge>
-            <span className="text-sm text-[var(--muted-foreground)]">
-              职业性格 6 题快测
-            </span>
-          </div>
+          <StepIndicator currentStep={1} compact className="mb-4" />
           <div className="flex justify-between text-xs text-[var(--muted-foreground)] mb-2">
             <span>
               第 {currentIdx + 1} / {questions.length} 题
@@ -343,7 +344,7 @@ export default function QuizPage() {
                 disabled={!allAnswered}
                 className="h-10 px-6 bg-[var(--navy-900)] hover:bg-[var(--navy-800)] text-white"
               >
-                生成定位报告
+                进入 AI 访谈
               </Button>
             )}
           </div>
@@ -363,160 +364,3 @@ export default function QuizPage() {
   );
 }
 
-/* ============================================
-   QuizLoadingScreen —— 多阶段"有进度感"加载屏
-   ============================================ */
-
-const LOADING_STEPS = [
-  { label: "解析求职意向与简历关键词", duration: 1200 },
-  { label: "匹配性格测评维度", duration: 2000 },
-  { label: "从谨世题库生成 6 道定制题", duration: 15000 },
-];
-
-function QuizLoadingScreen() {
-  const [stepIdx, setStepIdx] = useState(0);
-  const [typedLabel, setTypedLabel] = useState("");
-  const [tick, setTick] = useState(0);
-
-  // 阶段切换：基于 duration 累积推进，最后一步停在"加载语音"直到 quizLoading=false 卸载
-  useEffect(() => {
-    let cancelled = false;
-    const advance = async (i: number) => {
-      if (cancelled) return;
-      setStepIdx(i);
-      if (i >= LOADING_STEPS.length - 1) return;
-      await new Promise((r) => setTimeout(r, LOADING_STEPS[i].duration));
-      if (!cancelled) advance(i + 1);
-    };
-    advance(0);
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // 给当前 step label 打字机
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTypedLabel("");
-    const text = LOADING_STEPS[stepIdx]?.label ?? "";
-    let i = 0;
-    const id = setInterval(() => {
-      i += 1;
-      setTypedLabel(text.slice(0, i));
-      if (i >= text.length) clearInterval(id);
-    }, 40);
-    return () => clearInterval(id);
-  }, [stepIdx]);
-
-  // 每 200ms 让小点闪烁 / 进度条前进
-  useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 200);
-    return () => clearInterval(id);
-  }, []);
-
-  // 假进度：基于阶段位置 + 当前 step 内累积比例
-  const totalDuration = LOADING_STEPS.reduce((a, s) => a + s.duration, 0);
-  const passedMs = LOADING_STEPS.slice(0, stepIdx).reduce(
-    (a, s) => a + s.duration,
-    0
-  );
-  const bar = Math.min(
-    95,
-    Math.round(((passedMs + tick * 200 * 0.6) / totalDuration) * 100)
-  );
-
-  return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[var(--blue-50)] via-white to-[var(--blue-100)] px-6 flex items-center justify-center">
-      <div className="fixed top-20 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-[var(--blue-200)] to-[var(--blue-100)] opacity-40 blur-3xl pointer-events-none" />
-      <div className="fixed -bottom-20 -left-32 w-80 h-80 rounded-full bg-gradient-to-tr from-[var(--blue-300)] to-[var(--blue-100)] opacity-30 blur-3xl pointer-events-none" />
-
-      <div className="relative z-10 w-full max-w-md">
-        <motion.h1
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-center text-xl sm:text-2xl font-bold text-[var(--navy-950)] mb-2 tracking-tight"
-        >
-          正在为你生成 6 道定制题
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-center text-xs text-[var(--muted-foreground)] mb-8"
-        >
-          根据你的岗位、学历、公司意向与性格维度定制 · 通常 15-30 秒
-        </motion.p>
-
-        {/* 进度条 */}
-        <div className="mb-6">
-          <div className="h-1 bg-[var(--blue-100)] rounded-full overflow-hidden">
-            <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-[var(--blue-500)] to-[var(--blue-400)]"
-              animate={{ width: `${bar}%` }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            />
-          </div>
-          <div className="mt-2 flex justify-between text-[10px] font-mono text-[var(--muted-foreground)]">
-            <span>STEP {stepIdx + 1} / {LOADING_STEPS.length}</span>
-            <span className="tabular-nums">{bar}%</span>
-          </div>
-        </div>
-
-        {/* 阶段列表 */}
-        <div className="space-y-2.5 rounded-xl border border-[var(--blue-100)] bg-white/60 backdrop-blur p-4">
-          {LOADING_STEPS.map((step, i) => {
-            const done = i < stepIdx;
-            const active = i === stepIdx;
-            return (
-              <div
-                key={i}
-                className="flex items-center gap-3 text-[13px]"
-              >
-                <div className="shrink-0">
-                  {done ? (
-                    <CheckCircle2 className="size-4 text-emerald-500" />
-                  ) : active ? (
-                    <Loader2 className="size-4 animate-spin text-[var(--blue-500)]" />
-                  ) : (
-                    <div className="size-4 rounded-full border border-[var(--blue-200)] bg-white" />
-                  )}
-                </div>
-                <div
-                  className={cn(
-                    "flex-1 min-w-0 leading-snug transition-colors",
-                    done
-                      ? "text-[var(--muted-foreground)] line-through decoration-[var(--blue-300)]/50"
-                      : active
-                        ? "text-[var(--navy-900)] font-medium"
-                        : "text-[var(--muted-foreground)]/60"
-                  )}
-                >
-                  {active ? (
-                    <>
-                      {typedLabel}
-                      <motion.span
-                        className="inline-block ml-0.5 -translate-y-0.5 text-[var(--blue-500)]"
-                        aria-hidden
-                        animate={{ opacity: [1, 0, 1] }}
-                        transition={{ duration: 1, repeat: Infinity }}
-                      >
-                        ▍
-                      </motion.span>
-                    </>
-                  ) : (
-                    step.label
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <p className="mt-6 text-center text-[11px] text-[var(--muted-foreground)]">
-          AI 正在工作 · 请勿关闭页面
-        </p>
-      </div>
-    </div>
-  );
-}

@@ -47,16 +47,17 @@ ${buildSalaryAnchorPrompt(position, education, resumeText)}
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { formData, quizAnswers } = body as {
+    const { formData, quizAnswers, interviewSummary } = body as {
       formData: JobFormData;
       quizAnswers: QuizAnswer[];
+      interviewSummary?: string;
     };
     if (!formData?.targetPosition) {
       return NextResponse.json({ error: "缺少意向信息" }, { status: 400 });
     }
 
     // 静态指令前置，buildBaseContext 的动态内容后置 —— 吃 MiniMax 自动前缀缓存
-    const userPrompt = `请为用户的意向岗位生成应届校招薪资 JSON（包含 quartiles、industryComparison、userIndustry）。\n\n${buildBaseContext(formData, quizAnswers)}`;
+    const userPrompt = `请为用户的意向岗位生成应届校招薪资 JSON（包含 quartiles、industryComparison、userIndustry）。\n\n${buildBaseContext(formData, quizAnswers, interviewSummary)}`;
 
     const callOpts = {
       systemPrompt: buildSystemPrompt(

@@ -55,6 +55,12 @@ pdf-test-payload.json
 # 本地测试临时文件
 _test_out/
 _test_payload.json
+scripts/test*.mp3
+scripts/tts_*.json
+scripts/tts_body.json
+scripts/test-volc-*.mjs
+scripts/test-custom-server.mjs
+orb-samples/
 
 # secrets / 密钥防护（2026-04 曾发生 SSH key 被误复制到仓库根目录）
 *.key
