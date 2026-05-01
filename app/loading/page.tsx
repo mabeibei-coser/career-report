@@ -101,10 +101,12 @@ export default function LoadingPage() {
 
     let formData: JobFormData | null = null;
     let quizAnswers: QuizAnswer[] = [];
+    let interviewSummary: string | undefined;
 
     try {
       const fd = sessionStorage.getItem("formData");
       const qa = sessionStorage.getItem("quizAnswers");
+      const id = sessionStorage.getItem("interviewData");
       if (!fd) {
         router.replace("/form");
         return;
@@ -115,6 +117,12 @@ export default function LoadingPage() {
         return;
       }
       quizAnswers = qa ? (JSON.parse(qa) as QuizAnswer[]) : [];
+      if (id) {
+        try {
+          const parsed = JSON.parse(id) as { summary?: string };
+          interviewSummary = parsed.summary || undefined;
+        } catch { /* ignore */ }
+      }
     } catch {
       router.replace("/form");
       return;
@@ -127,6 +135,7 @@ export default function LoadingPage() {
       try {
         const report = await generateReport(formData, quizAnswers, {
           onProgress: (p) => setProgress(p),
+          interviewSummary,
         });
         sessionStorage.setItem("reportData", JSON.stringify(report));
         fetch("/api/report/finalize", {

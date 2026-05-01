@@ -49,17 +49,19 @@ export interface GenerateReportOptions {
   onProgress?: (progress: SectionProgress[]) => void;
   useMockOnly?: boolean;
   retries?: number;
+  interviewSummary?: string;
 }
 
 async function callSection<T>(
   endpoint: string,
   formData: JobFormData,
-  quizAnswers: QuizAnswer[]
+  quizAnswers: QuizAnswer[],
+  interviewSummary?: string
 ): Promise<{ data: T | null }> {
   const res = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ formData, quizAnswers }),
+    body: JSON.stringify({ formData, quizAnswers, interviewSummary }),
   });
   if (!res.ok) {
     const j = await res.json().catch(() => ({}));
@@ -153,7 +155,7 @@ export async function generateReport(
     while (attempts <= retries) {
       try {
         if (options.useMockOnly) throw new Error("forced mock");
-        const res = await callSection(section.endpoint, formData, quizAnswers);
+        const res = await callSection(section.endpoint, formData, quizAnswers, options.interviewSummary);
         progress[idx].status = "completed";
         update();
         return { key: section.key, data: res.data };

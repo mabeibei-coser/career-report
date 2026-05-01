@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { TransitionCard } from "@/app/interview/_components/transition-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ export default function QuizPage() {
   const [selections, setSelections] = useState<SelectionMap>({});
   const [loadError, setLoadError] = useState<string | null>(null);
   const [quizLoading, setQuizLoading] = useState(true);
+  const [showTransition, setShowTransition] = useState(false);
 
   // Load form data and fetch quiz
   useEffect(() => {
@@ -178,7 +180,7 @@ export default function QuizPage() {
     if (!allAnswered) return;
     persistAnswers(selections);
     sessionStorage.removeItem("reportData");
-    router.push("/loading");
+    setShowTransition(true);
   };
 
   if (quizLoading) {
@@ -209,6 +211,9 @@ export default function QuizPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
+      {showTransition && (
+        <TransitionCard onComplete={() => router.push("/interview")} />
+      )}
       <div className="fixed inset-0 bg-gradient-to-br from-[var(--blue-50)] via-white to-[var(--blue-100)]" />
       <div className="fixed inset-0 hero-grid opacity-40" />
       <div className="fixed top-20 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-[var(--blue-200)] to-[var(--blue-100)] opacity-40 blur-3xl" />

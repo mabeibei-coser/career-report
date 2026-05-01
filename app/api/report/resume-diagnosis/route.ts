@@ -50,9 +50,10 @@ ${APPLICANT_BASELINE}
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { formData, quizAnswers } = body as {
+    const { formData, quizAnswers, interviewSummary } = body as {
       formData: JobFormData;
       quizAnswers: QuizAnswer[];
+      interviewSummary?: string;
     };
     if (!formData?.targetPosition) {
       return NextResponse.json({ error: "缺少意向信息" }, { status: 400 });
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 静态指令前置，buildBaseContext 的动态简历内容后置 —— 吃 MiniMax 自动前缀缓存
-    const userPrompt = `请基于下面的简历内容输出 JSON 形式的简历诊断（3 条建议，含从简历摘取的原文片段）。\n\n${buildBaseContext(formData, quizAnswers)}`;
+    const userPrompt = `请基于下面的简历内容输出 JSON 形式的简历诊断（3 条建议，含从简历摘取的原文片段）。\n\n${buildBaseContext(formData, quizAnswers, interviewSummary)}`;
     const data = await callWithFallback<ResumeDiagnosis>({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,

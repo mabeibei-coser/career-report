@@ -9,7 +9,8 @@ export const APPLICANT_BASELINE = `用户是应届校招生（无正式工作经
 
 export function buildBaseContext(
   formData: JobFormData,
-  quizAnswers?: QuizAnswer[]
+  quizAnswers?: QuizAnswer[],
+  interviewSummary?: string
 ): string {
   // 系统预推断行业，注入给所有 section；各章节 prompt 应以此为准、不要自行再推断
   // 避免出现第 2 章说"建筑"、第 6 章说"金融"这种章节间矛盾
@@ -41,6 +42,10 @@ export function buildBaseContext(
     parts.push("\n简历内容：\n" + snippet);
   } else {
     parts.push("\n简历内容：未上传");
+  }
+
+  if (interviewSummary) {
+    parts.push("\n两轮访谈摘要：\n" + interviewSummary);
   }
 
   return parts.join("\n");

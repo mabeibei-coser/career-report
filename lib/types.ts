@@ -151,3 +151,20 @@ export interface WorkplaceInsight {
   };
   synthesis: string; // 综合给出的一段话
 }
+
+// ========== 访谈类型 ==========
+
+export interface InterviewTurn {
+  index: 0 | 1;
+  questionText: string;
+  userAnswerText: string;
+  inputMethod: "voice" | "text";
+  audioDurationSec?: number;
+}
+
+export interface InterviewData {
+  turns: InterviewTurn[];
+  summary: string;
+  skipped: boolean;
+  generatedAt: string;
+}
