@@ -43,7 +43,7 @@ export function startQuizPrefetch(formData: JobFormData): void {
   const promise = fetch("/api/quiz/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ formData }),
+    body: JSON.stringify({ formData, from: 3 }),
   })
     .then(async (res) => {
       const data = (await res.json().catch(() => ({}))) as QuizResponse;

@@ -1,177 +1,216 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+
+export type OrbState = "idle" | "speaking" | "recording" | "processing";
 
 interface AiOrbProps {
-  state: "speaking" | "recording" | "processing" | "idle";
-  amplitude?: number; // 0-1, drives scale animation during "recording" state
+  state: OrbState;
+  amplitude?: number;
+  size?: number;
 }
 
-const stateConfig = {
+const STATE_COLORS: Record<
+  OrbState,
+  { bg: string; c1: string; c2: string; c3: string; glow: string; halo: string }
+> = {
   idle: {
-    gradient: "radial-gradient(circle at 35% 35%, #e2e8f0, #cbd5e1 40%, #94a3b8)",
-    glowColor: "rgba(148, 163, 184, 0.3)",
-    shadowColor: "rgba(148, 163, 184, 0.4)",
+    bg: "oklch(95% 0.02 250)",
+    c1: "oklch(72% 0.14 250)",
+    c2: "oklch(78% 0.11 230)",
+    c3: "oklch(68% 0.13 265)",
+    glow: "rgba(59,130,246,0.2)",
+    halo: "rgba(59,130,246,0.1)",
   },
   speaking: {
-    gradient: "radial-gradient(circle at 35% 35%, #93c5fd, #3b82f6 40%, #1d4ed8)",
-    glowColor: "rgba(59, 130, 246, 0.5)",
-    shadowColor: "rgba(59, 130, 246, 0.6)",
+    bg: "oklch(93% 0.03 250)",
+    c1: "oklch(62% 0.22 250)",
+    c2: "oklch(70% 0.18 225)",
+    c3: "oklch(58% 0.20 268)",
+    glow: "rgba(59,130,246,0.45)",
+    halo: "rgba(59,130,246,0.2)",
   },
   recording: {
-    gradient: "radial-gradient(circle at 35% 35%, #e9d5ff, #a855f7 40%, #7e22ce)",
-    glowColor: "rgba(168, 85, 247, 0.5)",
-    shadowColor: "rgba(168, 85, 247, 0.6)",
+    bg: "oklch(93% 0.03 248)",
+    c1: "oklch(60% 0.24 252)",
+    c2: "oklch(68% 0.20 230)",
+    c3: "oklch(55% 0.22 270)",
+    glow: "rgba(59,130,246,0.5)",
+    halo: "rgba(59,130,246,0.25)",
   },
   processing: {
-    gradient: "radial-gradient(circle at 35% 35%, #e2e8f0, #cbd5e1 40%, #94a3b8)",
-    glowColor: "rgba(148, 163, 184, 0.3)",
-    shadowColor: "rgba(148, 163, 184, 0.3)",
+    bg: "oklch(94% 0.02 248)",
+    c1: "oklch(68% 0.12 250)",
+    c2: "oklch(74% 0.10 230)",
+    c3: "oklch(65% 0.11 265)",
+    glow: "rgba(59,130,246,0.3)",
+    halo: "rgba(59,130,246,0.12)",
   },
 };
 
-export function AiOrb({ state, amplitude = 0 }: AiOrbProps) {
-  const config = stateConfig[state];
+const STATE_SPEED: Record<OrbState, number> = {
+  idle: 24,
+  speaking: 10,
+  recording: 7,
+  processing: 14,
+};
 
-  // Scale for recording state based on amplitude
-  const recordingScale = state === "recording" ? 1 + amplitude * 0.3 : 1;
+export function AiOrb({ state, size = 220 }: AiOrbProps) {
+  const colors = STATE_COLORS[state];
+  const speed = STATE_SPEED[state];
 
-  // Determine orb animation based on state
-  const orbAnimate: { scale: number | number[] } =
-    state === "speaking"
-      ? { scale: [1, 1.08, 1] }
-      : { scale: recordingScale };
+  const orbSize = Math.round(size * 0.85);
 
-  const orbTransition =
-    state === "speaking"
-      ? { duration: 0.8, repeat: Infinity, ease: "easeInOut" as const }
-      : state === "recording"
-        ? { duration: 0.05, ease: "linear" as const }
-        : { duration: 0.2 };
+  const blurAmount = Math.max(orbSize * 0.015, 4);
+  const contrastAmount = Math.max(orbSize * 0.008, 1.5);
+  const dotSize = Math.max(orbSize * 0.008, 0.1);
+  const shadowSpread = Math.max(orbSize * 0.008, 2);
+
+  const haloScale: number[] =
+    state === "recording" ? [1, 1.1, 1]
+    : state === "speaking" ? [1, 1.1, 1]
+    : [1, 1.04, 1];
+
+  const haloDuration =
+    state === "speaking" ? 2.5 : state === "recording" ? 2.0 : 5;
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: 200, height: 200 }}>
-      {/* Glow rings for recording state */}
-      {state === "recording" && (
-        <>
-          {[1, 2, 3].map((ring) => (
-            <motion.div
-              key={ring}
-              className="absolute rounded-full"
-              style={{
-                width: 160,
-                height: 160,
-                border: `2px solid ${config.glowColor}`,
-              }}
-              animate={{
-                scale: [1, 1.4 + ring * 0.2, 1.8 + ring * 0.3],
-                opacity: [0.7, 0.3, 0],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                delay: ring * 0.4,
-                ease: "easeOut",
-              }}
-            />
-          ))}
-        </>
-      )}
+    <div
+      className="relative flex items-center justify-center"
+      style={{ width: size, height: size }}
+    >
+      {/* keyframes + pseudo-element styles — outside the orb div */}
+      <style>{`
+        @property --siri-angle {
+          syntax: "<angle>";
+          inherits: false;
+          initial-value: 0deg;
+        }
+        @keyframes siri-rotate {
+          to { --siri-angle: 360deg; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .siri-orb-inner::before { animation: none; }
+        }
+        .siri-orb-inner {
+          position: relative;
+        }
+        .siri-orb-inner::before,
+        .siri-orb-inner::after {
+          content: "";
+          display: block;
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+        }
+        .siri-orb-inner::before {
+          background:
+            conic-gradient(from calc(var(--siri-angle) * 2) at 25% 70%, var(--c3), transparent 20% 80%, var(--c3)),
+            conic-gradient(from calc(var(--siri-angle) * 2) at 45% 75%, var(--c2), transparent 30% 60%, var(--c2)),
+            conic-gradient(from calc(var(--siri-angle) * -3) at 80% 20%, var(--c1), transparent 40% 60%, var(--c1)),
+            conic-gradient(from calc(var(--siri-angle) * 2) at 15% 5%, var(--c2), transparent 10% 90%, var(--c2)),
+            conic-gradient(from calc(var(--siri-angle) * 1) at 20% 80%, var(--c1), transparent 10% 90%, var(--c1)),
+            conic-gradient(from calc(var(--siri-angle) * -2) at 85% 10%, var(--c3), transparent 20% 80%, var(--c3));
+          box-shadow: inset var(--bg) 0 0 var(--shadow-spread) calc(var(--shadow-spread) * 0.2);
+          filter: blur(var(--blur-amount)) contrast(var(--contrast-amount));
+          animation: siri-rotate var(--animation-duration) linear infinite;
+        }
+        .siri-orb-inner::after {
+          background-image: radial-gradient(circle at center, var(--bg) var(--dot-size), transparent var(--dot-size));
+          background-size: calc(var(--dot-size) * 2) calc(var(--dot-size) * 2);
+          backdrop-filter: blur(calc(var(--blur-amount) * 2)) contrast(calc(var(--contrast-amount) * 2));
+          mix-blend-mode: overlay;
+          mask-image: radial-gradient(black var(--mask-radius), transparent 75%);
+        }
+      `}</style>
 
-      {/* Glow ring for speaking state */}
-      {state === "speaking" && (
-        <motion.div
-          className="absolute rounded-full"
-          style={{
-            width: 160,
-            height: 160,
-            boxShadow: `0 0 30px 15px ${config.glowColor}`,
-          }}
-          animate={{
-            opacity: [0.6, 1, 0.6],
-          }}
-          transition={{
-            duration: 0.8,
+      {/* halo glow */}
+      <motion.div
+        className="absolute rounded-full pointer-events-none"
+        style={{
+          width: orbSize + 60,
+          height: orbSize + 60,
+          filter: "blur(40px)",
+        }}
+        animate={{
+          backgroundColor: colors.halo,
+          scale: haloScale,
+        }}
+        transition={{
+          backgroundColor: { duration: 1.2, ease: "easeInOut" },
+          scale: {
+            duration: haloDuration,
             repeat: Infinity,
             ease: "easeInOut",
-          }}
-        />
-      )}
-
-      {/* Spinning arc for processing state */}
-      {state === "processing" && (
-        <motion.div
-          className="absolute rounded-full"
-          style={{
-            width: 172,
-            height: 172,
-            border: "3px solid transparent",
-            borderTopColor: "#64748b",
-            borderRightColor: "#94a3b8",
-          }}
-          animate={{ rotate: 360 }}
-          transition={{
-            duration: 1.5,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        />
-      )}
-
-      {/* Main orb */}
-      <motion.div
-        style={{
-          width: 160,
-          height: 160,
-          borderRadius: "50%",
-          background: config.gradient,
-          boxShadow: `0 8px 32px ${config.shadowColor}, inset 0 -4px 12px rgba(0,0,0,0.2), inset 0 4px 8px rgba(255,255,255,0.3)`,
-          position: "relative",
-          overflow: "hidden",
+          },
         }}
-        animate={orbAnimate}
-        transition={orbTransition}
-      >
-        {/* Specular highlight for 3D sphere effect */}
-        <div
-          style={{
-            position: "absolute",
-            top: "18%",
-            left: "22%",
-            width: "35%",
-            height: "28%",
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%)",
-            transform: "rotate(-15deg)",
-          }}
-        />
+      />
 
-        {/* Secondary highlight */}
-        <div
-          style={{
-            position: "absolute",
-            top: "12%",
-            left: "15%",
-            width: "18%",
-            height: "14%",
+      {/* siri orb sphere */}
+      <motion.div
+        className="siri-orb-inner absolute"
+        style={
+          {
+            width: orbSize,
+            height: orbSize,
             borderRadius: "50%",
-            background: "rgba(255,255,255,0.4)",
-          }}
-        />
+            overflow: "hidden",
+            boxShadow: `0 0 ${shadowSpread * 6}px ${colors.glow}, 0 0 ${shadowSpread * 12}px ${colors.halo}`,
+            "--bg": colors.bg,
+            "--c1": colors.c1,
+            "--c2": colors.c2,
+            "--c3": colors.c3,
+            "--animation-duration": `${speed}s`,
+            "--blur-amount": `${blurAmount}px`,
+            "--contrast-amount": contrastAmount,
+            "--dot-size": `${dotSize}px`,
+            "--shadow-spread": `${shadowSpread}px`,
+            "--mask-radius": "25%",
+          } as React.CSSProperties
+        }
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{
+          opacity: 1,
+          scale:
+            state === "recording"
+              ? [1, 1.03, 1]
+              : state === "speaking"
+                ? [1, 1.02, 1]
+                : [1, 1.01, 1],
+        }}
+        transition={{
+          opacity: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+          scale: {
+            duration: state === "recording" ? 1.8 : state === "speaking" ? 2.5 : 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          },
+        }}
+      />
 
-        {/* Bottom depth shadow */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: "5%",
-            left: "15%",
-            right: "15%",
-            height: "30%",
-            borderRadius: "50%",
-            background: "radial-gradient(ellipse, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%)",
-          }}
-        />
-      </motion.div>
+      {/* processing spinner ring */}
+      <AnimatePresence>
+        {state === "processing" && (
+          <motion.div
+            key="spin"
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              width: orbSize + 14,
+              height: orbSize + 14,
+              border: "1.5px solid transparent",
+              borderTopColor: "rgba(59,130,246,0.5)",
+              borderRightColor: "rgba(59,130,246,0.15)",
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, rotate: 360 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              opacity: { duration: 0.3 },
+              rotate: { duration: 1.6, repeat: Infinity, ease: "linear" },
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

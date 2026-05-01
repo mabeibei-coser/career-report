@@ -31,11 +31,16 @@ export function useAudioPlayer(onEnded?: () => void): UseAudioPlayerReturn {
   }, []);
 
   const play = useCallback(
-    (audioBase64: string) => {
+    (audioSrc: string) => {
       // stop any existing playback first
       stop();
 
-      const audio = new Audio('data:audio/mp3;base64,' + audioBase64);
+      // Accept either: full URL ("/audio/foo.mp3" / "http..."), or raw base64 (legacy)
+      const src =
+        audioSrc.startsWith("/") || /^https?:/i.test(audioSrc)
+          ? audioSrc
+          : "data:audio/mp3;base64," + audioSrc;
+      const audio = new Audio(src);
 
       audio.onended = () => {
         setIsPlaying(false);
@@ -46,6 +51,7 @@ export function useAudioPlayer(onEnded?: () => void): UseAudioPlayerReturn {
       audio.onerror = () => {
         setIsPlaying(false);
         audioRef.current = null;
+        onEndedRef.current?.();
       };
 
       audioRef.current = audio;
@@ -53,6 +59,7 @@ export function useAudioPlayer(onEnded?: () => void): UseAudioPlayerReturn {
       audio.play().catch(() => {
         setIsPlaying(false);
         audioRef.current = null;
+        onEndedRef.current?.();
       });
     },
     [stop],

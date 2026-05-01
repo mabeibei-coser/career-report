@@ -36,6 +36,7 @@ export function useAudioVisualizer(mediaStream: MediaStream | null): UseAudioVis
         audioCtxRef.current.close().catch(() => {});
         audioCtxRef.current = null;
       }
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAmplitude(0);
       return;
     }
