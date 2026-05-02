@@ -61,8 +61,32 @@ export const INTERVIEW_QUESTION_BANK: BankQuestion[] = [
   },
 ];
 
+/** 模块级游标：进程存活期间顺序滚动，重启后从头来 */
+let _cursor = 0;
+
+/**
+ * 顺序取下一道题（非随机）。
+ * 每次调用游标向后推一位；exclude 不为空时自动跳过已用题，游标仍正确推进。
+ */
+export function pickNextQuestion(exclude?: string[]): BankQuestion {
+  const bank = INTERVIEW_QUESTION_BANK;
+  const n = bank.length;
+
+  for (let i = 0; i < n; i++) {
+    const q = bank[(_cursor + i) % n];
+    if (!exclude?.includes(q.id)) {
+      _cursor = (_cursor + i + 1) % n;
+      return q;
+    }
+  }
+
+  // 全部被排除（正常不会走到这里）：返回当前游标并推进
+  const fallback = bank[_cursor];
+  _cursor = (_cursor + 1) % n;
+  return fallback;
+}
+
+/** @deprecated 使用 pickNextQuestion 代替 */
 export function pickRandomQuestion(exclude?: string[]): BankQuestion {
-  const pool = INTERVIEW_QUESTION_BANK.filter((q) => !exclude?.includes(q.id));
-  const source = pool.length > 0 ? pool : INTERVIEW_QUESTION_BANK;
-  return source[Math.floor(Math.random() * source.length)];
+  return pickNextQuestion(exclude);
 }

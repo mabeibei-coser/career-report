@@ -4,7 +4,7 @@ import path from "path";
 import { callWithFallback } from "@/lib/report-shared";
 import { synthesizeTTS } from "@/lib/volc-tts";
 import {
-  pickRandomQuestion,
+  pickNextQuestion,
   INTERVIEW_QUESTION_BANK,
 } from "@/lib/interview-questions";
 import type { InterviewTurn } from "@/lib/types";
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     if (!previousTurns || previousTurns.length === 0) {
       // Q1: 从题库随机抽
-      const picked = pickRandomQuestion();
+      const picked = pickNextQuestion();
       questionText = picked.text;
       questionId = picked.id;
       isFromBank = true;
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
           "[interview/question] Q2 LLM failed/timeout, fallback to bank:",
           err
         );
-        const fallback = pickRandomQuestion(excludeIds);
+        const fallback = pickNextQuestion(excludeIds);
         questionText = fallback.text;
         questionId = fallback.id;
         isFromBank = true;
