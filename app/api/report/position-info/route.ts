@@ -9,6 +9,7 @@ import type {
   PositionInfo,
   QuizAnswer,
 } from "@/lib/types";
+import { positionInfoMock } from "@/lib/mocks/report-mocks";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -29,6 +30,9 @@ ${APPLICANT_BASELINE}
 铁律：coreCompetencies 必须恰好 5 个（雷达图需要），subPositions 必须恰好 2 个。`;
 
 export async function POST(req: NextRequest) {
+  if (process.env.E2E_MOCK_MODE === "true") {
+    return NextResponse.json({ data: positionInfoMock });
+  }
   try {
     const body = await req.json();
     const { formData, quizAnswers, interviewSummary } = body as {

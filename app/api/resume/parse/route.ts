@@ -59,6 +59,17 @@ async function parseDocx(buffer: Buffer): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
+  // E2E mock: skip actual file parsing, return fixture resume text
+  if (process.env.E2E_MOCK_MODE === "true") {
+    return NextResponse.json({
+      text: "应届生模拟简历。产品经理方向，曾在某科技公司完成三个月产品运营实习，参与用户调研和需求分析，独立输出 PRD 文档三份。熟悉 Axure 原型设计，有 Python 数据处理基础。在学生会任职期间负责活动策划，组织了三次百人规模的校园活动，具备较强的项目协调能力。",
+      fileName: "test-resume.pdf",
+      charCount: 128,
+      truncated: false,
+      resumeRef: "e2e-mock-resume-ref",
+      resumeFilename: "test-resume.pdf",
+    });
+  }
   try {
     const formData = await req.formData();
     const file = formData.get("file");

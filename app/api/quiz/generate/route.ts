@@ -134,6 +134,14 @@ function buildQuizUserPrompt(formData: JobFormData, from = 1): string {
 }
 
 export async function POST(req: NextRequest) {
+  // E2E mock: bypass LLM, return static quiz questions
+  if (process.env.E2E_MOCK_MODE === "true") {
+    const body = await req.json().catch(() => ({})) as { from?: number };
+    const from = body.from === 3 ? 3 : body.from === 2 ? 2 : 1;
+    const allQ = getFallbackQuiz();
+    const startIdx = from === 3 ? 2 : from === 2 ? 1 : 0;
+    return NextResponse.json({ questions: allQ.slice(startIdx) });
+  }
   try {
     const body = await req.json();
     const formData = body?.formData as JobFormData | undefined;

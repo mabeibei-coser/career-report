@@ -9,6 +9,7 @@ import type {
   QuizAnswer,
   ResumeDiagnosis,
 } from "@/lib/types";
+import { resumeDiagnosisMock } from "@/lib/mocks/report-mocks";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -48,6 +49,9 @@ ${APPLICANT_BASELINE}
 5. overallScore 反映总体完成度（应届视角，60-80 偏常见）`;
 
 export async function POST(req: NextRequest) {
+  if (process.env.E2E_MOCK_MODE === "true") {
+    return NextResponse.json({ data: resumeDiagnosisMock });
+  }
   try {
     const body = await req.json();
     const { formData, quizAnswers, interviewSummary } = body as {
