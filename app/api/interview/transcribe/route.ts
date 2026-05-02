@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ text: "" });
     }
 
-    const text = await transcribeAudio(audioBuffer);
+    const text = await transcribeAudio(audioBuffer, mimeType ?? undefined);
     return NextResponse.json({ text });
   } catch (err) {
     console.error("[transcribe] error:", err);
