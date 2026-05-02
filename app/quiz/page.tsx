@@ -294,7 +294,7 @@ export default function QuizPage() {
                         key={opt.key}
                         onClick={() => handleSelect(opt.key)}
                         className={cn(
-                          "group flex items-start gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all",
+                          "group flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all",
                           "min-h-[52px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue-500)]/40",
                           active
                             ? "border-[var(--blue-500)] bg-[var(--blue-500)]/5 shadow-sm"
@@ -303,7 +303,7 @@ export default function QuizPage() {
                       >
                         <div
                           className={cn(
-                            "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold",
+                            "flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold",
                             active
                               ? "border-[var(--blue-500)] bg-[var(--blue-500)] text-white"
                               : "border-[var(--blue-200)] text-[var(--navy-700)]"
