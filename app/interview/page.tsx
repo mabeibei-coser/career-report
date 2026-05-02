@@ -45,7 +45,8 @@ function audioSrcOf(q: { audioUrl?: string; audioBase64?: string }): string {
 
 function canUseVoiceRecording(): boolean {
   if (typeof MediaRecorder === "undefined") return false;
-  if (/MicroMessenger/i.test(navigator.userAgent)) return false;
+  // 不再拦截微信：现代微信 WebView 已支持 MediaRecorder；
+  // 若 getUserMedia 实际失败（权限/HTTP），handleRecordStart 的 catch 会降级到文字输入
   return true;
 }
 
