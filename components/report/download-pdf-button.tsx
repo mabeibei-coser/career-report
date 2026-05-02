@@ -10,27 +10,13 @@ interface Props {
 
 type Status = "preparing" | "ready" | "downloading" | "error";
 
-// 检测常见国产 in-app 浏览器（微信/QQ/钉钉/微博/UC/百度等）
-// 这些 WebView 对 blob + <a download> 兼容差，需要提示用户在外部浏览器打开
-function detectInAppBrowser(): boolean {
-  if (typeof navigator === "undefined") return false;
-  return /MicroMessenger|QQ\/|QQBrowser|DingTalk|Weibo|UCBrowser|Baidu|BaiduHD|MQQBrowser/i.test(
-    navigator.userAgent
-  );
-}
-
 export function DownloadPDFButton({ report }: Props) {
   const [status, setStatus] = useState<Status>("preparing");
   const [token, setToken] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isInApp, setIsInApp] = useState(false);
   // epoch 用来强制重跑 useEffect 进行"重试"
   const [prepEpoch, setPrepEpoch] = useState(0);
   const cancelledRef = useRef(false);
-
-  useEffect(() => {
-    setIsInApp(detectInAppBrowser());
-  }, []);
 
   // 挂载即 prep：POST /prepare 拿 token，同时服务端在 pdf-job-store 里 fire-and-forget
   // 启动 Puppeteer 后台渲染。点击时 GET /pdf?token=xxx，已完成秒出，未完成 hold 住等完成。
@@ -99,12 +85,7 @@ export function DownloadPDFButton({ report }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-2 mt-6 print:hidden">
-      {isInApp && (
-        <p className="max-w-md text-[12px] leading-relaxed text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-          检测到微信 / QQ / 钉钉等内置浏览器，PDF 下载可能失败。请点击右上角「⋯」菜单 →
-          选择「在浏览器中打开」后再点下载。
-        </p>
-      )}
+      {/* 内置浏览器提示已移除 */}
       <button
         type="button"
         onClick={status === "error" ? onRetry : onClick}
