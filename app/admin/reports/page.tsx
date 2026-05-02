@@ -281,12 +281,30 @@ export default function AdminReportsPage() {
                       {row.duration_ms ? `${Math.round(row.duration_ms / 1000)}s` : "—"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Link
-                        href={`/admin/reports/${row.id}`}
-                        className="text-xs text-blue-600 hover:underline"
-                      >
-                        详情
-                      </Link>
+                      <div className="flex items-center justify-end gap-2">
+                        {row.has_resume ? (
+                          <a
+                            href={`/api/admin/reports/${row.id}/resume`}
+                            download
+                            className="text-xs px-2 py-0.5 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
+                          >
+                            简历
+                          </a>
+                        ) : null}
+                        <Link
+                          href={`/admin/reports/${row.id}/preview`}
+                          target="_blank"
+                          className="text-xs px-2 py-0.5 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
+                        >
+                          报告
+                        </Link>
+                        <Link
+                          href={`/admin/reports/${row.id}`}
+                          className="text-xs px-2 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                        >
+                          详情
+                        </Link>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
