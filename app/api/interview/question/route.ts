@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
       // Q2: LLM 追问（2s 超时）→ 失败回落题库
       const turn1 = previousTurns[0];
       const systemPrompt =
-        "你是一位专业的 AI 面试官。基于候选人对'职业心态'类问题的回答，生成一个自然的追问（50-80 字开放式问题，一句话）。聚焦候选人提到的具体细节，不要泛泛而谈。只输出合法 JSON：{ \"text\": \"追问内容\" }";
+        "你是一位专业的 AI 面试官。基于候选人对'职业心态'类问题的回答，生成一个自然的追问（50-80 字开放式问题，一句话）。聚焦候选人提到的具体细节，引导对方深入而不是重复总结；语气像朋友聊天，不要过于正式。只输出合法 JSON：{ \"text\": \"追问内容\" }";
       const userPrompt = `候选人刚回答的问题：${turn1.questionText}\n候选人回答：${turn1.userAnswerText || "（未作答）"}\n请生成一个针对其回答细节的追问。`;
 
       try {
