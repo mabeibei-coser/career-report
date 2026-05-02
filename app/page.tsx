@@ -432,7 +432,7 @@ export default function HomePage() {
                 custom={3}
                 className="mt-6 text-lg text-blue-100/60 max-w-lg leading-relaxed font-light mx-auto lg:mx-0"
               >
-                面向应届大学生的校招定位工具：填写求职意向 + 上传简历（选填），1-2 分钟完成 AI 语音快测，获得含薪资、谈薪、发展建议的 7 章节报告
+                面向应届大学生的职业定位工具：填写求职意向 + 上传简历（选填），1-2 分钟完成 AI 语音快测，获得含薪资、谈薪、发展建议的 7 章节报告
               </motion.p>
 
               <motion.div
@@ -667,10 +667,10 @@ export default function HomePage() {
             </div>
 
             <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-4">
-              让应届校招准备不再迷茫
+              让应届求职准备不再迷茫
             </h3>
             <p className="text-sm text-blue-200/50 max-w-lg mx-auto mb-8 leading-relaxed">
-              面向应届大学生的校招定位工具：AI 结合你的意向岗位、性格测评和简历，生成一份可执行、有数据的校招定位报告
+              面向应届大学生的职业定位工具：AI 结合你的意向岗位、性格测评和简历，生成一份可执行、有数据的职业定位报告
             </p>
 
             <Link href="/form">

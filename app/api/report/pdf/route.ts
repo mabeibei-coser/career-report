@@ -120,7 +120,7 @@ function buildPdfResponse(buffer: Buffer, filename: string): NextResponse {
 
 function filenameFor(reportData: ReportData | null): string {
   const position = reportData?.meta?.formData?.targetPosition ?? "报告";
-  return `校招定位报告_${position}_${todayYYYYMMDD()}.pdf`;
+  return `职业定位报告_${position}_${todayYYYYMMDD()}.pdf`;
 }
 
 async function renderAndRespond(reportData: ReportData): Promise<NextResponse> {
