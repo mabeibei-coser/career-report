@@ -78,9 +78,21 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
       stopResolveRef.current = resolve;
       clearTimer();
 
+      // 捕获当前录音的 chunks 引用，防止新录音的 start() 清空 chunksRef 后
+      // 旧录音的 onstop 读到空数组
+      const myChunks = chunksRef.current;
+      const myMimeType = mimeTypeRef.current;
+
+      // 把旧 recorder 的 ondataavailable 也绑定到 myChunks，
+      // 这样 stop() 触发的最后一次 dataavailable 写入正确的数组
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          myChunks.push(e.data);
+        }
+      };
+
       recorder.onstop = () => {
-        const mimeType = mimeTypeRef.current;
-        const blob = new Blob(chunksRef.current, { type: mimeType || 'audio/webm' });
+        const blob = new Blob(myChunks, { type: myMimeType || 'audio/webm' });
         const dur = durationRef.current;
         stopTracks();
         setIsRecording(false);
@@ -90,7 +102,7 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
         durationRef.current = 0;
         setDurationSec(0);
         if (stopResolveRef.current) {
-          stopResolveRef.current({ blob, mimeType, durationSec: dur });
+          stopResolveRef.current({ blob, mimeType: myMimeType, durationSec: dur });
           stopResolveRef.current = null;
         }
       };
@@ -120,7 +132,7 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
       }
     };
 
-    recorder.start(100); // collect chunks every 100ms
+    recorder.start(); // 不分片：stop() 时一次性拿到完整 Blob，避免某些手机浏览器分片丢失 EBML 头
     durationRef.current = 0;
     setDurationSec(0);
     setIsRecording(true);
