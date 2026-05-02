@@ -211,6 +211,16 @@ export default function InterviewPage() {
     if (phaseRef.current === "greeting") {
       player.stop();
     }
+
+    // 预请求麦克风权限：在用户手势上下文里提前拿授权，
+    // 后面按住录音时 getUserMedia 就秒返回，不会弹权限弹窗导致时序错乱
+    try {
+      const preStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      preStream.getTracks().forEach((t) => t.stop()); // 拿到权限后立即释放
+    } catch {
+      // 权限被拒 → 后续按住录音时 catch 会降级到文字模式
+    }
+
     setPhaseSync("loading-q");
     const prefetched = await prefetchedQ1Ref.current;
     prefetchedQ1Ref.current = null;
