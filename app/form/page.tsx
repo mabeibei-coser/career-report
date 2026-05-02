@@ -226,7 +226,7 @@ export default function FormPage() {
             你的求职意向
           </h1>
           <p className="text-sm sm:text-base text-[var(--muted-foreground)] leading-relaxed">
-            面向应届大学生的校招定位工具。填写岗位、学历、公司、城市四项意向，可选上传简历，AI
+            面向应届大学生的职业定位工具。填写岗位、学历、公司、城市四项意向，可选上传简历，AI
             将据此完成 6 题快测并生成个性化报告。
           </p>
         </motion.div>

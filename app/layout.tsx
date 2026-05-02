@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "谨世 ATA 职业定位报告",
-  description: "面向应届大学生的校招定位工具：意向信息 + 简历 → 6 题快测 → 6 章节定位报告",
+  description: "面向应届大学生的职业定位工具：意向信息 + 简历 → 6 题快测 → 6 章节定位报告",
 };
 
 export const viewport: Viewport = {
