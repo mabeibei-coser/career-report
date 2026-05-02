@@ -5,6 +5,7 @@ import {
   callWithFallback,
 } from "@/lib/report-shared";
 import type { JobFormData, Overview, QuizAnswer } from "@/lib/types";
+import { overviewMock } from "@/lib/mocks/report-mocks";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -73,6 +74,9 @@ ${APPLICANT_BASELINE}
    - description（80-120 字）：这种性格在校招场景的实际表现——最受欢迎的场合 + 最容易掉坑的场合，白描不鸡汤`;
 
 export async function POST(req: NextRequest) {
+  if (process.env.E2E_MOCK_MODE === "true") {
+    return NextResponse.json({ data: overviewMock });
+  }
   try {
     const body = await req.json();
     const { formData, quizAnswers, interviewSummary } = body as {

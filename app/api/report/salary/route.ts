@@ -13,6 +13,7 @@ import type {
   QuizAnswer,
   SalaryInsight,
 } from "@/lib/types";
+import { salaryMock } from "@/lib/mocks/report-mocks";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -45,6 +46,9 @@ ${buildSalaryAnchorPrompt(position, education, resumeText)}
 }
 
 export async function POST(req: NextRequest) {
+  if (process.env.E2E_MOCK_MODE === "true") {
+    return NextResponse.json({ data: salaryMock });
+  }
   try {
     const body = await req.json();
     const { formData, quizAnswers, interviewSummary } = body as {

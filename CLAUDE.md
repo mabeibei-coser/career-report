@@ -75,3 +75,8 @@ lib/
 - 报告内容红线：
   - **职场环境透视**：绝不点名具体公司，只做行业/类型共性
   - **谈薪要点**：禁止建议伪造经历、购买实习证明等造假行为；只提合法积累路径
+
+## 移动端测试规则
+- **每次交付前必须跑 `npm run test:e2e:mobile` 并通过**（桌面端用 `npm run test:e2e`）
+- 测试用 E2E_MOCK_MODE=true（webServer 自动注入），不消耗 LLM API 额度
+- 真机 USB 调试指南见 `docs/mobile-testing.md`

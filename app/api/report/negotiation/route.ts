@@ -7,6 +7,7 @@ import {
 } from "@/lib/report-shared";
 import { asText } from "@/lib/text-normalize";
 import type { JobFormData, NegotiationTips, QuizAnswer } from "@/lib/types";
+import { negotiationMock } from "@/lib/mocks/report-mocks";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -40,6 +41,9 @@ function unwrapSummary(node: unknown): string {
 }
 
 export async function POST(req: NextRequest) {
+  if (process.env.E2E_MOCK_MODE === "true") {
+    return NextResponse.json({ data: negotiationMock });
+  }
   try {
     const body = await req.json();
     const { formData, quizAnswers, interviewSummary } = body as {

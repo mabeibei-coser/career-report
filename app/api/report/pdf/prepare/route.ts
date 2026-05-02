@@ -9,6 +9,11 @@ export const runtime = "nodejs";
 export const maxDuration = 180;
 
 export async function POST(req: NextRequest) {
+  // E2E_MOCK_MODE: 跳过 Puppeteer，直接返回固定 token，避免 127.0.0.1 跨域阻断 HMR
+  if (process.env.E2E_MOCK_MODE === "true") {
+    return NextResponse.json({ token: "e2e-mock-pdf-token" });
+  }
+
   let body: { reportData?: ReportData };
   try {
     body = await req.json();

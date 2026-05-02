@@ -6,6 +6,7 @@ import {
 } from "@/lib/report-shared";
 import { normalizeStringLikeFields, asText } from "@/lib/text-normalize";
 import type { JobFormData, QuizAnswer, WorkplaceInsight } from "@/lib/types";
+import { workplaceInsightMock } from "@/lib/mocks/report-mocks";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -34,6 +35,9 @@ ${APPLICANT_BASELINE}
 3. synthesis（**字符串**，60-90 字）：收束成"对这家公司该怎么决策"的具体建议；**必须是字符串，不是 {summary: "..."} 对象**`;
 
 export async function POST(req: NextRequest) {
+  if (process.env.E2E_MOCK_MODE === "true") {
+    return NextResponse.json({ data: workplaceInsightMock });
+  }
   try {
     const body = await req.json();
     const { formData, quizAnswers, interviewSummary } = body as {

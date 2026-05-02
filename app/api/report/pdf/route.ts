@@ -163,6 +163,31 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "缺少 token" }, { status: 400 });
   }
 
+  // E2E_MOCK_MODE: 直接返回最小合法 PDF，不启动 Puppeteer
+  if (process.env.E2E_MOCK_MODE === "true" && token === "e2e-mock-pdf-token") {
+    const minimalPdf = Buffer.from(
+      "%PDF-1.0\n" +
+      "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
+      "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+      "3 0 obj<</Type/Page/MediaBox[0 0 595 842]>>endobj\n" +
+      "xref\n0 4\n" +
+      "0000000000 65535 f \n" +
+      "0000000009 00000 n \n" +
+      "0000000058 00000 n \n" +
+      "0000000115 00000 n \n" +
+      "trailer<</Size 4/Root 1 0 R>>\nstartxref\n190\n%%EOF\n",
+      "ascii"
+    );
+    return new NextResponse(new Uint8Array(minimalPdf), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": 'attachment; filename="e2e-mock-report.pdf"',
+        "Cache-Control": "no-store",
+      },
+    });
+  }
+
   // 优先命中 job：已就绪秒回；未就绪 HTTP 长连接天然 hold 住 await
   const job = getJob(token);
   if (job) {
