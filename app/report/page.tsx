@@ -193,7 +193,7 @@ export default function ReportPage() {
               variant="secondary"
               className="bg-[var(--blue-500)] text-white text-xs"
             >
-              校招定位报告
+              职业定位报告
             </Badge>
             <Badge variant="secondary" className="bg-white text-xs">
               {position} · {report.meta.formData.targetEducation}
@@ -214,7 +214,7 @@ export default function ReportPage() {
             )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--navy-950)] tracking-tight mb-2">
-            {position} · 校招定位报告
+            {position} · 职业定位报告
           </h1>
           <p className="text-xs sm:text-sm text-[var(--report-ink-muted)]">
             生成于 {dateLabel} · 共 {total} 章节
