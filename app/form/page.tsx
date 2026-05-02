@@ -216,9 +216,9 @@ export default function FormPage() {
             返回首页
           </button>
 
-          <p className="text-xs sm:text-sm text-[var(--blue-500)] font-medium mb-3 tracking-wide">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--blue-600)] mb-3 tracking-tight">
             5 分钟完成职业定位自测
-          </p>
+          </h2>
 
           <StepIndicator currentStep={0} compact className="mb-6" />
 
