@@ -97,6 +97,7 @@ export default function InterviewPage() {
   const prefetchedQ1Ref = useRef<Promise<QuestionItem | null> | null>(null);
   const prefetchedQ2Ref = useRef<Promise<QuestionItem | null> | null>(null);
   const q1IdRef = useRef<string | undefined>(undefined);
+  const speakingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 录音
   const recorder = useAudioRecorder();
@@ -105,6 +106,11 @@ export default function InterviewPage() {
   // 播放结束回调（区分 greeting / Q）
   const player = useAudioPlayer(
     useCallback(() => {
+      // 清除 speaking 安全超时
+      if (speakingTimeoutRef.current) {
+        clearTimeout(speakingTimeoutRef.current);
+        speakingTimeoutRef.current = null;
+      }
       const p = phaseRef.current;
       if (p === "greeting") {
         setPhaseSync("idle");
@@ -173,6 +179,16 @@ export default function InterviewPage() {
       if (src) {
         setPhaseSync("speaking-q");
         player.play(src);
+        // 安全超时：某些手机浏览器 audio.play() resolve 但不出声也不触发 ended，
+        // 15 秒后如果还卡在 speaking-q 就强制推进到 ready
+        if (speakingTimeoutRef.current) clearTimeout(speakingTimeoutRef.current);
+        speakingTimeoutRef.current = setTimeout(() => {
+          if (phaseRef.current === "speaking-q") {
+            console.warn("[interview] speaking-q safety timeout, forcing → ready");
+            player.stop();
+            setPhaseSync("ready");
+          }
+        }, 15_000);
       } else {
         setPhaseSync("ready");
       }
