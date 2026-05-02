@@ -9,6 +9,7 @@ import { StepIndicator } from "@/components/ui/step-indicator";
 import { cn } from "@/lib/utils";
 import { consumeQuizPrefetch } from "@/lib/quiz-prefetch";
 import { pickStaticQ1, pickStaticQ2, PLACEHOLDER_Q3_TO_Q6, STATIC_FALLBACK_Q3_TO_Q6 } from "@/lib/quiz-skeleton";
+import { startBgSections } from "@/lib/report-bg-runner";
 import type {
   JobFormData,
   QuizAnswer,
@@ -155,7 +156,7 @@ export default function QuizPage() {
     persistAnswers(updated);
   };
 
-  const persistAnswers = (map: SelectionMap) => {
+  const persistAnswers = (map: SelectionMap): QuizAnswer[] => {
     const answers: QuizAnswer[] = questions
       .filter((q) => map[q.id])
       .map((q) => {
@@ -170,6 +171,7 @@ export default function QuizPage() {
         };
       });
     sessionStorage.setItem("quizAnswers", JSON.stringify(answers));
+    return answers;
   };
 
   const goNext = () => {
@@ -187,8 +189,11 @@ export default function QuizPage() {
 
   const handleFinish = () => {
     if (!allAnswered) return;
-    persistAnswers(selections);
+    const finalAnswers = persistAnswers(selections);
     sessionStorage.removeItem("reportData");
+    if (formData) {
+      startBgSections(formData, finalAnswers);
+    }
     router.push("/interview");
   };
 

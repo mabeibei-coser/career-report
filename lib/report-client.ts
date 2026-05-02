@@ -19,6 +19,7 @@ import {
   workplaceInsightMock,
 } from "@/lib/mocks/report-mocks";
 import { consumeReportPrefetch, type PrefetchSectionKey } from "@/lib/report-prefetch";
+import { consumeBgSections, type BgSectionKey } from "@/lib/report-bg-runner";
 
 const SECTION_CONFIG: {
   key: ReportSectionKey;
@@ -108,6 +109,7 @@ export async function generateReport(
   options: GenerateReportOptions = {}
 ): Promise<ReportData> {
   const prefetched = consumeReportPrefetch(formData);
+  const bgPrefetched = consumeBgSections(formData, quizAnswers);
 
   const progress: SectionProgress[] = SECTION_CONFIG.map((s) => ({
     key: s.key,
@@ -131,8 +133,10 @@ export async function generateReport(
       return { key: section.key, data: null };
     }
 
-    // 先尝试预拉取结果（只有 4 个前置章节有）
-    const prefetchedPromise = prefetched?.get(section.key as PrefetchSectionKey);
+    // 先尝试预拉取结果（prefetch 优先，bg-runner 次之）
+    const prefetchedPromise =
+      prefetched?.get(section.key as PrefetchSectionKey) ??
+      bgPrefetched?.get(section.key as BgSectionKey);
     if (prefetchedPromise !== undefined) {
       progress[idx].status = "loading";
       update();

@@ -21,6 +21,7 @@ import { StepIndicator } from "@/components/ui/step-indicator";
 import { educationLevels, cityTiers } from "@/lib/form-options";
 import { startQuizPrefetch } from "@/lib/quiz-prefetch";
 import { startReportPrefetch, clearReportPrefetch } from "@/lib/report-prefetch";
+import { clearBgSections } from "@/lib/report-bg-runner";
 import type { JobFormData } from "@/lib/types";
 
 const formSchema = z.object({
@@ -170,6 +171,7 @@ export default function FormPage() {
   useEffect(() => {
     // 用户返回表单重新填写：清理旧的预拉取，防止提交新表单后拿到旧数据
     clearReportPrefetch();
+    clearBgSections();   // 用户回 form 重填时清掉 quiz 阶段启动的后台任务
     // 后台预编译 /quiz 路由（dev 模式消除首次跳转的"Compiling..."等待）
     router.prefetch("/quiz");
   }, [router]);
