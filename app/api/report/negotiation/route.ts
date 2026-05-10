@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     if (!formData?.targetPosition) {
       return NextResponse.json({ error: "缺少意向信息" }, { status: 400 });
     }
-    // 静态指令前置，buildBaseContext 的动态内容后置 —— 吃 MiniMax 自动前缀缓存
+    // 静态指令前置，buildBaseContext 的动态内容后置 —— 吃 DeepSeek 自动前缀缓存
     const userPrompt = `只就 AI 应用经验 和 AI 相关的企业实习成果 两个主题给出谈薪要点（aiExperience.summary 和 internshipExperience.summary 两段，缺一不可），针对用户的意向岗位与意向公司/类型的应届候选人。\n\n${buildBaseContext(formData, quizAnswers, interviewSummary)}`;
     const raw = await callWithFallback<RawNegotiation>({
       systemPrompt: SYSTEM_PROMPT,

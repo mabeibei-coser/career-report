@@ -88,7 +88,7 @@ AI 职业定位报告
 - 底部显示访谈进度（如"第2/4个问题"）
 
 ### 4.4 技术要求
-- 使用 MiniMax API 生成访谈问题
+- 使用 DeepSeek API 生成访谈问题
 - 问题需根据用户的基本信息和前序回答动态调整
 - 所有问答数据需暂存，用于后续报告生成
 
@@ -211,7 +211,7 @@ AI 职业定位报告
 
 | 项目 | 选择 |
 |------|------|
-| AI 模型 | MiniMax API（已有 Key） |
+| AI 模型 | DeepSeek API |
 | 前端框架 | Next.js + Tailwind CSS + shadcn/ui |
 | 图表库 | Recharts |
 | 动画库 | Framer Motion |

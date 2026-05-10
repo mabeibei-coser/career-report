@@ -9,7 +9,7 @@
  * 为什么不传 quizAnswers：
  *   这 4 个章节的 buildBaseContext 不需要性格画像（画像主要服务 overview /
  *   positionInfo），API 侧在 quizAnswers 未传时会跳过性格段，不影响内容质量。
- *   这样就能在用户答题的 20-60s 里把这 4 个 MiniMax 请求并行消化掉。
+ *   这样就能在用户答题的 20-60s 里把这 4 个 DeepSeek 请求并行消化掉。
  *
  * 仅在浏览器 SPA 生命周期内有效；刷新 / 硬跳转会丢失（消费方返回 null，降级到
  * 现场 fetch via report-client 的 callSection）。

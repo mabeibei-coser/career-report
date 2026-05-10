@@ -42,7 +42,7 @@ git checkout claude/sharp-lumiere-c98cc8
 
 # 配置环境变量
 cp deploy/env.production.example .env.production.local
-vim .env.production.local   # 填入真实 MINIMAX_API_KEY
+vim .env.production.local   # 填入真实 DEEPSEEK_API_KEY
 
 # 安装依赖 + 构建
 npm ci
@@ -150,5 +150,5 @@ location /admin {
   fallocate -l 2G /swapfile && chmod 600 /swapfile
   mkswap /swapfile && swapon /swapfile
   ```
-- **API 超时**：.env.production.local 里 MINIMAX_BASE_URL 配置正确？MiniMax 账号余额？
+- **API 超时**：.env.production.local 里 DEEPSEEK_BASE_URL 配置正确？DeepSeek 账号余额？
 - **管理员登录失败**：确认 `.env.production.local` 中 `ADMIN_PASSWORD_HASH` 和 `SESSION_SECRET` 已填，pm2 已重启

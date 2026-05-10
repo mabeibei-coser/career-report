@@ -121,7 +121,7 @@ export async function generateReport(
   const update = () => options.onProgress?.([...progress]);
   update();
 
-  const retries = options.retries ?? 1; // 1 次重试（加初始尝试共 2 次）：M2.7 不稳时让失败章节 fallback 到 mock，报告立刻出来，而不是让用户等 2+ 分钟重试
+  const retries = options.retries ?? 1; // 1 次重试（加初始尝试共 2 次）：DeepSeek 不稳时让失败章节 fallback 到 mock，报告立刻出来，而不是让用户等 2+ 分钟重试
 
   const tasks = SECTION_CONFIG.map((section, idx) => async () => {
     if (
@@ -183,7 +183,7 @@ export async function generateReport(
     return { key: section.key, data: section.fallback };
   });
 
-  // 6 章节全并发：每章节一个 MiniMax 请求同时发出
+  // 6 章节全并发：每章节一个 DeepSeek 请求同时发出
   // 若额度不够会出 429/529，由内层指数退避 + 最多 3 次重试兜底；
   // 真·最坏情况个别章节用 mock 兜底，不会整个报告失败
   const results = await runWithConcurrency(tasks, 6);

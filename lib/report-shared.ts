@@ -1,4 +1,4 @@
-import client, { MINIMAX_MODEL } from "@/lib/minimax";
+import client, { DEEPSEEK_MODEL } from "@/lib/deepseek";
 import iflytek, { IFLYTEK_MODEL } from "@/lib/iflytek";
 import type { JobFormData, QuizAnswer } from "@/lib/types";
 import { inferIndustry } from "@/lib/industry-resolver";
@@ -118,12 +118,12 @@ const JSON_ONLY_PREFIX = `【输出约束 · 必须严格遵守】
 `;
 
 // 单章节硬超时（毫秒）：50s
-// M2.7 正常章节 14-45s 完成；超过 50s 基本是卡住或吐错 JSON 要重试
+// 正常章节 14-45s 完成；超过 50s 基本是卡住或吐错 JSON 要重试
 // 50s × 2 次 = 100s 上限，控制用户最坏等待在 ~100s 内
 // 超时章节自动 fallback mock，保证报告一定能出
 const SECTION_HARD_TIMEOUT_MS = 50_000;
 
-export async function callMiniMaxJson<T>(
+export async function callDeepSeekJson<T>(
   opts: CallOptions & { timeoutMs?: number }
 ): Promise<T> {
   const controller = new AbortController();
@@ -134,7 +134,7 @@ export async function callMiniMaxJson<T>(
   try {
     const response = await client.chat.completions.create(
       {
-        model: MINIMAX_MODEL,
+        model: DEEPSEEK_MODEL,
         messages: [
           { role: "system", content: JSON_ONLY_PREFIX + opts.systemPrompt },
           { role: "user", content: opts.userPrompt },
@@ -157,8 +157,8 @@ export async function callMiniMaxJson<T>(
   }
 }
 
-// 讯飞 fallback：镜像 callMiniMaxJson 的结构和后处理管线
-// 与 MiniMax 的区别：
+// 讯飞 fallback：镜像 callDeepSeekJson 的结构和后处理管线
+// 与 DeepSeek 的区别：
 // 1. 使用 iflytek client（可能为 null，未配 key 时抛错）
 // 2. model 用 IFLYTEK_MODEL（默认 astron-code-latest）
 // 3. 其他（JSON_ONLY_PREFIX / response_format / stripReasoning / extractJson / tryFixAndParse）完全一致
@@ -196,15 +196,15 @@ export async function callIflytekJson<T>(
 }
 
 /**
- * 章节 AI 调用的统一入口：MiniMax 主 → iFlytek fallback。
+ * 章节 AI 调用的统一入口：DeepSeek 主 → iFlytek fallback。
  *
  * **失败**包含三种情况，任一出现都会触发切换讯飞 key 重试：
  * 1. API 调用错误（429/529/超时/网络）
  * 2. JSON 解析失败（模型吐残缺 JSON）
  * 3. `validator` 返回非 null 字符串（内容校验不通过——字段缺失/占位符/空串）
  *
- * 两家都失败才抛**原始 MiniMax 错误**（第一手信息便于排查）。
- * 未配 IFLYTEK_API_KEY 时自动退化为单路 MiniMax，调用方无需改 env。
+ * 两家都失败才抛**原始 DeepSeek 错误**（第一手信息便于排查）。
+ * 未配 IFLYTEK_API_KEY 时自动退化为单路 DeepSeek，调用方无需改 env。
  */
 export async function callWithFallback<T>(
   opts: CallOptions & {
@@ -215,12 +215,12 @@ export async function callWithFallback<T>(
 ): Promise<T> {
   const { validator, ...callOpts } = opts;
   const runOnce = async (
-    caller: "minimax" | "iflytek",
+    caller: "deepseek" | "iflytek",
     sectionName: string
   ): Promise<T> => {
     const data =
-      caller === "minimax"
-        ? await callMiniMaxJson<T>(callOpts)
+      caller === "deepseek"
+        ? await callDeepSeekJson<T>(callOpts)
         : await callIflytekJson<T>(callOpts);
     if (validator) {
       const issue = validator(data);
@@ -230,19 +230,19 @@ export async function callWithFallback<T>(
   };
 
   try {
-    return await runOnce("minimax", "MiniMax");
-  } catch (miniMaxErr) {
-    if (!iflytek) throw miniMaxErr;
-    const miniMsg =
-      miniMaxErr instanceof Error ? miniMaxErr.message : String(miniMaxErr);
-    console.warn("[fallback] MiniMax 失败/校验不通过，切换讯飞重试:", miniMsg);
+    return await runOnce("deepseek", "DeepSeek");
+  } catch (deepseekErr) {
+    if (!iflytek) throw deepseekErr;
+    const dsMsg =
+      deepseekErr instanceof Error ? deepseekErr.message : String(deepseekErr);
+    console.warn("[fallback] DeepSeek 失败/校验不通过，切换讯飞重试:", dsMsg);
     try {
       return await runOnce("iflytek", "iFlytek");
     } catch (iflytekErr) {
       const ifMsg =
         iflytekErr instanceof Error ? iflytekErr.message : String(iflytekErr);
       console.warn("[fallback] 讯飞也失败:", ifMsg);
-      throw miniMaxErr; // 抛原始 MiniMax 错误，看到首因
+      throw deepseekErr; // 抛原始 DeepSeek 错误，看到首因
     }
   }
 }
