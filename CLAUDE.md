@@ -80,3 +80,53 @@ lib/
 - **每次交付前必须跑 `npm run test:e2e:mobile` 并通过**（桌面端用 `npm run test:e2e`）
 - 测试用 E2E_MOCK_MODE=true（webServer 自动注入），不消耗 LLM API 额度
 - 真机 USB 调试指南见 `docs/mobile-testing.md`
+
+## gstack
+Use /browse from gstack for all web browsing. Never use mcp__claude-in-chrome__* tools.
+Available skills: /office-hours, /plan-ceo-review, /plan-eng-review, /plan-design-review,
+/design-consultation, /design-shotgun, /design-html, /review, /ship, /land-and-deploy,
+/canary, /benchmark, /browse, /open-gstack-browser, /qa, /qa-only, /design-review,
+/setup-browser-cookies, /setup-deploy, /setup-gbrain, /sync-gbrain, /retro, /investigate,
+/document-release, /codex, /cso, /autoplan, /pair-agent, /careful, /freeze, /guard,
+/unfreeze, /gstack-upgrade, /learn.
+
+## Skill routing
+
+When the user's request matches one of the situations below, invoke the listed skill via the Skill tool. When in doubt between multiple, invoke the skill rather than answer freehand. Full 分工矩阵见 `~/.claude/skills/INDEX.md` `## 分工矩阵` 节。
+
+### 计划 / 起步
+- 产品想法、头脑风暴、起步框架 → `/office-hours`
+- 计划做 CEO 视角审查（10 星 / scope） → `/plan-ceo-review`
+- 计划做工程视角审查（架构 / 边界 / 测试） → `/plan-eng-review`
+- 计划做设计视角审查（0-10 评分） → `/plan-design-review`
+- 一键跑完 CEO + 设计 + 工程 + DX → `/autoplan`
+
+### 设计
+- 找设计灵感（"参考 XX 风格"） → `qiaomu-design-advisor`
+- 看多个 AI 设计变体对比挑 → `/design-shotgun`
+- 决定风格后做新页面/组件 → `frontend-design`（默认）或 `taste-skill` / `soft-skill` / `minimalist-skill`
+- 跑起来做视觉 QA → `/design-review`（动态实跑）+ `redesign-skill`（静态代码审计）
+- 落成 production HTML/CSS → `/design-html`
+
+### 调试 / 审查
+- 新 bug 不在 17 个 bug 笔记覆盖范围 → `/investigate`
+- 跨模型独立第二意见 → `/codex review` 或 `/codex challenge`
+- PR 合入前的 staff engineer 审查 → `/review`
+- 基础设施级安全审计 → `/cso`
+
+### 测试
+- QA 测试 + 修 bug 闭环 → `/qa`
+- 只测不修，给报告 → `/qa-only`
+- 打开 URL 测某个流程 → `/browse`
+- 测带登录的页面 → 先 `/setup-browser-cookies` 再 `/qa`
+
+### 部署
+- career-report 直推腾讯云（不走 PR） → `career-report-deploy`
+- 走 GitHub PR 流程 → `/ship` → `/land-and-deploy` → `/canary`
+- 发版后同步 README / CHANGELOG / CLAUDE.md → `/document-release`
+
+### 上下文 / 知识
+- 切走前保存当前工作状态 → `/context-save`
+- 回来时恢复 → `/context-restore`
+- 把这次的踩坑变成持久 skill → `claudeception`
+- 看本 repo 在 gstack 里积累的经验 → `/learn`
