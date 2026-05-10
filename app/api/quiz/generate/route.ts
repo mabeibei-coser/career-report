@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   APPLICANT_BASELINE,
-  callMiniMaxJson,
+  callDeepSeekJson,
   callIflytekJson,
 } from "@/lib/report-shared";
 import { hasIflytek } from "@/lib/iflytek";
@@ -121,7 +121,7 @@ ${APPLICANT_BASELINE}
 
 function buildQuizUserPrompt(formData: JobFormData, from = 1): string {
   const count = from === 3 ? 4 : from === 2 ? 5 : 6;
-  // 静态指令前置，动态意向信息后置 —— 吃 MiniMax 自动前缀缓存（Part B）
+  // 静态指令前置，动态意向信息后置 —— 吃 DeepSeek 自动前缀缓存（Part B）
   return [
     `请基于用户的意向岗位生成 ${count} 道个性化快测题，题目要体现岗位的校招场景。按骨架 JSON 严格输出。`,
     ``,
@@ -161,8 +161,8 @@ export async function POST(req: NextRequest) {
       maxTokens: from === 3 ? 1500 : from === 2 ? 1900 : 2200,
     };
 
-    // 讯飞主、MiniMax 兜底。讯飞经常 25s+，超时拉短让 fallback 提前介入：
-    // 常态下 5-20s 返回；>25s 说明 slow path，快速切 MiniMax（~30s）总比 50s+30s 快
+    // 讯飞主、DeepSeek 兜底。讯飞经常 25s+，超时拉短让 fallback 提前介入：
+    // 常态下 5-20s 返回；>25s 说明 slow path，快速切 DeepSeek（~30s）总比 50s+30s 快
     let aiQuiz: AiQuizResponse;
     if (hasIflytek) {
       try {
@@ -173,14 +173,14 @@ export async function POST(req: NextRequest) {
         });
       } catch (iflytekErr) {
         console.warn(
-          "iFlytek quiz generate failed, falling back to MiniMax:",
+          "iFlytek quiz generate failed, falling back to DeepSeek:",
           iflytekErr
         );
-        // MiniMax fallback 用默认 50s 超时（节省 token 模式下通常 20-35s）
-        aiQuiz = await callMiniMaxJson<AiQuizResponse>(baseOpts);
+        // DeepSeek fallback 用默认 50s 超时（节省 token 模式下通常 20-35s）
+        aiQuiz = await callDeepSeekJson<AiQuizResponse>(baseOpts);
       }
     } else {
-      aiQuiz = await callMiniMaxJson<AiQuizResponse>(baseOpts);
+      aiQuiz = await callDeepSeekJson<AiQuizResponse>(baseOpts);
     }
 
     // 服务端合并骨架：id / dimension / scoreMap 补齐

@@ -4,7 +4,7 @@
  * 表单提交时调 startQuizPrefetch(formData)，把 /api/quiz/generate 的 fetch Promise
  * 存在模块内；/quiz 页面 mount 时调 consumeQuizPrefetch() 取出并清空。
  *
- * 场景：用户点"开始 6 题快测"后，需要 10-30s 等 MiniMax 生成题目。把 fetch 提前
+ * 场景：用户点"开始 6 题快测"后，需要 10-30s 等 DeepSeek 生成题目。把 fetch 提前
  * 到表单页提交那一刻启动，Next 客户端路由跳转 + React mount 时间（约 0.5-1.5s）
  * 就可以并行消化掉。
  *

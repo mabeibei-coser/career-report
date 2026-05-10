@@ -8,7 +8,7 @@
 ## 技术栈
 - Next.js 16 + TypeScript + Tailwind CSS v4 + shadcn/ui（@base-ui/react）
 - Recharts（图表：柱状、雷达、进度）+ Framer Motion（动画）
-- MiniMax API（报告与测评题生成，OpenAI SDK 兼容）
+- DeepSeek API（报告与测评题生成，OpenAI SDK 兼容）
 - pdf-parse + mammoth（服务端解析 PDF / DOCX 简历）
 - React Hook Form + Zod（表单验证）
 - html2canvas-pro + jsPDF（按 section 分页导出 PDF）
@@ -53,8 +53,8 @@ components/
     workplace-insight-section.tsx
     export-actions.tsx                  → 底部 Sticky 下载 / 打印
 lib/
-  minimax.ts                            → MiniMax OpenAI 兼容客户端
-  report-shared.ts                      → buildBaseContext / callMiniMaxJson 等共享工具
+  deepseek.ts                           → DeepSeek OpenAI 兼容客户端
+  report-shared.ts                      → buildBaseContext / callDeepSeekJson 等共享工具
   report-client.ts                      → 前端并发调度 6 个 section API
   pdf-export.ts                         → 按 section 分页 PDF 导出
   salary-anchors.ts                     → 应届起薪锚点 + 城市系数
@@ -68,9 +68,9 @@ lib/
 - 组件用 shadcn/ui（@base-ui/react），不手写基础组件
 - API 路由放 app/api/ 下；**所有 section API 独立**，失败互不影响
 - 环境变量放 .env.local（模板见 `.env.local.example`）：
-  - `MINIMAX_API_KEY` / `MINIMAX_BASE_URL` / `MINIMAX_MODEL`（默认 MiniMax-M1，生产为 minimax2.7）
-  - `IFLYTEK_API_KEY`（必填以启用讯飞；**留空则自动降级回 MiniMax**）/ `IFLYTEK_BASE_URL`（默认 `https://maas-coding-api.cn-huabei-1.xf-yun.com/v2`）/ `IFLYTEK_MODEL`（默认 `astron-code-latest`）
-  - 讯飞作用：6 题快测生成的**主模型**（MiniMax 仅兜底）；salary 章节 MiniMax 失败时的 **fallback**
+  - `DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL`（默认 `https://api.deepseek.com/v1`）/ `DEEPSEEK_MODEL`（默认 `deepseek-chat`）
+  - `IFLYTEK_API_KEY`（必填以启用讯飞；**留空则自动降级回 DeepSeek**）/ `IFLYTEK_BASE_URL`（默认 `https://maas-coding-api.cn-huabei-1.xf-yun.com/v2`）/ `IFLYTEK_MODEL`（默认 `astron-code-latest`）
+  - 讯飞作用：6 题快测生成的**主模型**（DeepSeek 仅兜底）；其他章节 DeepSeek 失败时的 **fallback**
 - 新增 Node 包（pdf-parse、mammoth）需在 `next.config.ts` 的 `serverExternalPackages` 中登记
 - 报告内容红线：
   - **职场环境透视**：绝不点名具体公司，只做行业/类型共性
