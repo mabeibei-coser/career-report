@@ -135,14 +135,15 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     });
   }, [clearTimer, resetState, stopTracks]);
 
-  const start = useCallback(async (): Promise<void> => {
+  const start = useCallback(async (requirePrimed = false): Promise<void> => {
     if (isRecording) return;
 
     let stream: MediaStream;
     if (primedStreamRef.current) {
-      // 复用预热的 stream（已持有权限），iOS 上不会再次触发权限弹窗
       stream = primedStreamRef.current;
       stream.getAudioTracks().forEach((t) => (t.enabled = true));
+    } else if (requirePrimed) {
+      throw new Error('No primed mic stream');
     } else {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     }
