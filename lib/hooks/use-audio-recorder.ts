@@ -19,7 +19,7 @@ function getBestMimeType(): string {
 }
 
 interface UseAudioRecorderReturn {
-  start: () => Promise<void>;
+  start: (requirePrimed?: boolean) => Promise<void>;
   stop: () => Promise<{ blob: Blob; mimeType: string; durationSec: number }>;
   cancel: () => void;
   // 接管外部（用户手势内）已经拿到的麦克风 stream 并保留。
