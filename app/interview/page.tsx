@@ -50,16 +50,6 @@ function canUseVoiceRecording(): boolean {
   return true;
 }
 
-function unlockAudio() {
-  try {
-    const Ctor =
-      window.AudioContext ??
-      (window as unknown as { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
-    if (Ctor) new Ctor().resume();
-  } catch { /* noop */ }
-}
-
 const GREETING_TEXT =
   "你好，我是你的 AI 职业顾问，接下来我会问你两个问题，帮你完善这份定位报告。";
 
@@ -113,6 +103,7 @@ export default function InterviewPage() {
       }
       const p = phaseRef.current;
       if (p === "greeting") {
+        // 欢迎语播完 → 显示"开始访谈"按钮，等用户点击后再弹麦克风授权
         setPhaseSync("idle");
       } else if (p === "speaking-q") {
         setPhaseSync("ready");
@@ -220,32 +211,32 @@ export default function InterviewPage() {
     [presentQuestion, setPhaseSync]
   );
 
-  // ---------- 开始访谈 ----------
+  // ---------- 开始访谈（欢迎语播完后用户点按钮触发） ----------
 
-  const handleStart = useCallback(async () => {
-    unlockAudio();
-    if (phaseRef.current === "greeting") {
-      player.stop();
-    }
+  // 注意：这个函数**不能**是 async function！
+  // iOS Safari 在 async function 的 await 链中调用 getUserMedia 会丢失 user gesture，
+  // 导致授权弹窗被延迟到下一次同步的 getUserMedia 调用（按住麦克风时），不在欢迎页弹。
+  // 所以必须用 sync function，第一行同步调 getUserMedia，把弹窗挂在 click 的 sync 执行栈上。
+  const handleStart = useCallback(() => {
+    const micPromise = navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .catch(() => null);
 
-    // 预请求麦克风权限：在用户手势上下文里提前拿授权，
-    // 后面按住录音时 getUserMedia 就秒返回，不会弹权限弹窗导致时序错乱
-    try {
-      const preStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      preStream.getTracks().forEach((t) => t.stop()); // 拿到权限后立即释放
-    } catch {
-      // 权限被拒 → 后续按住录音时 catch 会降级到文字模式
-    }
-
-    setPhaseSync("loading-q");
-    const prefetched = await prefetchedQ1Ref.current;
-    prefetchedQ1Ref.current = null;
-    if (prefetched?.text) {
-      presentQuestion(prefetched);
-    } else {
-      fetchQuestionFallback([]);
-    }
-  }, [player, presentQuestion, setPhaseSync, fetchQuestionFallback]);
+    // 拿到 stream 后存到 recorder（异步），再推进 phase
+    micPromise.then(async (stream) => {
+      if (stream) {
+        recorder.adoptStream(stream);
+      }
+      setPhaseSync("loading-q");
+      const prefetched = await prefetchedQ1Ref.current;
+      prefetchedQ1Ref.current = null;
+      if (prefetched?.text) {
+        presentQuestion(prefetched);
+      } else {
+        fetchQuestionFallback([]);
+      }
+    });
+  }, [presentQuestion, setPhaseSync, fetchQuestionFallback, recorder]);
 
   // ---------- 录音 ----------
 
@@ -536,7 +527,19 @@ export default function InterviewPage() {
         {/* 底部行动区 */}
         <div className="w-full flex flex-col items-center gap-2 min-h-[100px]">
           <AnimatePresence mode="wait">
-            {(phase === "greeting" || phase === "idle") && (
+            {phase === "greeting" && (
+              <motion.div
+                key="greeting-hint"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-[11px] text-slate-400"
+              >
+                AI 正在问候你...
+              </motion.div>
+            )}
+
+            {phase === "idle" && (
               <motion.button
                 key="start-btn"
                 initial={{ opacity: 0, y: 6 }}

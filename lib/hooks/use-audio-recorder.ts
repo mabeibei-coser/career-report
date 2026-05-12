@@ -22,6 +22,9 @@ interface UseAudioRecorderReturn {
   start: () => Promise<void>;
   stop: () => Promise<{ blob: Blob; mimeType: string; durationSec: number }>;
   cancel: () => void;
+  // 接管外部（用户手势内）已经拿到的麦克风 stream 并保留。
+  // 后续 start() 直接复用，避免 iOS 上 getUserMedia 二次弹授权。
+  adoptStream: (stream: MediaStream) => void;
   isRecording: boolean;
   durationSec: number;
   mediaStream: MediaStream | null;
@@ -38,6 +41,9 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
   const durationRef = useRef(0);
   const mimeTypeRef = useRef('');
   const streamRef = useRef<MediaStream | null>(null);
+  // 预热的麦克风 stream：在用户手势内 primeStream() 拿到权限后保留下来，
+  // 后续 start() 直接复用同一 stream，iOS Safari 不会再次弹授权。
+  const primedStreamRef = useRef<MediaStream | null>(null);
   // resolve/reject for the stop() promise
   const stopResolveRef = useRef<((value: { blob: Blob; mimeType: string; durationSec: number }) => void) | null>(null);
 
@@ -48,11 +54,29 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     }
   }, []);
 
+  // 释放当前录音占用的 stream：
+  // - 如果用的是 primedStream，只 disable tracks（保留权限，下次 start 复用）
+  // - 否则真正 stop tracks
   const stopTracks = useCallback(() => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
+      if (streamRef.current === primedStreamRef.current) {
+        streamRef.current.getAudioTracks().forEach((t) => (t.enabled = false));
+      } else {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+      }
       streamRef.current = null;
     }
+  }, []);
+
+  const adoptStream = useCallback((stream: MediaStream) => {
+    // 已经有 primed stream → 释放传入的新 stream 避免泄漏
+    if (primedStreamRef.current && primedStreamRef.current !== stream) {
+      stream.getTracks().forEach((t) => t.stop());
+      return;
+    }
+    // 静音 tracks，等真正录音时再启用，避免 iOS 状态栏一直显示"录音中"
+    stream.getAudioTracks().forEach((t) => (t.enabled = false));
+    primedStreamRef.current = stream;
   }, []);
 
   const resetState = useCallback(() => {
@@ -114,7 +138,14 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
   const start = useCallback(async (): Promise<void> => {
     if (isRecording) return;
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    let stream: MediaStream;
+    if (primedStreamRef.current) {
+      // 复用预热的 stream（已持有权限），iOS 上不会再次触发权限弹窗
+      stream = primedStreamRef.current;
+      stream.getAudioTracks().forEach((t) => (t.enabled = true));
+    } else {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    }
     streamRef.current = stream;
     setMediaStream(stream);
 
@@ -162,8 +193,13 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     return () => {
       clearTimer();
       stopTracks();
+      // 卸载时彻底释放 primed stream
+      if (primedStreamRef.current) {
+        primedStreamRef.current.getTracks().forEach((t) => t.stop());
+        primedStreamRef.current = null;
+      }
     };
   }, [clearTimer, stopTracks]);
 
-  return { start, stop, cancel, isRecording, durationSec, mediaStream };
+  return { start, stop, cancel, adoptStream, isRecording, durationSec, mediaStream };
 }
