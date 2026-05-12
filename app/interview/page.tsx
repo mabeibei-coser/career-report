@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { SkipForward, Keyboard, Mic } from "lucide-react";
@@ -84,6 +84,12 @@ export default function InterviewPage() {
   const [textInput, setTextInput] = useState("");
   const [voiceSupported, setVoiceSupported] = useState(true);
   const [skipConfirm, setSkipConfirm] = useState(false);
+
+  // 诊断日志（下个版本移除）
+  const [debugLog, setDebugLog] = useState<string[]>([]);
+  const addDebug = useCallback((msg: string) => {
+    setDebugLog((prev) => [...prev.slice(-6), msg]);
+  }, []);
 
   // 预取
   const prefetchedQ1Ref = useRef<Promise<QuestionItem | null> | null>(null);
@@ -226,47 +232,54 @@ export default function InterviewPage() {
     }
   }, [presentQuestion, setPhaseSync, fetchQuestionFallback]);
 
-  // sync function + onTouchStart：保证 getUserMedia 在 iOS user gesture 窗口内调用
   const handleStart = useCallback(() => {
     if (phaseRef.current !== "idle") return;
+    addDebug("handleStart 触发");
 
     if (!navigator.mediaDevices?.getUserMedia) {
+      addDebug("mediaDevices 不可用");
       setVoiceSupported(false);
       proceedToQuestion();
       return;
     }
 
     setPhaseSync("requesting-mic");
+    addDebug("getUserMedia 调用中...");
 
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then(
         (stream) => {
+          addDebug("getUserMedia 成功 ✓");
           recorder.adoptStream(stream);
-          // 授权成功 → 短暂停留让用户在欢迎页看到结果，再切题目页
           setPhaseSync("mic-granted");
           return new Promise<void>((r) => setTimeout(r, 600));
         },
-        () => {
-          // 权限拒绝或不可用 → 降级到文字输入（不延迟）
+        (err) => {
+          addDebug("getUserMedia 失败: " + (err?.name || "unknown"));
           setVoiceSupported(false);
         }
       )
-      .then(() => proceedToQuestion());
-  }, [recorder, proceedToQuestion, setPhaseSync]);
+      .then(() => {
+        addDebug("进入题目页");
+        proceedToQuestion();
+      });
+  }, [recorder, proceedToQuestion, setPhaseSync, addDebug]);
 
   // ---------- 录音 ----------
 
   const handleRecordStart = useCallback(async () => {
+    addDebug("录音 start(requirePrimed)");
     try {
       await recorder.start(true);
       setPhaseSync("recording");
     } catch (e) {
+      addDebug("录音失败: " + (e instanceof Error ? e.message : "unknown"));
       console.error("mic error:", e);
       setVoiceSupported(false);
       setPhaseSync("text-input");
     }
-  }, [recorder, setPhaseSync]);
+  }, [recorder, setPhaseSync, addDebug]);
 
   const prefetchQ2Background = useCallback((turn1: InterviewTurn) => {
     prefetchedQ2Ref.current = fetch("/api/interview/question", {
@@ -728,6 +741,14 @@ export default function InterviewPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 诊断面板（排查完后移除） */}
+      <div className="fixed bottom-0 left-0 right-0 z-[999] bg-black/80 text-[10px] text-green-400 font-mono px-3 py-1.5 safe-area-pb">
+        <div>v2.3.10 | phase: {phase} | mic: {voiceSupported ? "on" : "off"}</div>
+        {debugLog.map((msg, i) => (
+          <div key={i} className="text-gray-400">{msg}</div>
+        ))}
+      </div>
     </div>
   );
 }
