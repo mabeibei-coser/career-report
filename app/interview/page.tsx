@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { SkipForward, Keyboard, Mic } from "lucide-react";
@@ -19,8 +19,6 @@ type Phase =
   | "init"
   | "greeting"
   | "idle"
-  | "requesting-mic"
-  | "mic-granted"
   | "loading-q"
   | "speaking-q"
   | "ready"
@@ -50,6 +48,16 @@ function canUseVoiceRecording(): boolean {
   // 不再拦截微信：现代微信 WebView 已支持 MediaRecorder；
   // 若 getUserMedia 实际失败（权限/HTTP），handleRecordStart 的 catch 会降级到文字输入
   return true;
+}
+
+function unlockAudio() {
+  try {
+    const Ctor =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (Ctor) new Ctor().resume();
+  } catch { /* noop */ }
 }
 
 const GREETING_TEXT =
@@ -85,12 +93,6 @@ export default function InterviewPage() {
   const [voiceSupported, setVoiceSupported] = useState(true);
   const [skipConfirm, setSkipConfirm] = useState(false);
 
-  // 诊断日志（下个版本移除）
-  const [debugLog, setDebugLog] = useState<string[]>([]);
-  const addDebug = useCallback((msg: string) => {
-    setDebugLog((prev) => [...prev.slice(-6), msg]);
-  }, []);
-
   // 预取
   const prefetchedQ1Ref = useRef<Promise<QuestionItem | null> | null>(null);
   const prefetchedQ2Ref = useRef<Promise<QuestionItem | null> | null>(null);
@@ -111,7 +113,6 @@ export default function InterviewPage() {
       }
       const p = phaseRef.current;
       if (p === "greeting") {
-        // 欢迎语播完 → 显示"开始访谈"按钮，等用户点击后再弹麦克风授权
         setPhaseSync("idle");
       } else if (p === "speaking-q") {
         setPhaseSync("ready");
@@ -219,9 +220,23 @@ export default function InterviewPage() {
     [presentQuestion, setPhaseSync]
   );
 
-  // ---------- 开始访谈（欢迎语播完后用户点按钮触发） ----------
+  // ---------- 开始访谈 ----------
 
-  const proceedToQuestion = useCallback(async () => {
+  const handleStart = useCallback(async () => {
+    unlockAudio();
+    if (phaseRef.current === "greeting") {
+      player.stop();
+    }
+
+    // 预请求麦克风权限：在用户手势上下文里提前拿授权，
+    // 后面按住录音时 getUserMedia 就秒返回，不会弹权限弹窗导致时序错乱
+    try {
+      const preStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      preStream.getTracks().forEach((t) => t.stop()); // 拿到权限后立即释放
+    } catch {
+      // 权限被拒 → 后续按住录音时 catch 会降级到文字模式
+    }
+
     setPhaseSync("loading-q");
     const prefetched = await prefetchedQ1Ref.current;
     prefetchedQ1Ref.current = null;
@@ -230,56 +245,20 @@ export default function InterviewPage() {
     } else {
       fetchQuestionFallback([]);
     }
-  }, [presentQuestion, setPhaseSync, fetchQuestionFallback]);
-
-  const handleStart = useCallback(() => {
-    if (phaseRef.current !== "idle") return;
-    addDebug("handleStart 触发");
-
-    if (!navigator.mediaDevices?.getUserMedia) {
-      addDebug("mediaDevices 不可用");
-      setVoiceSupported(false);
-      proceedToQuestion();
-      return;
-    }
-
-    setPhaseSync("requesting-mic");
-    addDebug("getUserMedia 调用中...");
-
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then(
-        (stream) => {
-          addDebug("getUserMedia 成功 ✓");
-          recorder.adoptStream(stream);
-          setPhaseSync("mic-granted");
-          return new Promise<void>((r) => setTimeout(r, 600));
-        },
-        (err) => {
-          addDebug("getUserMedia 失败: " + (err?.name || "unknown"));
-          setVoiceSupported(false);
-        }
-      )
-      .then(() => {
-        addDebug("进入题目页");
-        proceedToQuestion();
-      });
-  }, [recorder, proceedToQuestion, setPhaseSync, addDebug]);
+  }, [player, presentQuestion, setPhaseSync, fetchQuestionFallback]);
 
   // ---------- 录音 ----------
 
   const handleRecordStart = useCallback(async () => {
-    addDebug("录音 start(requirePrimed)");
     try {
-      await recorder.start(true);
+      await recorder.start();
       setPhaseSync("recording");
     } catch (e) {
-      addDebug("录音失败: " + (e instanceof Error ? e.message : "unknown"));
       console.error("mic error:", e);
       setVoiceSupported(false);
       setPhaseSync("text-input");
     }
-  }, [recorder, setPhaseSync, addDebug]);
+  }, [recorder, setPhaseSync]);
 
   const prefetchQ2Background = useCallback((turn1: InterviewTurn) => {
     prefetchedQ2Ref.current = fetch("/api/interview/question", {
@@ -474,7 +453,7 @@ export default function InterviewPage() {
         {/* 文案区 */}
         <div className="w-full max-w-md min-h-[100px] flex flex-col items-center justify-start">
           <AnimatePresence mode="wait">
-            {(phase === "init" || phase === "greeting" || phase === "idle" || phase === "requesting-mic" || phase === "mic-granted") && (
+            {(phase === "init" || phase === "greeting" || phase === "idle") && (
               <motion.div
                 key="greeting"
                 initial={{ opacity: 0, y: 8 }}
@@ -557,26 +536,13 @@ export default function InterviewPage() {
         {/* 底部行动区 */}
         <div className="w-full flex flex-col items-center gap-2 min-h-[100px]">
           <AnimatePresence mode="wait">
-            {phase === "greeting" && (
-              <motion.div
-                key="greeting-hint"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-[11px] text-slate-400"
-              >
-                AI 正在问候你...
-              </motion.div>
-            )}
-
-            {phase === "idle" && (
+            {(phase === "greeting" || phase === "idle") && (
               <motion.button
                 key="start-btn"
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 onClick={handleStart}
-                onTouchStart={(e) => { e.preventDefault(); handleStart(); }}
                 className="px-7 py-3 text-white rounded-full text-sm font-medium shadow-lg active:scale-95 transition-all"
                 style={{
                   background: "linear-gradient(135deg, #4f8cff 0%, #3b82f6 100%)",
@@ -585,34 +551,6 @@ export default function InterviewPage() {
               >
                 准备好了，开始访谈
               </motion.button>
-            )}
-
-            {phase === "requesting-mic" && (
-              <motion.div
-                key="requesting-mic"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col items-center gap-2"
-              >
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <span className="inline-block w-2 h-2 rounded-full bg-blue-400 animate-ping" />
-                  请在弹出的对话框中允许麦克风访问
-                </div>
-              </motion.div>
-            )}
-
-            {phase === "mic-granted" && (
-              <motion.div
-                key="mic-granted"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center gap-2 text-sm font-medium text-emerald-600"
-              >
-                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
-                麦克风已就绪
-              </motion.div>
             )}
 
             {phase === "loading-q" && (
@@ -741,14 +679,6 @@ export default function InterviewPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* 诊断面板（排查完后移除） */}
-      <div className="fixed bottom-0 left-0 right-0 z-[999] bg-black/80 text-[10px] text-green-400 font-mono px-3 py-1.5 safe-area-pb">
-        <div>v2.3.10 | phase: {phase} | mic: {voiceSupported ? "on" : "off"}</div>
-        {debugLog.map((msg, i) => (
-          <div key={i} className="text-gray-400">{msg}</div>
-        ))}
-      </div>
     </div>
   );
 }

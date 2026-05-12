@@ -194,7 +194,7 @@ export default function QuizPage() {
     if (formData) {
       startBgSections(formData, finalAnswers);
     }
-    router.push("/interview?_=" + Date.now());
+    router.push("/interview");
   };
 
   if (quizLoading) {
