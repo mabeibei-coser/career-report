@@ -36,9 +36,34 @@ function Card({ title, children }: { title: string; children: ReactNode }) {
 
 const IDENTITY_LABELS: Record<string, string> = {
   recent_grad: "应届毕业生",
-  young_unemployed: "青年失业",
-  general_unemployed: "求职中",
+  young_unemployed: "35岁以下求职者",
+  general_unemployed: "35岁以上求职者",
 };
+
+const EDUCATION_LABELS: Record<string, string> = {
+  junior_high: "初中及以下",
+  high_school: "高中/中专/技校",
+  junior_college: "高职/大专",
+  bachelor: "本科",
+  master_plus: "硕士及以上",
+};
+
+const WORK_YEARS_LABELS: Record<string, string> = {
+  lt1: "0-1 年",
+  "1to3": "1-3 年",
+  "3to10": "3-10 年",
+  gt10: "10 年以上",
+};
+
+function eduLabel(v: string | null | undefined): string {
+  if (!v) return "—";
+  return EDUCATION_LABELS[v] ?? v;
+}
+
+function workYearsLabel(v: string | null | undefined): string {
+  if (!v) return "—";
+  return WORK_YEARS_LABELS[v] ?? v;
+}
 
 export default async function ReportDetailPage({
   params,
@@ -152,14 +177,14 @@ export default async function ReportDetailPage({
             label="学历"
             value={
               project === "nav"
-                ? navFormData?.education ?? null
-                : (row.target_education as string | null)
+                ? eduLabel(navFormData?.education)
+                : eduLabel(row.target_education as string | null)
             }
           />
 
           {project === "nav" ? (
             <>
-              <Row label="工作年限" value={navFormData?.workYears ?? null} />
+              <Row label="工作年限" value={workYearsLabel(navFormData?.workYears)} />
               <Row
                 label="用户身份"
                 value={IDENTITY_LABELS[row.user_identity as string] ?? (row.user_identity as string | null)}
@@ -231,8 +256,8 @@ export default async function ReportDetailPage({
           <Card title="填报信息（原始）">
             <Row label="姓名" value={navFormData.name ?? null} />
             <Row label="意向岗位" value={navFormData.targetPosition} />
-            <Row label="学历" value={navFormData.education} />
-            <Row label="工作年限" value={navFormData.workYears} />
+            <Row label="学历" value={eduLabel(navFormData.education)} />
+            <Row label="工作年限" value={workYearsLabel(navFormData.workYears)} />
             <Row
               label="用户身份"
               value={IDENTITY_LABELS[navFormData.identity] ?? navFormData.identity}

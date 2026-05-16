@@ -54,9 +54,35 @@ interface ApiResponse {
 
 const IDENTITY_LABELS: Record<string, string> = {
   recent_grad: "应届毕业生",
-  young_unemployed: "青年失业",
-  general_unemployed: "求职中",
+  young_unemployed: "35岁以下求职者",
+  general_unemployed: "35岁以上求职者",
 };
+
+// nav 的 form_data_json 学历是 code，admin 显示要映射成中文
+const EDUCATION_LABELS: Record<string, string> = {
+  junior_high: "初中及以下",
+  high_school: "高中/中专/技校",
+  junior_college: "高职/大专",
+  bachelor: "本科",
+  master_plus: "硕士及以上",
+};
+
+const WORK_YEARS_LABELS: Record<string, string> = {
+  lt1: "0-1 年",
+  "1to3": "1-3 年",
+  "3to10": "3-10 年",
+  gt10: "10 年以上",
+};
+
+function eduLabel(v: string | null | undefined): string {
+  if (!v) return "—";
+  return EDUCATION_LABELS[v] ?? v;
+}
+
+function workYearsLabel(v: string | null | undefined): string {
+  if (!v) return "—";
+  return WORK_YEARS_LABELS[v] ?? v;
+}
 
 function formatTs(ms: number) {
   return new Date(ms).toLocaleString("zh-CN", {
@@ -504,7 +530,7 @@ function ReportRowItem({
           <ProjectBadge project={row.project} />
         </TableCell>
         <TableCell className="font-medium max-w-[140px] truncate">{row.target_position}</TableCell>
-        <TableCell className="text-gray-600">{row.target_education ?? "—"}</TableCell>
+        <TableCell className="text-gray-600">{eduLabel(row.target_education)}</TableCell>
         <TableCell className="text-gray-600 max-w-[120px] truncate">
           {row.target_company || "—"}
         </TableCell>
@@ -542,8 +568,8 @@ function ReportRowItem({
       <TableCell className="text-gray-600">
         {row.user_identity ? IDENTITY_LABELS[row.user_identity] ?? row.user_identity : "—"}
       </TableCell>
-      <TableCell className="text-gray-600">{row.target_education ?? "—"}</TableCell>
-      <TableCell className="text-gray-600">{row.work_years ?? "—"}</TableCell>
+      <TableCell className="text-gray-600">{eduLabel(row.target_education)}</TableCell>
+      <TableCell className="text-gray-600">{workYearsLabel(row.work_years)}</TableCell>
       <TableCell className="tabular-nums text-xs text-gray-500">{durationCell}</TableCell>
       <TableCell className="text-right">
         <RowActions row={row} />
@@ -578,7 +604,7 @@ function ExpandedDetails({ row }: { row: ReportRow }) {
   if (row.project === "report") {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-gray-600">
-        <div><span className="text-gray-400">学历：</span>{row.target_education ?? "—"}</div>
+        <div><span className="text-gray-400">学历：</span>{eduLabel(row.target_education)}</div>
         <div><span className="text-gray-400">公司：</span>{row.target_company ?? "—"}</div>
         <div><span className="text-gray-400">城市：</span>{row.target_city_tier ?? "—"}</div>
         <div>
@@ -605,8 +631,8 @@ function ExpandedDetails({ row }: { row: ReportRow }) {
         <span className="text-gray-400">用户身份：</span>
         {row.user_identity ? IDENTITY_LABELS[row.user_identity] ?? row.user_identity : "—"}
       </div>
-      <div><span className="text-gray-400">学历：</span>{row.target_education ?? "—"}</div>
-      <div><span className="text-gray-400">工作年限：</span>{row.work_years ?? "—"}</div>
+      <div><span className="text-gray-400">学历：</span>{eduLabel(row.target_education)}</div>
+      <div><span className="text-gray-400">工作年限：</span>{workYearsLabel(row.work_years)}</div>
       <div>
         <span className="text-gray-400">简历：</span>
         {row.has_resume ? (
