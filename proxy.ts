@@ -32,6 +32,12 @@ export async function proxy(req: NextRequest) {
       return NextResponse.redirect(new URL("/admin/login", req.url));
     }
 
+    // admin 页面/接口必须实时鉴权，禁止任何缓存（默认 Next.js 会把 prerendered 页
+    // 标 s-maxage=31536000，导致 UI/JS 改动后浏览器 1 年内看到旧版本）
+    res.headers.set(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, max-age=0"
+    );
     return res;
   }
 
