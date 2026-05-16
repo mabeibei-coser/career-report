@@ -1,9 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, Suspense, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { BarChart3, FileText, Clock, Users, Upload, ChevronDown, ChevronRight, AlertTriangle, RefreshCw, Inbox, ArrowRightCircle } from "lucide-react";
+import {
+  FileText,
+  ChevronDown,
+  ChevronRight,
+  AlertTriangle,
+  RefreshCw,
+  Inbox,
+  ArrowRightCircle,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -116,76 +124,18 @@ function formatTs(ms: number) {
   });
 }
 
-type StatTone = "blue" | "orange" | "emerald" | "violet";
-
-const STAT_TONE: Record<
-  StatTone,
-  { iconBg: string; iconText: string; valueText: string }
-> = {
-  blue: {
-    iconBg: "bg-blue-50",
-    iconText: "text-blue-600",
-    valueText: "text-gray-900",
-  },
-  orange: {
-    iconBg: "bg-orange-50",
-    iconText: "text-orange-600",
-    valueText: "text-gray-900",
-  },
-  emerald: {
-    iconBg: "bg-emerald-50",
-    iconText: "text-emerald-600",
-    valueText: "text-emerald-700",
-  },
-  violet: {
-    iconBg: "bg-violet-50",
-    iconText: "text-violet-600",
-    valueText: "text-gray-900",
-  },
-};
-
-function StatCard({
-  icon,
-  label,
-  value,
-  sub,
-  tone = "blue",
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-  sub?: string;
-  tone?: StatTone;
-}) {
-  const t = STAT_TONE[tone];
-  return (
-    <div className="group rounded-xl bg-white px-4 py-3.5 shadow-sm shadow-gray-200/60 ring-1 ring-gray-100 hover:shadow-md hover:shadow-gray-300/40 transition-shadow">
-      <div className="flex items-start gap-2.5 mb-2.5">
-        <span
-          className={`inline-flex size-8 shrink-0 items-center justify-center rounded-lg ${t.iconBg} ${t.iconText}`}
-        >
-          {icon}
-        </span>
-        <div className="text-[11px] text-gray-500 font-medium pt-1.5">
-          {label}
-        </div>
-      </div>
-      <div
-        className={`text-3xl font-semibold tabular-nums tracking-tight leading-none ${t.valueText}`}
-      >
-        {value}
-      </div>
-      {sub && <div className="text-[11px] text-gray-400 mt-1.5">{sub}</div>}
-    </div>
-  );
-}
-
 function ProjectBadge({ project }: { project: ProjectId }) {
   const meta = PROJECTS[project];
   const palette =
     meta.color === "green"
-      ? { dot: "bg-emerald-500", text: "text-emerald-700" }
-      : { dot: "bg-blue-500", text: "text-blue-700" };
+      ? {
+          dot: "bg-[var(--semantic-positive)]",
+          text: "text-[var(--semantic-positive)]",
+        }
+      : {
+          dot: "bg-[var(--blue-500)]",
+          text: "text-[var(--blue-700)]",
+        };
   return (
     <span
       className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${palette.text}`}
@@ -215,12 +165,9 @@ function PageSkeleton() {
     <div className="p-6">
       <div className="max-w-7xl mx-auto space-y-5">
         <div className="h-6 w-32 bg-gray-100 rounded animate-pulse" />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-20 rounded-xl bg-white ring-1 ring-gray-100 shadow-sm shadow-gray-200/60" />
-          ))}
-        </div>
-        <div className="h-64 rounded-xl bg-white ring-1 ring-gray-100 shadow-sm shadow-gray-200/60" />
+        <div className="h-32 rounded-xl bg-white ring-1 ring-[var(--report-border)] shadow-sm" />
+        <div className="h-8 w-72 rounded bg-gray-100 animate-pulse" />
+        <div className="h-64 rounded-xl bg-white ring-1 ring-[var(--report-border)] shadow-sm" />
       </div>
     </div>
   );
@@ -248,7 +195,11 @@ function AdminReportsContent() {
   useEffect(() => {
     fetch("/api/admin/me")
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: MeData | null) => d && setMe({ adminId: d.adminId, name: d.name, showService: d.showService }))
+      .then(
+        (d: MeData | null) =>
+          d &&
+          setMe({ adminId: d.adminId, name: d.name, showService: d.showService })
+      )
       .catch(() => {});
   }, []);
   const handleTransfer = useCallback((row: ReportRow) => {
@@ -307,6 +258,16 @@ function AdminReportsContent() {
     fetch_();
   }
 
+  function resetFilters() {
+    setFrom("");
+    setTo("");
+    setPosition("");
+    setHasResume("");
+    setPage(1);
+  }
+
+  const hasFilters = !!(from || to || position || hasResume);
+
   // 表格列模式：tab=all 时只显示通用列 + 展开按钮；单项目时显示项目专属列
   const showProjectSpecific = project !== "all";
   // 只在 navReady===false 时提示（避免 pm2 重启首次请求的短暂 false 污染状态）
@@ -328,18 +289,6 @@ function AdminReportsContent() {
   const currentProjectLabel =
     project === "all" ? "全部报告" : `${PROJECTS[project as ProjectId].label}报告`;
 
-  // 页头副标题：根据加载状态显示总数 + 今日新增
-  const headerSub = (() => {
-    if (loading) return "加载中…";
-    if (!data) return "—";
-    const t = data.stats.total;
-    const today = data.stats.todayCount;
-    const parts: string[] = [`共 ${t} 份`];
-    if (today > 0) parts.push(`今日 +${today}`);
-    if (project === "all") parts.push("两个项目合计");
-    return parts.join(" · ");
-  })();
-
   return (
     <div className="p-6">
       <TransferServiceDialog
@@ -349,22 +298,21 @@ function AdminReportsContent() {
         onClose={() => setTransferRow(null)}
       />
       <div className="max-w-7xl mx-auto space-y-5">
-        {/* 标题 — 带项目色点 + gradient 装饰条 */}
+        {/* 标题 — 单色装饰条 + 项目色点 */}
         <div className="relative">
-          {/* 顶部 gradient 装饰条 */}
           <div
             aria-hidden
-            className={`absolute -top-1 left-0 h-0.5 w-12 rounded-full ${
+            className={`absolute -top-1 left-0 h-[3px] w-16 rounded-full ${
               project === "nav"
-                ? "bg-gradient-to-r from-emerald-500 to-emerald-300"
+                ? "bg-[var(--semantic-positive)]"
                 : project === "report"
-                ? "bg-gradient-to-r from-blue-500 to-blue-300"
-                : "bg-gradient-to-r from-blue-500 via-violet-400 to-emerald-400"
+                ? "bg-[var(--blue-700)]"
+                : "bg-[var(--blue-500)]"
             }`}
           />
-          <div className="space-y-1 pt-2">
+          <div className="pt-2">
             <div className="flex flex-wrap items-baseline gap-2.5">
-              <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
+              <h1 className="text-2xl font-semibold text-[var(--navy-800)] tracking-tight">
                 {currentProjectLabel}
               </h1>
               {project !== "all" && (
@@ -373,7 +321,6 @@ function AdminReportsContent() {
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-500 tabular-nums">{headerSub}</p>
           </div>
         </div>
 
@@ -382,125 +329,106 @@ function AdminReportsContent() {
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 flex items-start gap-2">
             <AlertTriangle className="size-4 mt-0.5 shrink-0" />
             <div>
-              「职业导航」数据源暂不可用，已自动切到「职业定位」。请联系开发人员检查 <code>NAV_DB_PATH</code>。
+              「职业导航」数据源暂不可用，已自动切到「职业定位」。请联系开发人员检查{" "}
+              <code>NAV_DB_PATH</code>。
             </div>
           </div>
         )}
 
-        {/* 统计卡片 */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <StatCard
-            tone="blue"
-            icon={<Users className="size-4" />}
-            label="总报告数"
-            value={data ? String(data.stats.total) : "—"}
-            sub={project === "all" ? "两个项目合计" : PROJECTS[project as ProjectId].label}
-          />
-          <StatCard
-            tone="orange"
-            icon={<BarChart3 className="size-4" />}
-            label="今日新增"
-            value={data ? String(data.stats.todayCount) : "—"}
-          />
-          <StatCard
-            tone="emerald"
-            icon={<Upload className="size-4" />}
-            label="简历上传率"
-            value={data ? `${data.stats.resumeRate}%` : "—"}
-          />
-          <StatCard
-            tone="violet"
-            icon={<Clock className="size-4" />}
-            label="平均生成时长"
-            value={
-              data
-                ? data.stats.avgDurationSec
-                  ? `${data.stats.avgDurationSec}s`
-                  : "—"
-                : "—"
-            }
-          />
-        </div>
+        {/* Today Strip — 单卡 actionable 工作台 */}
+        <TodayStrip data={data} project={project} loading={loading} />
+
+        {/* Project Filter Pill Bar — 焦点级切换 */}
+        <ProjectPillBar project={project} showService={me?.showService} />
 
         {/* 过滤栏 — 去框感，inline 排列 */}
         <div className="flex flex-wrap gap-3 items-end px-1">
-            <div>
-              <div className="text-xs text-gray-500 mb-1">开始日期</div>
-              <Input
-                type="date"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                className="h-8 text-sm w-36 bg-white"
-              />
-            </div>
-            <div>
-              <div className="text-xs text-gray-500 mb-1">结束日期</div>
-              <Input
-                type="date"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                className="h-8 text-sm w-36 bg-white"
-              />
-            </div>
-            <div>
-              <div className="text-xs text-gray-500 mb-1">意向岗位</div>
-              <Input
-                placeholder="关键词"
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                className="h-8 text-sm w-36 bg-white"
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              />
-            </div>
-            <div>
-              <div className="text-xs text-gray-500 mb-1">简历</div>
-              <select
-                value={hasResume}
-                onChange={(e) => setHasResume(e.target.value as "" | "1" | "0")}
-                className="h-8 text-sm border border-input rounded-md px-2 bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-              >
-                <option value="">全部</option>
-                <option value="1">有简历</option>
-                <option value="0">无简历</option>
-              </select>
-            </div>
-            <div className="flex gap-1.5 ml-auto sm:ml-0">
-              <Button size="sm" onClick={handleSearch} className="h-8 bg-blue-600 hover:bg-blue-700">
-                搜索
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 text-gray-500 hover:text-gray-700"
-                onClick={() => {
-                  setFrom("");
-                  setTo("");
-                  setPosition("");
-                  setHasResume("");
-                  setPage(1);
-                }}
-              >
-                重置
-              </Button>
-            </div>
+          <div>
+            <div className="text-xs text-gray-500 mb-1">开始日期</div>
+            <Input
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              className="h-8 text-sm w-36 bg-white ring-1 ring-[var(--report-border)]"
+            />
+          </div>
+          <div>
+            <div className="text-xs text-gray-500 mb-1">结束日期</div>
+            <Input
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              className="h-8 text-sm w-36 bg-white ring-1 ring-[var(--report-border)]"
+            />
+          </div>
+          <div>
+            <div className="text-xs text-gray-500 mb-1">意向岗位</div>
+            <Input
+              placeholder="关键词"
+              value={position}
+              onChange={(e) => setPosition(e.target.value)}
+              className="h-8 text-sm w-36 bg-white ring-1 ring-[var(--report-border)]"
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            />
+          </div>
+          <div>
+            <div className="text-xs text-gray-500 mb-1">简历</div>
+            <select
+              value={hasResume}
+              onChange={(e) =>
+                setHasResume(e.target.value as "" | "1" | "0")
+              }
+              className="h-8 text-sm border border-input rounded-md px-2 bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue-400)]"
+            >
+              <option value="">全部</option>
+              <option value="1">有简历</option>
+              <option value="0">无简历</option>
+            </select>
+          </div>
+          <div className="flex gap-1.5 ml-auto sm:ml-0">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSearch}
+              className="h-8 border-[var(--blue-200)] text-[var(--blue-700)] hover:bg-[var(--blue-50)] hover:border-[var(--blue-300)]"
+            >
+              搜索
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 text-gray-500 hover:text-gray-700"
+              onClick={resetFilters}
+            >
+              重置
+            </Button>
+          </div>
         </div>
 
         {/* 表格 */}
-        <div className="bg-white rounded-xl ring-1 ring-gray-100 shadow-sm shadow-gray-200/60 overflow-hidden">
+        <div className="bg-white rounded-xl ring-1 ring-[var(--report-border)] shadow-sm overflow-hidden">
           {error && (
             <div className="p-4 text-sm text-red-600 border-b border-red-100 bg-red-50 flex items-center justify-between">
               <span>加载失败：{error}</span>
-              <Button size="sm" variant="outline" onClick={fetch_} className="h-7 text-xs">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={fetch_}
+                className="h-7 text-xs"
+              >
                 <RefreshCw className="size-3 mr-1" />
                 重试
               </Button>
             </div>
           )}
           <Table>
-            <TableHeader>
-              <TableRow className="text-xs text-gray-500">
+            <TableHeader className="sticky top-0 bg-white z-10">
+              <TableRow className="text-xs text-gray-500 border-b border-[var(--report-border)]">
                 {columns.map((c) => (
-                  <TableHead key={c} className={c === "操作" || c === "详情" ? "text-right" : ""}>
+                  <TableHead
+                    key={c}
+                    className={c === "操作" || c === "详情" ? "text-right" : ""}
+                  >
                     {c}
                   </TableHead>
                 ))}
@@ -520,21 +448,11 @@ function AdminReportsContent() {
               ) : data?.rows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="text-center py-16">
-                    <div className="flex flex-col items-center gap-3 text-gray-400">
-                      <div className="size-12 rounded-full bg-gray-50 flex items-center justify-center">
-                        <Inbox className="size-5" />
-                      </div>
-                      <div className="space-y-0.5">
-                        <p className="text-sm text-gray-600">
-                          {project === "all"
-                            ? "还没有人提交报告"
-                            : `${PROJECTS[project as ProjectId].label} 暂无报告`}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          当用户完成测评后，结果会出现在这里
-                        </p>
-                      </div>
-                    </div>
+                    <EmptyState
+                      hasFilters={hasFilters}
+                      project={project}
+                      onReset={resetFilters}
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -562,15 +480,17 @@ function AdminReportsContent() {
 
           {/* 分页 */}
           {data && totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--report-border)]">
               <div className="text-xs text-gray-500 tabular-nums">
-                共 <span className="font-medium text-gray-700">{data.total}</span> 条
+                共{" "}
+                <span className="font-medium text-gray-700">{data.total}</span>{" "}
+                条
               </div>
               <div className="flex items-center gap-1.5">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs px-2.5"
+                  className="h-7 text-xs px-2.5 hover:bg-[var(--blue-50)]/40"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
@@ -584,7 +504,7 @@ function AdminReportsContent() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs px-2.5"
+                  className="h-7 text-xs px-2.5 hover:bg-[var(--blue-50)]/40"
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => p + 1)}
                 >
@@ -594,6 +514,185 @@ function AdminReportsContent() {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Today Strip — 替代 4-StatCard 横排，actionable 工作台 */
+function TodayStrip({
+  data,
+  project,
+  loading,
+}: {
+  data: ApiResponse | null;
+  project: ProjectFilter;
+  loading: boolean;
+}) {
+  const todayCount = data?.stats.todayCount;
+  const total = data?.stats.total;
+  const resumeRate = data?.stats.resumeRate;
+  const avgDur = data?.stats.avgDurationSec;
+
+  return (
+    <div className="bg-white rounded-xl ring-1 ring-[var(--report-border)] shadow-sm p-5">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+        {/* 左 5 栏：今日新增大数字 */}
+        <div className="md:col-span-5">
+          <div className="text-[11px] text-gray-500 font-medium tracking-wider uppercase">
+            今日新增
+          </div>
+          {loading && data === null ? (
+            <div className="h-12 w-24 bg-gray-100 rounded animate-pulse mt-2" />
+          ) : (
+            <div className="text-4xl md:text-5xl font-semibold tabular-nums tracking-tight leading-none mt-2 text-[var(--navy-900)]">
+              {todayCount ?? "—"}
+            </div>
+          )}
+          <div className="text-xs text-gray-500 mt-2 tabular-nums">
+            累计{" "}
+            <span className="font-medium text-[var(--navy-700)]">
+              {total ?? "—"}
+            </span>{" "}
+            份{project === "all" && " · 两个项目合计"}
+          </div>
+        </div>
+
+        {/* 中间分隔（仅桌面） */}
+        <div
+          aria-hidden
+          className="hidden md:block md:col-span-1 h-full w-px bg-[var(--report-border)] mx-auto"
+        />
+
+        {/* 右 6 栏：两个 secondary KPI */}
+        <div className="md:col-span-6 grid grid-cols-2 gap-4">
+          <div>
+            <div className="text-[11px] text-gray-500 font-medium tracking-wider uppercase">
+              简历上传率
+            </div>
+            {loading && data === null ? (
+              <div className="h-7 w-16 bg-gray-100 rounded animate-pulse mt-2" />
+            ) : (
+              <div className="text-2xl font-semibold tabular-nums tracking-tight leading-none mt-2 text-[var(--navy-700)]">
+                {resumeRate !== undefined ? `${resumeRate}%` : "—"}
+              </div>
+            )}
+          </div>
+          <div>
+            <div className="text-[11px] text-gray-500 font-medium tracking-wider uppercase">
+              平均耗时
+            </div>
+            {loading && data === null ? (
+              <div className="h-7 w-16 bg-gray-100 rounded animate-pulse mt-2" />
+            ) : (
+              <div className="text-2xl font-semibold tabular-nums tracking-tight leading-none mt-2 text-[var(--navy-700)]">
+                {avgDur ? `${avgDur}s` : "—"}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Project Filter Pill Bar — 焦点级 project 切换 */
+function ProjectPillBar({
+  project,
+  showService,
+}: {
+  project: ProjectFilter;
+  showService: boolean | undefined;
+}) {
+  const pills: Array<{ href: string; label: string; active: boolean }> = [
+    {
+      href: "/admin/reports?project=all",
+      label: "全部",
+      active: project === "all",
+    },
+    {
+      href: "/admin/reports?project=report",
+      label: PROJECTS.report.label,
+      active: project === "report",
+    },
+    {
+      href: "/admin/reports?project=nav",
+      label: PROJECTS.nav.label,
+      active: project === "nav",
+    },
+  ];
+  if (showService) {
+    pills.push({
+      href: "/admin/service-tracking",
+      label: "服务跟踪",
+      active: false,
+    });
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 px-1">
+      {pills.map((p) => (
+        <Link
+          key={p.href}
+          href={p.href}
+          className={`inline-flex items-center px-3 py-1.5 rounded-md text-xs transition-colors ${
+            p.active
+              ? "bg-[var(--blue-50)] text-[var(--blue-700)] ring-1 ring-[var(--blue-200)]/60 font-medium"
+              : "text-gray-600 hover:bg-gray-50"
+          }`}
+        >
+          {p.label}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+/** 空状态 — 区分"无数据"vs"筛选无结果" */
+function EmptyState({
+  hasFilters,
+  project,
+  onReset,
+}: {
+  hasFilters: boolean;
+  project: ProjectFilter;
+  onReset: () => void;
+}) {
+  if (hasFilters) {
+    return (
+      <div className="flex flex-col items-center gap-3 text-gray-400">
+        <div className="size-12 rounded-full bg-gray-50 flex items-center justify-center">
+          <Inbox className="size-5" />
+        </div>
+        <div className="space-y-0.5">
+          <p className="text-sm text-gray-600">当前筛选无结果</p>
+          <p className="text-xs text-gray-400">试着调整日期或岗位关键词</p>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="mt-1 h-7 text-xs"
+          onClick={onReset}
+        >
+          清空筛选
+        </Button>
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col items-center gap-3 text-gray-400">
+      <div className="size-12 rounded-full bg-gray-50 flex items-center justify-center">
+        <Inbox className="size-5" />
+      </div>
+      <div className="space-y-0.5">
+        <p className="text-sm text-gray-600">
+          {project === "all"
+            ? "还没有人提交报告"
+            : `${PROJECTS[project as ProjectId].label} 暂无报告`}
+        </p>
+        <p className="text-xs text-gray-400">
+          当用户完成测评后，结果会出现在这里
+        </p>
       </div>
     </div>
   );
@@ -618,13 +717,18 @@ function ReportRowItem({
   navReady: boolean;
 }) {
   void PROJECTS[row.project]; // 保留 import 引用（meta 此处暂不直接展示）
-  const durationCell = row.duration_ms ? `${Math.round(row.duration_ms / 1000)}s` : "—";
+  const durationCell = row.duration_ms
+    ? `${Math.round(row.duration_ms / 1000)}s`
+    : "—";
 
   if (!showProjectSpecific) {
     // tab=all：通用列（时间/姓名/手机号/项目/岗位/耗时/详情）+ 展开按钮
     return (
       <>
-        <TableRow className="text-sm cursor-pointer hover:bg-slate-50 transition-colors duration-150" onClick={onToggleExpand}>
+        <TableRow
+          className="text-sm cursor-pointer hover:bg-[var(--blue-50)]/40 transition-colors duration-150"
+          onClick={onToggleExpand}
+        >
           <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">
             {formatTs(row.created_at)}
           </TableCell>
@@ -640,17 +744,23 @@ function ReportRowItem({
           <TableCell className="font-medium max-w-[180px] truncate">
             {row.target_position}
           </TableCell>
-          <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">{durationCell}</TableCell>
+          <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">
+            {durationCell}
+          </TableCell>
           <TableCell className="text-right">
             <div className="flex items-center justify-end gap-2">
               <Link
                 href={`/admin/reports/${row.id}?project=${row.project}`}
-                className="inline-flex items-center justify-center min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded-md ring-1 ring-gray-200 text-gray-700 hover:bg-gray-50 hover:ring-gray-300 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                className="inline-flex items-center justify-center min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded-md ring-1 ring-gray-200 text-gray-700 hover:bg-gray-50 hover:ring-gray-300 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue-400)]"
                 onClick={(e) => e.stopPropagation()}
               >
                 详情
               </Link>
-              {expanded ? <ChevronDown className="size-4 text-gray-400" /> : <ChevronRight className="size-4 text-gray-400" />}
+              {expanded ? (
+                <ChevronDown className="size-4 text-gray-400" />
+              ) : (
+                <ChevronRight className="size-4 text-gray-400" />
+              )}
             </div>
           </TableCell>
         </TableRow>
@@ -668,7 +778,7 @@ function ReportRowItem({
   // tab=report：全列
   if (project === "report") {
     return (
-      <TableRow className="text-sm hover:bg-slate-50 transition-colors duration-150">
+      <TableRow className="text-sm hover:bg-[var(--blue-50)]/40 transition-colors duration-150">
         <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">
           {formatTs(row.created_at)}
         </TableCell>
@@ -681,7 +791,9 @@ function ReportRowItem({
         <TableCell>
           <ProjectBadge project={row.project} />
         </TableCell>
-        <TableCell className="font-medium max-w-[140px] truncate">{row.target_position}</TableCell>
+        <TableCell className="font-medium max-w-[140px] truncate">
+          {row.target_position}
+        </TableCell>
         <TableCell className="text-gray-600">{eduLabel(row.target_education)}</TableCell>
         <TableCell className="text-gray-600 max-w-[120px] truncate">
           {row.target_company || "—"}
@@ -689,14 +801,16 @@ function ReportRowItem({
         <TableCell className="text-gray-600">{row.target_city_tier || "—"}</TableCell>
         <TableCell>
           {row.has_resume ? (
-            <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5 text-[11px]">
+            <span className="inline-flex items-center gap-1 text-[var(--semantic-positive)] bg-[var(--semantic-positive)]/8 border border-[var(--semantic-positive)]/30 rounded px-1.5 py-0.5 text-[11px]">
               <FileText className="size-3" />有
             </span>
           ) : (
             <span className="text-gray-400 text-[11px]">无</span>
           )}
         </TableCell>
-        <TableCell className="tabular-nums text-xs text-gray-500">{durationCell}</TableCell>
+        <TableCell className="tabular-nums text-xs text-gray-500">
+          {durationCell}
+        </TableCell>
         <TableCell className="text-right">
           <RowActions row={row} onTransfer={onTransfer} navReady={navReady} />
         </TableCell>
@@ -706,7 +820,7 @@ function ReportRowItem({
 
   // tab=nav：去掉耗时列（用户要求）
   return (
-    <TableRow className="text-sm">
+    <TableRow className="text-sm hover:bg-[var(--blue-50)]/40 transition-colors duration-150">
       <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">
         {formatTs(row.created_at)}
       </TableCell>
@@ -719,9 +833,13 @@ function ReportRowItem({
       <TableCell>
         <ProjectBadge project={row.project} />
       </TableCell>
-      <TableCell className="font-medium max-w-[140px] truncate">{row.target_position}</TableCell>
+      <TableCell className="font-medium max-w-[140px] truncate">
+        {row.target_position}
+      </TableCell>
       <TableCell className="text-gray-600">
-        {row.user_identity ? IDENTITY_LABELS[row.user_identity] ?? row.user_identity : "—"}
+        {row.user_identity
+          ? IDENTITY_LABELS[row.user_identity] ?? row.user_identity
+          : "—"}
       </TableCell>
       <TableCell className="text-gray-600">{eduLabel(row.target_education)}</TableCell>
       <TableCell className="text-gray-600">{workYearsLabel(row.work_years)}</TableCell>
@@ -749,14 +867,14 @@ function RowActions({
         <a
           href={`/api/admin/reports/${row.id}/resume?project=${row.project}`}
           download
-          className="text-xs text-blue-600 hover:text-blue-700 hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
+          className="text-xs text-[var(--blue-700)] hover:text-[var(--blue-600)] hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue-400)] rounded"
         >
           简历
         </a>
       ) : null}
       <Link
         href={`/admin/reports/${row.id}?project=${row.project}`}
-        className="inline-flex items-center justify-center min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded-md ring-1 ring-gray-200 text-gray-700 hover:bg-gray-50 hover:ring-gray-300 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+        className="inline-flex items-center justify-center min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded-md ring-1 ring-gray-200 text-gray-700 hover:bg-gray-50 hover:ring-gray-300 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue-400)]"
       >
         详情
       </Link>
@@ -766,9 +884,9 @@ function RowActions({
           onClick={() => canTransfer && onTransfer(row)}
           disabled={!canTransfer}
           title={canTransfer ? "转入服务跟踪" : "数据库暂不可用"}
-          className={`inline-flex items-center gap-1 min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded-md ring-1 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 ${
+          className={`inline-flex items-center gap-1 min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded-md ring-1 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--semantic-positive)]/50 ${
             canTransfer
-              ? "ring-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 hover:ring-emerald-300"
+              ? "ring-[var(--semantic-positive)]/30 text-[var(--semantic-positive)] bg-[var(--semantic-positive)]/8 hover:bg-[var(--semantic-positive)]/12"
               : "ring-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
           }`}
         >
@@ -784,16 +902,25 @@ function ExpandedDetails({ row }: { row: ReportRow }) {
   if (row.project === "report") {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-gray-600">
-        <div><span className="text-gray-400">学历：</span>{eduLabel(row.target_education)}</div>
-        <div><span className="text-gray-400">公司：</span>{row.target_company ?? "—"}</div>
-        <div><span className="text-gray-400">城市：</span>{row.target_city_tier ?? "—"}</div>
+        <div>
+          <span className="text-gray-400">学历：</span>
+          {eduLabel(row.target_education)}
+        </div>
+        <div>
+          <span className="text-gray-400">公司：</span>
+          {row.target_company ?? "—"}
+        </div>
+        <div>
+          <span className="text-gray-400">城市：</span>
+          {row.target_city_tier ?? "—"}
+        </div>
         <div>
           <span className="text-gray-400">简历：</span>
           {row.has_resume ? (
             <a
               href={`/api/admin/reports/${row.id}/resume?project=${row.project}`}
               download
-              className="text-blue-600 hover:underline"
+              className="text-[var(--blue-700)] hover:underline"
             >
               下载
             </a>
@@ -809,18 +936,29 @@ function ExpandedDetails({ row }: { row: ReportRow }) {
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-gray-600">
       <div>
         <span className="text-gray-400">用户身份：</span>
-        {row.user_identity ? IDENTITY_LABELS[row.user_identity] ?? row.user_identity : "—"}
+        {row.user_identity
+          ? IDENTITY_LABELS[row.user_identity] ?? row.user_identity
+          : "—"}
       </div>
-      <div><span className="text-gray-400">学历：</span>{eduLabel(row.target_education)}</div>
-      <div><span className="text-gray-400">工作年限：</span>{workYearsLabel(row.work_years)}</div>
-      <div><span className="text-gray-400">手机号：</span>{row.user_phone || "—"}</div>
+      <div>
+        <span className="text-gray-400">学历：</span>
+        {eduLabel(row.target_education)}
+      </div>
+      <div>
+        <span className="text-gray-400">工作年限：</span>
+        {workYearsLabel(row.work_years)}
+      </div>
+      <div>
+        <span className="text-gray-400">手机号：</span>
+        {row.user_phone || "—"}
+      </div>
       <div>
         <span className="text-gray-400">简历：</span>
         {row.has_resume ? (
           <a
             href={`/api/admin/reports/${row.id}/resume?project=${row.project}`}
             download
-            className="text-blue-600 hover:underline"
+            className="text-[var(--blue-700)] hover:underline"
           >
             下载
           </a>
