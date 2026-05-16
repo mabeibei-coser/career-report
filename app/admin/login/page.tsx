@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Lock } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,13 +52,32 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4">
-      <Card className="w-full max-w-sm shadow-lg">
-        <CardHeader className="space-y-1 text-center pb-4">
-          <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-blue-100">
-            <Lock className="size-6 text-blue-600" />
+    <div className="relative min-h-dvh flex items-center justify-center px-4 bg-[#0f172a]">
+      {/* 背景：径向晕染 + 细网格，替换通用对角灰渐变 */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(60% 50% at 50% 0%, rgba(59,130,246,0.18) 0%, rgba(15,23,42,0) 60%), radial-gradient(40% 35% at 100% 100%, rgba(96,165,250,0.10) 0%, rgba(15,23,42,0) 60%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+        }}
+      />
+
+      <Card className="relative w-full max-w-sm shadow-2xl shadow-blue-950/40 border-slate-200/60 backdrop-blur-sm">
+        <CardHeader className="space-y-1.5 text-center pb-4">
+          <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-xl bg-gradient-to-b from-blue-500 to-blue-600 shadow-md shadow-blue-600/30 ring-1 ring-inset ring-white/20">
+            <ShieldCheck className="size-5 text-white" />
           </div>
-          <CardTitle className="text-xl">管理员登录</CardTitle>
+          <CardTitle className="text-xl tracking-tight">管理员登录</CardTitle>
           <p className="text-sm text-muted-foreground">谨世 ATA 后台管理系统</p>
         </CardHeader>
         <CardContent>

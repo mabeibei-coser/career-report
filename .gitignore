@@ -89,3 +89,4 @@ C\:*
 playwright-report/
 test-results/
 e2e/fixtures/.tmp-*
+.gstack/

@@ -106,29 +106,62 @@ function formatTs(ms: number) {
   });
 }
 
+type StatTone = "blue" | "orange" | "emerald" | "violet";
+
+const STAT_TONE: Record<
+  StatTone,
+  { iconBg: string; iconText: string; valueText: string }
+> = {
+  blue: {
+    iconBg: "bg-blue-50",
+    iconText: "text-blue-600",
+    valueText: "text-gray-900",
+  },
+  orange: {
+    iconBg: "bg-orange-50",
+    iconText: "text-orange-600",
+    valueText: "text-gray-900",
+  },
+  emerald: {
+    iconBg: "bg-emerald-50",
+    iconText: "text-emerald-600",
+    valueText: "text-emerald-700",
+  },
+  violet: {
+    iconBg: "bg-violet-50",
+    iconText: "text-violet-600",
+    valueText: "text-gray-900",
+  },
+};
+
 function StatCard({
   icon,
   label,
   value,
   sub,
-  accent,
+  tone = "blue",
 }: {
   icon: ReactNode;
   label: string;
   value: string;
   sub?: string;
-  accent?: boolean; // 主指标：用蓝色强调
+  tone?: StatTone;
 }) {
+  const t = STAT_TONE[tone];
   return (
-    <div className="rounded-xl bg-white px-4 py-3.5 border border-gray-100/80 hover:border-gray-200 transition-colors">
-      <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-medium mb-2">
-        <span className="text-gray-400">{icon}</span>
-        {label}
+    <div className="group rounded-xl bg-white px-4 py-3.5 shadow-sm shadow-gray-200/60 ring-1 ring-gray-100 hover:shadow-md hover:shadow-gray-300/40 transition-shadow">
+      <div className="flex items-start gap-2.5 mb-2.5">
+        <span
+          className={`inline-flex size-8 shrink-0 items-center justify-center rounded-lg ${t.iconBg} ${t.iconText}`}
+        >
+          {icon}
+        </span>
+        <div className="text-[11px] text-gray-500 font-medium pt-1.5">
+          {label}
+        </div>
       </div>
       <div
-        className={`text-3xl font-semibold tabular-nums tracking-tight leading-none ${
-          accent ? "text-blue-600" : "text-gray-900"
-        }`}
+        className={`text-3xl font-semibold tabular-nums tracking-tight leading-none ${t.valueText}`}
       >
         {value}
       </div>
@@ -173,10 +206,10 @@ function PageSkeleton() {
         <div className="h-6 w-32 bg-gray-100 rounded animate-pulse" />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-20 rounded-xl bg-white border border-gray-100" />
+            <div key={i} className="h-20 rounded-xl bg-white ring-1 ring-gray-100 shadow-sm shadow-gray-200/60" />
           ))}
         </div>
-        <div className="h-64 rounded-xl bg-white border border-gray-100" />
+        <div className="h-64 rounded-xl bg-white ring-1 ring-gray-100 shadow-sm shadow-gray-200/60" />
       </div>
     </div>
   );
@@ -309,23 +342,26 @@ function AdminReportsContent() {
         {/* 统计卡片 */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <StatCard
+            tone="blue"
             icon={<Users className="size-4" />}
             label="总报告数"
             value={data ? String(data.stats.total) : "—"}
             sub={project === "all" ? "两个项目合计" : PROJECTS[project as ProjectId].label}
           />
           <StatCard
+            tone="orange"
             icon={<BarChart3 className="size-4" />}
             label="今日新增"
             value={data ? String(data.stats.todayCount) : "—"}
           />
           <StatCard
+            tone="emerald"
             icon={<Upload className="size-4" />}
             label="简历上传率"
             value={data ? `${data.stats.resumeRate}%` : "—"}
-            accent
           />
           <StatCard
+            tone="violet"
             icon={<Clock className="size-4" />}
             label="平均生成时长"
             value={
@@ -339,7 +375,7 @@ function AdminReportsContent() {
         </div>
 
         {/* 过滤栏 */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <div className="bg-white rounded-xl ring-1 ring-gray-100 shadow-sm shadow-gray-200/60 p-4">
           <div className="flex flex-wrap gap-3 items-end">
             <div>
               <div className="text-xs text-gray-500 mb-1">开始日期</div>
@@ -404,7 +440,7 @@ function AdminReportsContent() {
         </div>
 
         {/* 表格 */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl ring-1 ring-gray-100 shadow-sm shadow-gray-200/60 overflow-hidden">
           {error && (
             <div className="p-4 text-sm text-red-600 border-b border-red-100 bg-red-50 flex items-center justify-between">
               <span>加载失败：{error}</span>
@@ -479,23 +515,28 @@ function AdminReportsContent() {
           {/* 分页 */}
           {data && totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-              <div className="text-xs text-gray-500">
-                共 {data.total} 条，第 {page}/{totalPages} 页
+              <div className="text-xs text-gray-500 tabular-nums">
+                共 <span className="font-medium text-gray-700">{data.total}</span> 条
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-1.5">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs"
+                  className="h-7 text-xs px-2.5"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
                   上一页
                 </Button>
+                <div className="px-2 text-xs text-gray-600 tabular-nums whitespace-nowrap">
+                  <span className="font-semibold text-gray-900">{page}</span>
+                  <span className="text-gray-300 mx-1">/</span>
+                  <span>{totalPages}</span>
+                </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs"
+                  className="h-7 text-xs px-2.5"
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => p + 1)}
                 >
@@ -531,7 +572,7 @@ function ReportRowItem({
     // tab=all：通用列（时间/姓名/手机号/项目/岗位/耗时/详情）+ 展开按钮
     return (
       <>
-        <TableRow className="text-sm cursor-pointer hover:bg-gray-50" onClick={onToggleExpand}>
+        <TableRow className="text-sm cursor-pointer hover:bg-slate-50 transition-colors duration-150" onClick={onToggleExpand}>
           <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">
             {formatTs(row.created_at)}
           </TableCell>
@@ -552,7 +593,7 @@ function ReportRowItem({
             <div className="flex items-center justify-end gap-2">
               <Link
                 href={`/admin/reports/${row.id}?project=${row.project}`}
-                className="inline-flex items-center justify-center min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                className="inline-flex items-center justify-center min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded-md ring-1 ring-gray-200 text-gray-700 hover:bg-gray-50 hover:ring-gray-300 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                 onClick={(e) => e.stopPropagation()}
               >
                 详情
@@ -575,7 +616,7 @@ function ReportRowItem({
   // tab=report：全列
   if (project === "report") {
     return (
-      <TableRow className="text-sm">
+      <TableRow className="text-sm hover:bg-slate-50 transition-colors duration-150">
         <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">
           {formatTs(row.created_at)}
         </TableCell>
@@ -641,19 +682,19 @@ function ReportRowItem({
 
 function RowActions({ row }: { row: ReportRow }) {
   return (
-    <div className="flex items-center justify-end gap-2">
+    <div className="flex items-center justify-end gap-3">
       {row.has_resume ? (
         <a
           href={`/api/admin/reports/${row.id}/resume?project=${row.project}`}
           download
-          className="inline-flex items-center justify-center min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+          className="text-xs text-blue-600 hover:text-blue-700 hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
         >
           简历
         </a>
       ) : null}
       <Link
         href={`/admin/reports/${row.id}?project=${row.project}`}
-        className="inline-flex items-center justify-center min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+        className="inline-flex items-center justify-center min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded-md ring-1 ring-gray-200 text-gray-700 hover:bg-gray-50 hover:ring-gray-300 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
       >
         详情
       </Link>
