@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { Plus, RefreshCw, ShieldCheck, ShieldOff } from "lucide-react";
+import { Plus, RefreshCw, ShieldCheck, ShieldOff, UserCog } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Table,
@@ -93,10 +93,12 @@ export default function AdminsPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       {/* 页头 */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">管理员管理</h1>
-          <p className="text-sm text-gray-500 mt-0.5">管理各老师的登录账号与菜单权限</p>
+      <div className="flex items-center justify-between mb-6 gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">管理员管理</h1>
+          <p className="text-sm text-gray-500 mt-0.5 tabular-nums">
+            {loading ? "加载中…" : admins.length > 0 ? `共 ${admins.length} 人 · ${admins.filter(a => a.is_active).length} 人启用中` : "管理各老师的登录账号与菜单权限"}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={fetchAdmins} disabled={loading}>
@@ -123,11 +125,18 @@ export default function AdminsPage() {
       {loading ? (
         <div className="text-center py-16 text-gray-400 text-sm">加载中…</div>
       ) : admins.length === 0 ? (
-        <div className="text-center py-16 text-gray-400 text-sm">
-          暂无管理员，
-          <Link href="/admin/admins/new" className="text-blue-600 hover:underline">
-            立即新建
-          </Link>
+        <div className="text-center py-16">
+          <div className="flex flex-col items-center gap-3 text-gray-400">
+            <div className="size-12 rounded-full bg-gray-50 flex items-center justify-center">
+              <UserCog className="size-5" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-gray-600">还没有管理员</p>
+              <Link href="/admin/admins/new" className="inline-block text-xs text-blue-600 hover:underline">
+                立即新建第一个
+              </Link>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="rounded-xl border border-gray-200 overflow-hidden bg-white">
@@ -177,7 +186,7 @@ export default function AdminsPage() {
                     <div className="flex items-center justify-end gap-1">
                       <Link
                         href={`/admin/admins/${admin.id}/edit`}
-                        className={buttonVariants({ variant: "ghost", size: "xs" })}
+                        className={buttonVariants({ variant: "ghost", size: "xs", className: "focus-visible:ring-2 focus-visible:ring-blue-500/50" })}
                       >
                         编辑
                       </Link>

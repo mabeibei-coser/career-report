@@ -381,23 +381,25 @@ function AdminReportsContent() {
                 <option value="0">无简历</option>
               </select>
             </div>
-            <Button size="sm" onClick={handleSearch} className="h-8">
-              搜索
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 text-gray-500"
-              onClick={() => {
-                setFrom("");
-                setTo("");
-                setPosition("");
-                setHasResume("");
-                setPage(1);
-              }}
-            >
-              重置
-            </Button>
+            <div className="flex gap-1.5 ml-auto sm:ml-0">
+              <Button size="sm" onClick={handleSearch} className="h-8 bg-blue-600 hover:bg-blue-700">
+                搜索
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 text-gray-500 hover:text-gray-700"
+                onClick={() => {
+                  setFrom("");
+                  setTo("");
+                  setPosition("");
+                  setHasResume("");
+                  setPage(1);
+                }}
+              >
+                重置
+              </Button>
+            </div>
           </div>
         </div>
 
