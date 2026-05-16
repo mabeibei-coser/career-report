@@ -1,3 +1,6 @@
+// SHARED: 同时存在于 admin-hub/lib/projects.ts —— 改一边记得改另一边。
+// 没有走 _shared/ 是为了让每个 repo 自己拥有自己的代码（owner: career-report + admin-hub 双拥有）。
+
 /**
  * 项目元数据中心。
  * admin UI 渲染处必须用这里的 label，不准写 'report'/'nav' 这种 code identifier。
