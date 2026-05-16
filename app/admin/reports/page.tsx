@@ -174,12 +174,13 @@ function ProjectBadge({ project }: { project: ProjectId }) {
   const meta = PROJECTS[project];
   const palette =
     meta.color === "green"
-      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-      : "bg-blue-50 text-blue-700 border-blue-200";
+      ? { dot: "bg-emerald-500", text: "text-emerald-700" }
+      : { dot: "bg-blue-500", text: "text-blue-700" };
   return (
     <span
-      className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] font-medium ${palette}`}
+      className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${palette.text}`}
     >
+      <span className={`size-1.5 rounded-full ${palette.dot}`} />
       {meta.shortLabel}
     </span>
   );
@@ -314,19 +315,32 @@ function AdminReportsContent() {
   return (
     <div className="p-6">
       <div className="max-w-7xl mx-auto space-y-5">
-        {/* 标题 */}
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-baseline gap-2.5">
-            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
-              {currentProjectLabel}
-            </h1>
-            {project !== "all" && (
-              <span className="text-xs text-gray-500">
-                {PROJECTS[project as ProjectId].description ?? ""}
-              </span>
-            )}
+        {/* 标题 — 带项目色点 + gradient 装饰条 */}
+        <div className="relative">
+          {/* 顶部 gradient 装饰条 */}
+          <div
+            aria-hidden
+            className={`absolute -top-1 left-0 h-0.5 w-12 rounded-full ${
+              project === "nav"
+                ? "bg-gradient-to-r from-emerald-500 to-emerald-300"
+                : project === "report"
+                ? "bg-gradient-to-r from-blue-500 to-blue-300"
+                : "bg-gradient-to-r from-blue-500 via-violet-400 to-emerald-400"
+            }`}
+          />
+          <div className="space-y-1 pt-2">
+            <div className="flex flex-wrap items-baseline gap-2.5">
+              <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
+                {currentProjectLabel}
+              </h1>
+              {project !== "all" && (
+                <span className="text-xs text-gray-500">
+                  {PROJECTS[project as ProjectId].description ?? ""}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-gray-500 tabular-nums">{headerSub}</p>
           </div>
-          <p className="text-sm text-gray-500 tabular-nums">{headerSub}</p>
         </div>
 
         {/* nav 降级提示 */}
@@ -374,16 +388,15 @@ function AdminReportsContent() {
           />
         </div>
 
-        {/* 过滤栏 */}
-        <div className="bg-white rounded-xl ring-1 ring-gray-100 shadow-sm shadow-gray-200/60 p-4">
-          <div className="flex flex-wrap gap-3 items-end">
+        {/* 过滤栏 — 去框感，inline 排列 */}
+        <div className="flex flex-wrap gap-3 items-end px-1">
             <div>
               <div className="text-xs text-gray-500 mb-1">开始日期</div>
               <Input
                 type="date"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
-                className="h-8 text-sm w-36"
+                className="h-8 text-sm w-36 bg-white"
               />
             </div>
             <div>
@@ -392,7 +405,7 @@ function AdminReportsContent() {
                 type="date"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
-                className="h-8 text-sm w-36"
+                className="h-8 text-sm w-36 bg-white"
               />
             </div>
             <div>
@@ -401,7 +414,7 @@ function AdminReportsContent() {
                 placeholder="关键词"
                 value={position}
                 onChange={(e) => setPosition(e.target.value)}
-                className="h-8 text-sm w-36"
+                className="h-8 text-sm w-36 bg-white"
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               />
             </div>
@@ -410,7 +423,7 @@ function AdminReportsContent() {
               <select
                 value={hasResume}
                 onChange={(e) => setHasResume(e.target.value as "" | "1" | "0")}
-                className="h-8 text-sm border border-input rounded-md px-2 bg-background"
+                className="h-8 text-sm border border-input rounded-md px-2 bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
               >
                 <option value="">全部</option>
                 <option value="1">有简历</option>
@@ -436,7 +449,6 @@ function AdminReportsContent() {
                 重置
               </Button>
             </div>
-          </div>
         </div>
 
         {/* 表格 */}
