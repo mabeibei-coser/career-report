@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +13,6 @@ import {
 } from "@/components/ui/card";
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,12 +30,14 @@ export default function AdminLoginPage() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "登录失败");
+        setLoading(false);
         return;
       }
-      router.push("/admin/reports");
+      // Full page navigation instead of router.push to avoid Next.js client-side
+      // routing pitfalls with RSC redirects from middleware-protected pages.
+      window.location.href = "/admin/reports";
     } catch {
       setError("网络错误，请重试");
-    } finally {
       setLoading(false);
     }
   };
