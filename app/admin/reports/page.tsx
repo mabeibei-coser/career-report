@@ -75,6 +75,18 @@ const WORK_YEARS_LABELS: Record<string, string> = {
   gt10: "10 年以上",
 };
 
+// 简历 AI 提取时可能把字段标签误当成姓名，过滤掉这些常见误识别值
+const NAME_BLACKLIST = new Set([
+  "投递职位", "邮箱", "手机号", "手机", "电话号码", "电话",
+  "姓名", "地址", "性别", "民族", "学历", "岗位", "邮件", "Email",
+]);
+function cleanName(v: string | null | undefined): string {
+  if (!v) return "—";
+  const trimmed = v.trim();
+  if (NAME_BLACKLIST.has(trimmed)) return "—";
+  return trimmed || "—";
+}
+
 function eduLabel(v: string | null | undefined): string {
   if (!v) return "—";
   return EDUCATION_LABELS[v] ?? v;
@@ -229,7 +241,8 @@ function AdminReportsContent() {
 
   // 表格列模式：tab=all 时只显示通用列 + 展开按钮；单项目时显示项目专属列
   const showProjectSpecific = project !== "all";
-  const navDegraded = data && data.project !== project; // 后端把 nav 降级到 report（nav 库不可用）
+  // 只在 navReady===false 时提示（避免 pm2 重启首次请求的短暂 false 污染状态）
+  const navDegraded = data && !data.navReady;
 
   // 列定义（通用 + 项目专属）
   // 通用列把"姓名"+"手机号"放在"时间"之后（report 项目没这俩字段，显示 "—"）
@@ -485,7 +498,7 @@ function ReportRowItem({
             {formatTs(row.created_at)}
           </TableCell>
           <TableCell className="text-gray-700 max-w-[100px] truncate">
-            {row.user_name || "—"}
+            {cleanName(row.user_name)}
           </TableCell>
           <TableCell className="tabular-nums text-xs text-gray-600 whitespace-nowrap">
             {row.user_phone || "—"}
