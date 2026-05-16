@@ -10,6 +10,8 @@ import {
   LogOut,
   Users,
   KeyRound,
+  ShieldCheck,
+  UserCircle2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { PROJECTS } from "@/lib/projects";
@@ -142,6 +144,7 @@ export function AdminSidebar() {
                 href="/admin/admins"
                 className={`
                   flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50
                   ${
                     pathname.startsWith("/admin/admins")
                       ? "bg-blue-50 text-blue-700 font-medium"
@@ -162,11 +165,32 @@ export function AdminSidebar() {
           </>
         )}
 
-        {/* Bottom: 修改密码 + 登出 */}
-        <div className="mt-auto p-3 border-t border-gray-100 flex flex-col gap-0.5">
+        {/* Bottom: 用户块 + 操作 */}
+        <div className="mt-auto p-3 border-t border-gray-100">
+          {/* 用户身份块 */}
+          <div className="px-3 py-2.5 flex items-center gap-2.5 mb-1">
+            <div className="relative shrink-0">
+              <div className="size-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
+                <UserCircle2 className="size-4 text-blue-600" />
+              </div>
+              {me?.isSuper && (
+                <ShieldCheck className="absolute -bottom-0.5 -right-0.5 size-3 text-blue-600 bg-white rounded-full" />
+              )}
+            </div>
+            <div className="min-w-0 leading-tight">
+              <div className="text-sm font-medium text-gray-800 truncate">
+                {me?.name ?? "—"}
+              </div>
+              <div className="text-[10px] text-gray-400 tabular-nums">
+                {me?.username ? `••• ${me.username.slice(-4)}` : ""}
+                {me?.isSuper && <span className="ml-1 text-blue-600">· 超管</span>}
+              </div>
+            </div>
+          </div>
+
           <button
             onClick={() => setPwdDialogOpen(true)}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
           >
             <KeyRound className="size-4 text-gray-400" />
             修改密码
@@ -174,7 +198,7 @@ export function AdminSidebar() {
           <button
             onClick={handleLogout}
             disabled={loggingOut}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-50"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
           >
             <LogOut className="size-4 text-gray-400" />
             {loggingOut ? "登出中…" : "登出"}
@@ -207,6 +231,7 @@ function SidebarNavItem({
       href={href}
       className={`
         flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50
         ${
           active
             ? "bg-blue-50 text-blue-700 font-medium"
