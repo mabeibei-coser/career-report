@@ -74,9 +74,15 @@ export async function POST(req: NextRequest) {
   }
 
   // ─── 源记录存在性 + 关键字段（EH4） ─────────────────────────────
+  // nav.reports 真实 schema 里没有 user_name / user_phone 列，
+  // 姓名手机号埋在 form_data_json，照搬 [/api/admin/reports/route.ts] 用 json_extract 抽
   const source = db
     .prepare(
-      `SELECT user_name, user_phone, target_position FROM nav.reports WHERE id = ?`
+      `SELECT
+         json_extract(form_data_json, '$.name')  AS user_name,
+         json_extract(form_data_json, '$.phone') AS user_phone,
+         target_position
+       FROM nav.reports WHERE id = ?`
     )
     .get(sourceReportId) as
     | {

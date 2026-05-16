@@ -99,7 +99,7 @@ export function TransferServiceDialog({
         return;
       }
       if (!res.ok) {
-        setError((json as { error?: string }).error ?? "操作失败");
+        setError((json as { error?: string }).error ?? `操作失败 (HTTP ${res.status})`);
         setSubmitting(false);
         return;
       }
@@ -108,8 +108,10 @@ export function TransferServiceDialog({
       router.push(`/admin/service-tracking/${id}`);
       router.refresh();
       onClose();
-    } catch {
-      setError("网络错误，请重试");
+    } catch (e) {
+      // fetch 抛 / JSON 解析失败 / 后端返 HTML 错误页：把实际原因暴露给用户而不是泛化「网络错误」
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(`提交失败：${msg || "网络错误"}`);
       setSubmitting(false);
     }
   }
@@ -195,34 +197,25 @@ export function TransferServiceDialog({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* 服务分类（DH1：决策最先） */}
+          {/* 服务分类（DH1：决策最先；UI 改用下拉框） */}
           <div className="space-y-1.5">
-            <Label>服务分类</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {SERVICE_CATEGORIES.map((c) => {
-                const checked = category === c.key;
-                return (
-                  <label
-                    key={c.key}
-                    className={`min-h-[44px] flex items-center justify-center text-xs px-2 rounded-md border cursor-pointer transition-all duration-150 ${
-                      checked
-                        ? "ring-2 ring-blue-500 bg-blue-50 text-blue-800 border-transparent"
-                        : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="service_category"
-                      value={c.key}
-                      checked={checked}
-                      onChange={() => setCategory(c.key)}
-                      className="sr-only"
-                    />
-                    {c.label}
-                  </label>
-                );
-              })}
-            </div>
+            <Label htmlFor="service-category">服务分类</Label>
+            <select
+              id="service-category"
+              value={category}
+              onChange={(e) =>
+                setCategory(e.target.value as ServiceCategory | "")
+              }
+              className="w-full h-10 px-3 rounded-md ring-1 ring-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+              style={{ fontSize: "16px" }}
+            >
+              <option value="">请选择服务分类</option>
+              {SERVICE_CATEGORIES.map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* 服务人员 2 */}
