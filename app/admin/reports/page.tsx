@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import Link from "next/link";
-import { BarChart3, FileText, Clock, Users, Upload } from "lucide-react";
+import { BarChart3, FileText, Clock, Users, Upload, ChevronDown, ChevronRight, AlertTriangle, RefreshCw } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -13,18 +13,23 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ProjectSwitcher } from "@/components/admin/project-switcher";
+import { PROJECT_OPTIONS, PROJECTS, type ProjectId } from "@/lib/projects";
+
+type ProjectFilter = ProjectId | "all";
 
 interface ReportRow {
   id: number;
   created_at: number;
+  project: ProjectId;
   target_position: string;
-  target_education: string;
-  target_company: string;
-  target_city_tier: string;
+  target_education: string | null;
+  target_company: string | null;
+  target_city_tier: string | null;
   has_resume: number;
   resume_filename: string | null;
-  sections_status: string | null;
-  ip: string | null;
+  user_identity: string | null;
+  uuid: string | null;
   duration_ms: number | null;
 }
 
@@ -40,8 +45,16 @@ interface ApiResponse {
   total: number;
   page: number;
   pageSize: number;
+  project: ProjectFilter;
+  navReady: boolean;
   stats: Stats;
 }
+
+const IDENTITY_LABELS: Record<string, string> = {
+  recent_grad: "应届毕业生",
+  young_unemployed: "青年失业",
+  general_unemployed: "求职中",
+};
 
 function formatTs(ms: number) {
   return new Date(ms).toLocaleString("zh-CN", {
@@ -77,10 +90,37 @@ function StatCard({
   );
 }
 
+function ProjectBadge({ project }: { project: ProjectId }) {
+  const meta = PROJECTS[project];
+  const palette =
+    meta.color === "green"
+      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+      : "bg-blue-50 text-blue-700 border-blue-200";
+  return (
+    <span
+      className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] font-medium ${palette}`}
+    >
+      {meta.shortLabel}
+    </span>
+  );
+}
+
+function readInitialProject(): ProjectFilter {
+  if (typeof window === "undefined") return "all";
+  const url = new URLSearchParams(window.location.search);
+  const p = url.get("project");
+  if (p === "all" || p === "report" || p === "nav") return p;
+  const saved = window.localStorage.getItem("admin.lastProject");
+  if (saved === "all" || saved === "report" || saved === "nav") return saved;
+  return "all";
+}
+
 export default function AdminReportsPage() {
+  const [project, setProject] = useState<ProjectFilter>("all");
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null); // id+project key
 
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -88,6 +128,20 @@ export default function AdminReportsPage() {
   const [hasResume, setHasResume] = useState<"" | "1" | "0">("");
   const [page, setPage] = useState(1);
   const pageSize = 20;
+
+  // 初始化项目（URL > localStorage > 默认 all）
+  useEffect(() => {
+    setProject(readInitialProject());
+  }, []);
+
+  // URL & localStorage 同步
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("project", project);
+    window.history.replaceState({}, "", url.toString());
+    window.localStorage.setItem("admin.lastProject", project);
+  }, [project]);
 
   const fetch_ = useCallback(async () => {
     setLoading(true);
@@ -98,22 +152,30 @@ export default function AdminReportsPage() {
       if (to) params.set("to", to);
       if (position) params.set("position", position);
       if (hasResume) params.set("hasResume", hasResume);
+      params.set("project", project);
       params.set("page", String(page));
       params.set("pageSize", String(pageSize));
 
       const res = await fetch(`/api/admin/reports?${params}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setData(await res.json());
+      setData((await res.json()) as ApiResponse);
     } catch (e) {
       setError(e instanceof Error ? e.message : "加载失败");
     } finally {
       setLoading(false);
     }
-  }, [from, to, position, hasResume, page]);
+  }, [from, to, position, hasResume, project, page]);
 
   useEffect(() => {
     fetch_();
   }, [fetch_]);
+
+  // 切 project 时重置分页 + 收起 expand
+  function handleProjectChange(p: ProjectFilter) {
+    setProject(p);
+    setPage(1);
+    setExpandedRow(null);
+  }
 
   const totalPages = data ? Math.ceil(data.total / pageSize) : 1;
 
@@ -122,15 +184,48 @@ export default function AdminReportsPage() {
     fetch_();
   }
 
+  // 表格列模式：tab=all 时只显示通用列 + 展开按钮；单项目时显示项目专属列
+  const showProjectSpecific = project !== "all";
+  const navDegraded = data && data.project !== project; // 后端把 nav 降级到 report（nav 库不可用）
+
+  // 列定义（通用 + 项目专属）
+  const columns = useMemo(() => {
+    const common = ["时间", "项目"];
+    if (project === "report") return [...common, "岗位", "学历", "公司", "城市", "简历", "耗时", "操作"];
+    if (project === "nav") return [...common, "岗位", "用户身份", "学历", "耗时", "操作"];
+    return [...common, "岗位", "耗时", "详情"]; // all
+  }, [project]);
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-5">
+        {/* 标题 + Project 切换 */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-xl font-bold text-gray-900">报告管理</h1>
+          <ProjectSwitcher
+            value={project}
+            options={PROJECT_OPTIONS}
+            onChange={handleProjectChange}
+          />
+        </div>
+
+        {/* nav 降级提示 */}
+        {navDegraded && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 flex items-start gap-2">
+            <AlertTriangle className="size-4 mt-0.5 shrink-0" />
+            <div>
+              「职业导航」数据源暂不可用，已自动切到「职业定位」。请联系开发人员检查 <code>NAV_DB_PATH</code>。
+            </div>
+          </div>
+        )}
+
         {/* 统计卡片 */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <StatCard
             icon={<Users className="size-4" />}
             label="总报告数"
             value={data ? String(data.stats.total) : "—"}
+            sub={project === "all" ? "两个项目合计" : PROJECTS[project as ProjectId].label}
           />
           <StatCard
             icon={<BarChart3 className="size-4" />}
@@ -221,93 +316,60 @@ export default function AdminReportsPage() {
         {/* 表格 */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           {error && (
-            <div className="p-4 text-sm text-red-600 border-b border-red-100 bg-red-50">
-              {error}
+            <div className="p-4 text-sm text-red-600 border-b border-red-100 bg-red-50 flex items-center justify-between">
+              <span>加载失败：{error}</span>
+              <Button size="sm" variant="outline" onClick={fetch_} className="h-7 text-xs">
+                <RefreshCw className="size-3 mr-1" />
+                重试
+              </Button>
             </div>
           )}
           <Table>
             <TableHeader>
               <TableRow className="text-xs text-gray-500">
-                <TableHead className="w-12">ID</TableHead>
-                <TableHead>时间</TableHead>
-                <TableHead>岗位</TableHead>
-                <TableHead>学历</TableHead>
-                <TableHead>意向公司</TableHead>
-                <TableHead>城市</TableHead>
-                <TableHead>简历</TableHead>
-                <TableHead>耗时</TableHead>
-                <TableHead className="text-right">操作</TableHead>
+                {columns.map((c) => (
+                  <TableHead key={c} className={c === "操作" || c === "详情" ? "text-right" : ""}>
+                    {c}
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={9} className="text-center py-10 text-gray-400 text-sm">
-                    加载中…
-                  </TableCell>
-                </TableRow>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={`skel-${i}`}>
+                    {columns.map((c) => (
+                      <TableCell key={c} className="py-3">
+                        <div className="h-3 bg-gray-100 rounded animate-pulse" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
               ) : data?.rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-10 text-gray-400 text-sm">
-                    暂无数据
+                  <TableCell colSpan={columns.length} className="text-center py-10 text-gray-400 text-sm">
+                    {project === "all"
+                      ? "暂无报告"
+                      : `${PROJECTS[project as ProjectId].label} 还没有报告`}
                   </TableCell>
                 </TableRow>
               ) : (
-                data?.rows.map((row) => (
-                  <TableRow key={row.id} className="text-sm">
-                    <TableCell className="text-gray-400 text-xs">{row.id}</TableCell>
-                    <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">
-                      {formatTs(row.created_at)}
-                    </TableCell>
-                    <TableCell className="font-medium max-w-[140px] truncate">
-                      {row.target_position}
-                    </TableCell>
-                    <TableCell className="text-gray-600">{row.target_education}</TableCell>
-                    <TableCell className="text-gray-600 max-w-[120px] truncate">
-                      {row.target_company || "—"}
-                    </TableCell>
-                    <TableCell className="text-gray-600">{row.target_city_tier || "—"}</TableCell>
-                    <TableCell>
-                      {row.has_resume ? (
-                        <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5 text-[11px]">
-                          <FileText className="size-3" />
-                          有
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 text-[11px]">无</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="tabular-nums text-xs text-gray-500">
-                      {row.duration_ms ? `${Math.round(row.duration_ms / 1000)}s` : "—"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {row.has_resume ? (
-                          <a
-                            href={`/api/admin/reports/${row.id}/resume`}
-                            download
-                            className="text-xs px-2 py-0.5 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
-                          >
-                            简历
-                          </a>
-                        ) : null}
-                        <Link
-                          href={`/admin/reports/${row.id}/preview`}
-                          target="_blank"
-                          className="text-xs px-2 py-0.5 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
-                        >
-                          报告
-                        </Link>
-                        <Link
-                          href={`/admin/reports/${row.id}`}
-                          className="text-xs px-2 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-                        >
-                          详情
-                        </Link>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                data?.rows.map((row) => {
+                  const rowKey = `${row.project}-${row.id}`;
+                  const expanded = expandedRow === rowKey;
+                  return (
+                    <ReportRowItem
+                      key={rowKey}
+                      row={row}
+                      project={project}
+                      showProjectSpecific={showProjectSpecific}
+                      expanded={expanded}
+                      onToggleExpand={() =>
+                        setExpandedRow((prev) => (prev === rowKey ? null : rowKey))
+                      }
+                    />
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -342,6 +404,176 @@ export default function AdminReportsPage() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** 单行：根据 project filter 渲染对应列；tab=all 时只显示通用 + 展开按钮 */
+function ReportRowItem({
+  row,
+  project,
+  showProjectSpecific,
+  expanded,
+  onToggleExpand,
+}: {
+  row: ReportRow;
+  project: ProjectFilter;
+  showProjectSpecific: boolean;
+  expanded: boolean;
+  onToggleExpand: () => void;
+}) {
+  const meta = PROJECTS[row.project];
+  const durationCell = row.duration_ms ? `${Math.round(row.duration_ms / 1000)}s` : "—";
+
+  if (!showProjectSpecific) {
+    // tab=all：4 列 + 展开按钮（行下方展示项目专属字段）
+    return (
+      <>
+        <TableRow className="text-sm cursor-pointer hover:bg-gray-50" onClick={onToggleExpand}>
+          <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">
+            {formatTs(row.created_at)}
+          </TableCell>
+          <TableCell>
+            <ProjectBadge project={row.project} />
+          </TableCell>
+          <TableCell className="font-medium max-w-[180px] truncate">
+            {row.target_position}
+          </TableCell>
+          <TableCell className="tabular-nums text-xs text-gray-500">{durationCell}</TableCell>
+          <TableCell className="text-right">
+            <div className="flex items-center justify-end gap-2">
+              <Link
+                href={`/admin/reports/${row.id}?project=${row.project}`}
+                className="text-xs px-2 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                详情
+              </Link>
+              {expanded ? <ChevronDown className="size-4 text-gray-400" /> : <ChevronRight className="size-4 text-gray-400" />}
+            </div>
+          </TableCell>
+        </TableRow>
+        {expanded && (
+          <TableRow className="bg-gray-50/50">
+            <TableCell colSpan={5} className="px-4 py-3 text-xs">
+              <ExpandedDetails row={row} />
+            </TableCell>
+          </TableRow>
+        )}
+      </>
+    );
+  }
+
+  // tab=report：全列
+  if (project === "report") {
+    return (
+      <TableRow className="text-sm">
+        <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">
+          {formatTs(row.created_at)}
+        </TableCell>
+        <TableCell>
+          <ProjectBadge project={row.project} />
+        </TableCell>
+        <TableCell className="font-medium max-w-[140px] truncate">{row.target_position}</TableCell>
+        <TableCell className="text-gray-600">{row.target_education ?? "—"}</TableCell>
+        <TableCell className="text-gray-600 max-w-[120px] truncate">
+          {row.target_company || "—"}
+        </TableCell>
+        <TableCell className="text-gray-600">{row.target_city_tier || "—"}</TableCell>
+        <TableCell>
+          {row.has_resume ? (
+            <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5 text-[11px]">
+              <FileText className="size-3" />有
+            </span>
+          ) : (
+            <span className="text-gray-400 text-[11px]">无</span>
+          )}
+        </TableCell>
+        <TableCell className="tabular-nums text-xs text-gray-500">{durationCell}</TableCell>
+        <TableCell className="text-right">
+          <RowActions row={row} />
+        </TableCell>
+      </TableRow>
+    );
+  }
+
+  // tab=nav：5 模块流程字段
+  return (
+    <TableRow className="text-sm">
+      <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">
+        {formatTs(row.created_at)}
+      </TableCell>
+      <TableCell>
+        <ProjectBadge project={row.project} />
+      </TableCell>
+      <TableCell className="font-medium max-w-[140px] truncate">{row.target_position}</TableCell>
+      <TableCell className="text-gray-600">
+        {row.user_identity ? IDENTITY_LABELS[row.user_identity] ?? row.user_identity : "—"}
+      </TableCell>
+      <TableCell className="text-gray-600">{row.target_education ?? "—"}</TableCell>
+      <TableCell className="tabular-nums text-xs text-gray-500">{durationCell}</TableCell>
+      <TableCell className="text-right">
+        <RowActions row={row} />
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function RowActions({ row }: { row: ReportRow }) {
+  return (
+    <div className="flex items-center justify-end gap-2">
+      {row.has_resume && row.project === "report" ? (
+        <a
+          href={`/api/admin/reports/${row.id}/resume`}
+          download
+          className="text-xs px-2 py-0.5 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
+        >
+          简历
+        </a>
+      ) : null}
+      <Link
+        href={`/admin/reports/${row.id}?project=${row.project}`}
+        className="text-xs px-2 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+      >
+        详情
+      </Link>
+    </div>
+  );
+}
+
+function ExpandedDetails({ row }: { row: ReportRow }) {
+  if (row.project === "report") {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-gray-600">
+        <div><span className="text-gray-400">学历：</span>{row.target_education ?? "—"}</div>
+        <div><span className="text-gray-400">公司：</span>{row.target_company ?? "—"}</div>
+        <div><span className="text-gray-400">城市：</span>{row.target_city_tier ?? "—"}</div>
+        <div>
+          <span className="text-gray-400">简历：</span>
+          {row.has_resume ? (
+            <a
+              href={`/api/admin/reports/${row.id}/resume`}
+              download
+              className="text-blue-600 hover:underline"
+            >
+              下载
+            </a>
+          ) : (
+            "无"
+          )}
+        </div>
+      </div>
+    );
+  }
+  // nav
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-gray-600">
+      <div>
+        <span className="text-gray-400">用户身份：</span>
+        {row.user_identity ? IDENTITY_LABELS[row.user_identity] ?? row.user_identity : "—"}
+      </div>
+      <div><span className="text-gray-400">学历：</span>{row.target_education ?? "—"}</div>
+      <div><span className="text-gray-400">简历：</span>{row.has_resume ? "有" : "无"}</div>
     </div>
   );
 }

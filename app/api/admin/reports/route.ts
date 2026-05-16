@@ -1,7 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getAdminDb, isNavDbReady } from "@/lib/db";
 
 export const runtime = "nodejs";
+
+type ProjectFilter = "all" | "report" | "nav";
+
+function parseProject(v: string | null): ProjectFilter {
+  if (v === "report" || v === "nav") return v;
+  return "all";
+}
+
+interface ReportRow {
+  id: number;
+  created_at: number;
+  project: "report" | "nav";
+  target_position: string;
+  target_education: string | null;
+  target_company: string | null;
+  target_city_tier: string | null;
+  has_resume: number;
+  resume_filename: string | null;
+  user_identity: string | null;
+  uuid: string | null;
+  duration_ms: number | null;
+  sections_status: string | null;
+  ip: string | null;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,9 +38,15 @@ export async function GET(req: NextRequest) {
     const to = searchParams.get("to");
     const position = searchParams.get("position");
     const hasResume = searchParams.get("hasResume");
+    const project = parseProject(searchParams.get("project"));
 
-    const db = getDb();
+    const db = getAdminDb();
+    const navReady = isNavDbReady();
 
+    // 如果 nav 库不可用，自动降级到 report-only
+    const effectiveProject: ProjectFilter = !navReady && project !== "report" ? "report" : project;
+
+    // 构建 filter 条件（应用到 UNION 两侧）
     const conditions: string[] = [];
     const params: (string | number)[] = [];
 
@@ -37,58 +67,125 @@ export async function GET(req: NextRequest) {
     } else if (hasResume === "0") {
       conditions.push("has_resume = 0");
     }
-
     const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-    const total = (
-      db.prepare(`SELECT COUNT(*) as count FROM reports ${where}`).get(...params) as { count: number }
-    ).count;
+    // 列对齐：report 库没有 user_identity / uuid，select NULL 占位
+    const reportSelect = `
+      SELECT id, created_at, 'report' AS project,
+             target_position, target_education, target_company, target_city_tier,
+             has_resume, resume_filename, NULL AS user_identity, NULL AS uuid,
+             duration_ms, sections_status, ip
+      FROM main.reports ${where}
+    `;
+    // nav 库有 user_identity / uuid；老 schema 字段（company/city_tier）写 null
+    const navSelect = `
+      SELECT id, created_at, 'nav' AS project,
+             target_position, target_education, NULL AS target_company, NULL AS target_city_tier,
+             has_resume, resume_filename, user_identity, uuid,
+             duration_ms, sections_status, ip
+      FROM nav.reports ${where}
+    `;
 
-    const rows = db
-      .prepare(
-        `SELECT id, created_at, target_position, target_education, target_company,
-                target_city_tier, has_resume, resume_filename, sections_status,
-                ip, duration_ms
-         FROM reports ${where}
-         ORDER BY created_at DESC
-         LIMIT ? OFFSET ?`
-      )
-      .all(...params, pageSize, offset);
+    // 根据 project filter 决定查哪一侧或两侧 UNION
+    let listQuery: string;
+    let countQuery: string;
+    let queryParams: (string | number)[];
+    if (effectiveProject === "report") {
+      listQuery = `${reportSelect} ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+      countQuery = `SELECT COUNT(*) AS c FROM main.reports ${where}`;
+      queryParams = [...params];
+    } else if (effectiveProject === "nav") {
+      listQuery = `${navSelect} ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+      countQuery = `SELECT COUNT(*) AS c FROM nav.reports ${where}`;
+      queryParams = [...params];
+    } else {
+      // all: UNION ALL，参数复制一遍
+      listQuery = `${reportSelect} UNION ALL ${navSelect} ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+      countQuery = `SELECT (SELECT COUNT(*) FROM main.reports ${where}) + (SELECT COUNT(*) FROM nav.reports ${where}) AS c`;
+      queryParams = [...params, ...params];
+    }
 
+    const total = (db.prepare(countQuery).get(...(effectiveProject === "all" ? [...params, ...params] : params)) as { c: number }).c;
+    const rows = db.prepare(listQuery).all(...queryParams, pageSize, offset) as ReportRow[];
+
+    // 统计卡片：按 project filter
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    const todayCount = (
-      db
-        .prepare("SELECT COUNT(*) as count FROM reports WHERE created_at >= ?")
-        .get(todayStart.getTime()) as { count: number }
-    ).count;
+    const todayTs = todayStart.getTime();
 
-    const resumeCount = (
-      db
-        .prepare("SELECT COUNT(*) as count FROM reports WHERE has_resume = 1")
-        .get() as { count: number }
-    ).count;
+    function statForProject(p: ProjectFilter): {
+      total: number;
+      todayCount: number;
+      resumeRate: number;
+      avgDurationSec: number | null;
+    } {
+      const reportPart = `SELECT COUNT(*) AS total,
+        SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) AS today_count,
+        SUM(CASE WHEN has_resume = 1 THEN 1 ELSE 0 END) AS resume_count,
+        AVG(duration_ms) AS avg_dur
+        FROM main.reports`;
+      const navPart = `SELECT COUNT(*) AS total,
+        SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) AS today_count,
+        SUM(CASE WHEN has_resume = 1 THEN 1 ELSE 0 END) AS resume_count,
+        AVG(duration_ms) AS avg_dur
+        FROM nav.reports`;
+      let q: string;
+      let qParams: number[];
+      if (p === "report") {
+        q = reportPart;
+        qParams = [todayTs];
+      } else if (p === "nav") {
+        q = navPart;
+        qParams = [todayTs];
+      } else {
+        // 合并两侧
+        q = `SELECT
+          (SELECT COUNT(*) FROM main.reports) + (SELECT COUNT(*) FROM nav.reports) AS total,
+          (SELECT SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) FROM main.reports) +
+          (SELECT SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) FROM nav.reports) AS today_count,
+          (SELECT SUM(CASE WHEN has_resume = 1 THEN 1 ELSE 0 END) FROM main.reports) +
+          (SELECT SUM(CASE WHEN has_resume = 1 THEN 1 ELSE 0 END) FROM nav.reports) AS resume_count,
+          (
+            SELECT (
+              IFNULL((SELECT SUM(duration_ms) FROM main.reports WHERE duration_ms IS NOT NULL), 0) +
+              IFNULL((SELECT SUM(duration_ms) FROM nav.reports WHERE duration_ms IS NOT NULL), 0)
+            ) * 1.0 / NULLIF(
+              (SELECT COUNT(*) FROM main.reports WHERE duration_ms IS NOT NULL) +
+              (SELECT COUNT(*) FROM nav.reports WHERE duration_ms IS NOT NULL), 0
+            )
+          ) AS avg_dur
+        `;
+        qParams = [todayTs, todayTs];
+      }
+      const r = db.prepare(q).get(...qParams) as {
+        total: number;
+        today_count: number | null;
+        resume_count: number | null;
+        avg_dur: number | null;
+      };
+      const t = r.total ?? 0;
+      const resumeCount = r.resume_count ?? 0;
+      return {
+        total: t,
+        todayCount: r.today_count ?? 0,
+        resumeRate: t > 0 ? Math.round((resumeCount / t) * 100) : 0,
+        avgDurationSec: r.avg_dur ? Math.round(r.avg_dur / 1000) : null,
+      };
+    }
 
-    const avgDuration = (
-      db
-        .prepare("SELECT AVG(duration_ms) as avg FROM reports WHERE duration_ms IS NOT NULL")
-        .get() as { avg: number | null }
-    ).avg;
+    const stats = navReady ? statForProject(effectiveProject) : statForProject("report");
 
     return NextResponse.json({
       rows,
       total,
       page,
       pageSize,
-      stats: {
-        total,
-        todayCount,
-        resumeRate: total > 0 ? Math.round((resumeCount / total) * 100) : 0,
-        avgDurationSec: avgDuration ? Math.round(avgDuration / 1000) : null,
-      },
+      project: effectiveProject,
+      navReady,
+      stats,
     });
   } catch (e) {
     console.error("[admin/reports] error:", e);
-    return NextResponse.json({ error: "查询失败" }, { status: 500 });
+    return NextResponse.json({ error: "查询失败", detail: String(e) }, { status: 500 });
   }
 }
