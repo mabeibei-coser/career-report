@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useMemo, Suspense, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BarChart3, FileText, Clock, Users, Upload, ChevronDown, ChevronRight, AlertTriangle, RefreshCw } from "lucide-react";
@@ -110,7 +110,32 @@ function readProjectFromUrl(p: string | null): ProjectFilter {
   return "all";
 }
 
+/** Page wrapper — Suspense 让 useSearchParams 能在 static prerender 通过 */
 export default function AdminReportsPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <AdminReportsContent />
+    </Suspense>
+  );
+}
+
+function PageSkeleton() {
+  return (
+    <div className="p-6">
+      <div className="max-w-7xl mx-auto space-y-5">
+        <div className="h-6 w-32 bg-gray-100 rounded animate-pulse" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-20 rounded-xl bg-white border border-gray-100" />
+          ))}
+        </div>
+        <div className="h-64 rounded-xl bg-white border border-gray-100" />
+      </div>
+    </div>
+  );
+}
+
+function AdminReportsContent() {
   const searchParams = useSearchParams();
   const project = readProjectFromUrl(searchParams.get("project"));
 
