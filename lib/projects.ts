@@ -17,6 +17,8 @@ export interface ProjectMeta {
   color: "blue" | "green" | "purple" | "orange";
   /** 报告章节数（详情页用来标题里显示，可选） */
   sectionCount: number;
+  /** 业务描述（sidebar / 标题副文案） */
+  description?: string;
 }
 
 export const PROJECTS: Record<ProjectId, ProjectMeta> = {
@@ -26,6 +28,7 @@ export const PROJECTS: Record<ProjectId, ProjectMeta> = {
     shortLabel: "定位",
     color: "blue",
     sectionCount: 6,
+    description: "应届校招求职报告",
   },
   nav: {
     id: "nav",
@@ -33,6 +36,7 @@ export const PROJECTS: Record<ProjectId, ProjectMeta> = {
     shortLabel: "导航",
     color: "green",
     sectionCount: 5,
+    description: "求职指导评估报告",
   },
 };
 

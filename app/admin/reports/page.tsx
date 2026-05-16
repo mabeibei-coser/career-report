@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BarChart3, FileText, Clock, Users, Upload, ChevronDown, ChevronRight, AlertTriangle, RefreshCw } from "lucide-react";
 import {
@@ -13,8 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ProjectSwitcher } from "@/components/admin/project-switcher";
-import { PROJECT_OPTIONS, PROJECTS, type ProjectId } from "@/lib/projects";
+import { PROJECTS, type ProjectId } from "@/lib/projects";
 
 type ProjectFilter = ProjectId | "all";
 
@@ -105,18 +105,15 @@ function ProjectBadge({ project }: { project: ProjectId }) {
   );
 }
 
-function readInitialProject(): ProjectFilter {
-  if (typeof window === "undefined") return "all";
-  const url = new URLSearchParams(window.location.search);
-  const p = url.get("project");
+function readProjectFromUrl(p: string | null): ProjectFilter {
   if (p === "all" || p === "report" || p === "nav") return p;
-  const saved = window.localStorage.getItem("admin.lastProject");
-  if (saved === "all" || saved === "report" || saved === "nav") return saved;
   return "all";
 }
 
 export default function AdminReportsPage() {
-  const [project, setProject] = useState<ProjectFilter>("all");
+  const searchParams = useSearchParams();
+  const project = readProjectFromUrl(searchParams.get("project"));
+
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -129,18 +126,17 @@ export default function AdminReportsPage() {
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
-  // 初始化项目（URL > localStorage > 默认 all）
+  // 切 project 时重置分页 + 收起 expand
   useEffect(() => {
-    setProject(readInitialProject());
-  }, []);
+    setPage(1);
+    setExpandedRow(null);
+  }, [project]);
 
-  // URL & localStorage 同步
+  // localStorage 记最近一次（侧栏未来可用作 default）
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const url = new URL(window.location.href);
-    url.searchParams.set("project", project);
-    window.history.replaceState({}, "", url.toString());
-    window.localStorage.setItem("admin.lastProject", project);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("admin.lastProject", project);
+    }
   }, [project]);
 
   const fetch_ = useCallback(async () => {
@@ -170,13 +166,6 @@ export default function AdminReportsPage() {
     fetch_();
   }, [fetch_]);
 
-  // 切 project 时重置分页 + 收起 expand
-  function handleProjectChange(p: ProjectFilter) {
-    setProject(p);
-    setPage(1);
-    setExpandedRow(null);
-  }
-
   const totalPages = data ? Math.ceil(data.total / pageSize) : 1;
 
   function handleSearch() {
@@ -196,17 +185,21 @@ export default function AdminReportsPage() {
     return [...common, "岗位", "耗时", "详情"]; // all
   }, [project]);
 
+  // 当前 project 的中文显示（标题用）
+  const currentProjectLabel =
+    project === "all" ? "全部报告" : `${PROJECTS[project as ProjectId].label}报告`;
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="p-6">
       <div className="max-w-7xl mx-auto space-y-5">
-        {/* 标题 + Project 切换 */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-xl font-bold text-gray-900">报告管理</h1>
-          <ProjectSwitcher
-            value={project}
-            options={PROJECT_OPTIONS}
-            onChange={handleProjectChange}
-          />
+        {/* 标题 */}
+        <div className="flex flex-wrap items-end gap-2">
+          <h1 className="text-xl font-bold text-gray-900">{currentProjectLabel}</h1>
+          {project !== "all" && (
+            <span className="text-xs text-gray-400">
+              {PROJECTS[project as ProjectId].description ?? ""}
+            </span>
+          )}
         </div>
 
         {/* nav 降级提示 */}
@@ -522,9 +515,9 @@ function ReportRowItem({
 function RowActions({ row }: { row: ReportRow }) {
   return (
     <div className="flex items-center justify-end gap-2">
-      {row.has_resume && row.project === "report" ? (
+      {row.has_resume ? (
         <a
-          href={`/api/admin/reports/${row.id}/resume`}
+          href={`/api/admin/reports/${row.id}/resume?project=${row.project}`}
           download
           className="text-xs px-2 py-0.5 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
         >
@@ -552,7 +545,7 @@ function ExpandedDetails({ row }: { row: ReportRow }) {
           <span className="text-gray-400">简历：</span>
           {row.has_resume ? (
             <a
-              href={`/api/admin/reports/${row.id}/resume`}
+              href={`/api/admin/reports/${row.id}/resume?project=${row.project}`}
               download
               className="text-blue-600 hover:underline"
             >
@@ -573,7 +566,20 @@ function ExpandedDetails({ row }: { row: ReportRow }) {
         {row.user_identity ? IDENTITY_LABELS[row.user_identity] ?? row.user_identity : "—"}
       </div>
       <div><span className="text-gray-400">学历：</span>{row.target_education ?? "—"}</div>
-      <div><span className="text-gray-400">简历：</span>{row.has_resume ? "有" : "无"}</div>
+      <div>
+        <span className="text-gray-400">简历：</span>
+        {row.has_resume ? (
+          <a
+            href={`/api/admin/reports/${row.id}/resume?project=${row.project}`}
+            download
+            className="text-blue-600 hover:underline"
+          >
+            下载
+          </a>
+        ) : (
+          "无"
+        )}
+      </div>
     </div>
   );
 }

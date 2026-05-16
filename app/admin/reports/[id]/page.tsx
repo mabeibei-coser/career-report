@@ -175,7 +175,7 @@ export default async function ReportDetailPage({
               (row.has_resume as number) ? (
                 hasResumeFile ? (
                   <a
-                    href={`/api/admin/reports/${String(row.id as number)}/resume`}
+                    href={`/api/admin/reports/${String(row.id as number)}/resume?project=${project}`}
                     download
                     className="inline-flex items-center gap-1 text-blue-600 hover:underline"
                   >

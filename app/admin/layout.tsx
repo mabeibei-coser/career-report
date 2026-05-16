@@ -1,6 +1,4 @@
-import Link from "next/link";
-import { BarChart3 } from "lucide-react";
-import AdminLogoutButton from "./_logout-button";
+import { AdminSidebar, AdminMobileBar } from "@/components/admin/admin-sidebar";
 
 export default function AdminLayout({
   children,
@@ -8,26 +6,16 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-50">
-      <nav className="border-b bg-white px-6 py-3 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-6">
-          <Link
-            href="/admin/reports"
-            className="flex items-center gap-2 font-semibold text-slate-800"
-          >
-            <BarChart3 className="size-5 text-blue-600" />
-            谨世 ATA 管理后台
-          </Link>
-          <Link
-            href="/admin/reports"
-            className="text-sm text-slate-600 hover:text-slate-900"
-          >
-            报告列表
-          </Link>
-        </div>
-        <AdminLogoutButton />
-      </nav>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">{children}</main>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* 左侧 sidebar (desktop) */}
+      <AdminSidebar />
+
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* 移动端顶部小条 */}
+        <AdminMobileBar />
+        {/* 主内容 */}
+        <main className="flex-1 min-w-0">{children}</main>
+      </div>
     </div>
   );
 }

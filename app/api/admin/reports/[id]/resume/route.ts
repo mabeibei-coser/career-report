@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getAdminDb, isNavDbReady } from "@/lib/db";
 import fs from "fs";
 import path from "path";
 
 export const runtime = "nodejs";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -16,10 +16,17 @@ export async function GET(
       return NextResponse.json({ error: "无效 ID" }, { status: 400 });
     }
 
-    const db = getDb();
+    const project = req.nextUrl.searchParams.get("project") === "nav" ? "nav" : "report";
+
+    if (project === "nav" && !isNavDbReady()) {
+      return NextResponse.json({ error: "职业导航数据库暂不可用" }, { status: 503 });
+    }
+
+    const db = getAdminDb();
+    const table = project === "nav" ? "nav.reports" : "main.reports";
     const row = db
       .prepare(
-        "SELECT resume_storage_path, resume_filename FROM reports WHERE id = ?"
+        `SELECT resume_storage_path, resume_filename FROM ${table} WHERE id = ?`
       )
       .get(id) as
       | { resume_storage_path: string | null; resume_filename: string | null }
