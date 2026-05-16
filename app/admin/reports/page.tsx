@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, Suspense, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { BarChart3, FileText, Clock, Users, Upload, ChevronDown, ChevronRight, AlertTriangle, RefreshCw, Inbox } from "lucide-react";
+import { BarChart3, FileText, Clock, Users, Upload, ChevronDown, ChevronRight, AlertTriangle, RefreshCw, Inbox, ArrowRightCircle } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -15,6 +15,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PROJECTS, type ProjectId } from "@/lib/projects";
+import {
+  TransferServiceDialog,
+  type TransferTargetRow,
+} from "@/components/admin/transfer-service-dialog";
+
+interface MeData {
+  adminId: number;
+  name: string;
+  showService: boolean;
+}
 
 type ProjectFilter = ProjectId | "all";
 
@@ -232,6 +242,24 @@ function AdminReportsContent() {
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
+  // 转服务弹窗：dialog state 上提到顶层（plan §8 决策）
+  const [transferRow, setTransferRow] = useState<TransferTargetRow | null>(null);
+  const [me, setMe] = useState<MeData | null>(null);
+  useEffect(() => {
+    fetch("/api/admin/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: MeData | null) => d && setMe({ adminId: d.adminId, name: d.name, showService: d.showService }))
+      .catch(() => {});
+  }, []);
+  const handleTransfer = useCallback((row: ReportRow) => {
+    setTransferRow({
+      id: row.id,
+      user_name: row.user_name,
+      user_phone: row.user_phone,
+      target_position: row.target_position,
+    });
+  }, []);
+
   // 切 project 时重置分页 + 收起 expand
   useEffect(() => {
     setPage(1);
@@ -314,6 +342,12 @@ function AdminReportsContent() {
 
   return (
     <div className="p-6">
+      <TransferServiceDialog
+        open={!!transferRow}
+        row={transferRow}
+        me={me}
+        onClose={() => setTransferRow(null)}
+      />
       <div className="max-w-7xl mx-auto space-y-5">
         {/* 标题 — 带项目色点 + gradient 装饰条 */}
         <div className="relative">
@@ -517,6 +551,8 @@ function AdminReportsContent() {
                       onToggleExpand={() =>
                         setExpandedRow((prev) => (prev === rowKey ? null : rowKey))
                       }
+                      onTransfer={handleTransfer}
+                      navReady={data?.navReady ?? true}
                     />
                   );
                 })
@@ -570,14 +606,18 @@ function ReportRowItem({
   showProjectSpecific,
   expanded,
   onToggleExpand,
+  onTransfer,
+  navReady,
 }: {
   row: ReportRow;
   project: ProjectFilter;
   showProjectSpecific: boolean;
   expanded: boolean;
   onToggleExpand: () => void;
+  onTransfer: (row: ReportRow) => void;
+  navReady: boolean;
 }) {
-  const meta = PROJECTS[row.project];
+  void PROJECTS[row.project]; // 保留 import 引用（meta 此处暂不直接展示）
   const durationCell = row.duration_ms ? `${Math.round(row.duration_ms / 1000)}s` : "—";
 
   if (!showProjectSpecific) {
@@ -658,7 +698,7 @@ function ReportRowItem({
         </TableCell>
         <TableCell className="tabular-nums text-xs text-gray-500">{durationCell}</TableCell>
         <TableCell className="text-right">
-          <RowActions row={row} />
+          <RowActions row={row} onTransfer={onTransfer} navReady={navReady} />
         </TableCell>
       </TableRow>
     );
@@ -686,13 +726,23 @@ function ReportRowItem({
       <TableCell className="text-gray-600">{eduLabel(row.target_education)}</TableCell>
       <TableCell className="text-gray-600">{workYearsLabel(row.work_years)}</TableCell>
       <TableCell className="text-right">
-        <RowActions row={row} />
+        <RowActions row={row} onTransfer={onTransfer} navReady={navReady} />
       </TableCell>
     </TableRow>
   );
 }
 
-function RowActions({ row }: { row: ReportRow }) {
+function RowActions({
+  row,
+  onTransfer,
+  navReady,
+}: {
+  row: ReportRow;
+  onTransfer: (row: ReportRow) => void;
+  navReady: boolean;
+}) {
+  // 只在 nav 行显示「转服务」按钮（plan §8，V1 决策）
+  const canTransfer = row.project === "nav" && navReady;
   return (
     <div className="flex items-center justify-end gap-3">
       {row.has_resume ? (
@@ -710,6 +760,22 @@ function RowActions({ row }: { row: ReportRow }) {
       >
         详情
       </Link>
+      {row.project === "nav" && (
+        <button
+          type="button"
+          onClick={() => canTransfer && onTransfer(row)}
+          disabled={!canTransfer}
+          title={canTransfer ? "转入服务跟踪" : "数据库暂不可用"}
+          className={`inline-flex items-center gap-1 min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded-md ring-1 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 ${
+            canTransfer
+              ? "ring-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 hover:ring-emerald-300"
+              : "ring-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+          }`}
+        >
+          <ArrowRightCircle className="size-3" />
+          转服务
+        </button>
+      )}
     </div>
   );
 }

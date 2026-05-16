@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   UserCircle2,
   Layers,
+  LifeBuoy,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { PROJECTS } from "@/lib/projects";
@@ -25,6 +26,7 @@ interface MeData {
   isSuper: boolean;
   showAll: boolean;
   visibleProjects: string[];
+  showService: boolean;
   showAdmins: boolean;
 }
 
@@ -131,6 +133,55 @@ export function AdminSidebar() {
             }
           )}
         </nav>
+
+        {/* 服务管理 section — 有 service 权限或加载中显示 */}
+        {(!me || me.showService) && (
+          <>
+            <div className="px-5 pt-5 pb-2 flex items-center gap-2">
+              <div className="text-xs text-gray-400 font-medium shrink-0">
+                服务管理
+              </div>
+              <div className="h-px flex-1 bg-gray-100" />
+            </div>
+            <nav className="px-3 flex flex-col gap-0.5">
+              <Link
+                href="/admin/service-tracking"
+                className={`
+                  group relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50
+                  ${
+                    pathname.startsWith("/admin/service-tracking")
+                      ? "bg-gray-50 text-gray-900 font-semibold"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  }
+                `}
+              >
+                {pathname.startsWith("/admin/service-tracking") && (
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-blue-600" />
+                )}
+                <LifeBuoy
+                  className={`size-4 ${
+                    pathname.startsWith("/admin/service-tracking")
+                      ? "text-blue-600"
+                      : "text-gray-400"
+                  }`}
+                />
+                <div className="flex-1 leading-tight">
+                  <div>服务跟踪</div>
+                  <div
+                    className={`text-[10px] mt-0.5 font-normal ${
+                      pathname.startsWith("/admin/service-tracking")
+                        ? "text-gray-500"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    咨询服务持续跟进
+                  </div>
+                </div>
+              </Link>
+            </nav>
+          </>
+        )}
 
         {/* 系统管理 section — 仅超管可见 */}
         {(!me || me.showAdmins) && (
@@ -278,6 +329,8 @@ export function AdminMobileBar() {
   // 在 me 加载前显示骨架（loading 状态）
   const showAll = !me || me.showAll;
   const visibleProjects: string[] = me ? me.visibleProjects : ["report", "nav"];
+  const showService = !me || me.showService;
+  const inServiceTracking = pathname.startsWith("/admin/service-tracking");
 
   return (
     <>
@@ -317,7 +370,7 @@ export function AdminMobileBar() {
                 key={pid}
                 href={`/admin/reports?project=${pid}`}
                 className={`px-2.5 py-1 rounded-md text-xs whitespace-nowrap ${
-                  currentProject === pid
+                  currentProject === pid && !inServiceTracking
                     ? "bg-blue-100 text-blue-700 font-medium"
                     : "text-gray-600 hover:bg-gray-50"
                 }`}
@@ -326,6 +379,18 @@ export function AdminMobileBar() {
               </Link>
             );
           })}
+          {showService && (
+            <Link
+              href="/admin/service-tracking"
+              className={`px-2.5 py-1 rounded-md text-xs whitespace-nowrap ${
+                inServiceTracking
+                  ? "bg-blue-100 text-blue-700 font-medium"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              服务跟踪
+            </Link>
+          )}
         </div>
         {/* 修改密码 — 右侧图标按钮 */}
         <button

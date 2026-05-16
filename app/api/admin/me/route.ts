@@ -8,7 +8,8 @@ export async function GET() {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
 
-  const { showAll, visibleProjects, showAdmins } = deriveVisibleMenus(session);
+  const { showAll, visibleProjects, showService, showAdmins } =
+    deriveVisibleMenus(session);
 
   return NextResponse.json({
     adminId: session.adminId,
@@ -19,6 +20,7 @@ export async function GET() {
     // 便捷字段，sidebar 直接读，不需要再跑 deriveVisibleMenus
     showAll,
     visibleProjects,
+    showService,
     showAdmins,
   });
 }

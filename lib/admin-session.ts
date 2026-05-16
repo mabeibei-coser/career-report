@@ -2,15 +2,32 @@ import { getIronSession, type SessionOptions } from "iron-session";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { getDb } from "./db";
-import type { ProjectId } from "./projects";
+import { ASSIGNABLE_MENUS, type StoredMenuKey } from "./menus";
 
 export interface AdminSession {
   adminId?: number;
   username?: string; // 手机号
   name?: string;
   isSuper?: boolean;
-  menus?: Array<"all" | ProjectId>; // DB 原值；不含 "admins"（由 isSuper 派生）
+  menus?: Array<StoredMenuKey>; // DB 原值；不含 "admins"（由 isSuper 派生）
   loggedInAt?: number; // ms timestamp — 用于 session_invalid_after 对比
+}
+
+/** 反序列化 menus_json 时只放行白名单 key，避免老 cookie 残留废 key 影响逻辑 */
+const VALID_STORED_MENUS = new Set<string>(
+  ASSIGNABLE_MENUS.map((m) => m.key)
+);
+function parseStoredMenus(raw: string): StoredMenuKey[] {
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (k): k is StoredMenuKey =>
+        typeof k === "string" && VALID_STORED_MENUS.has(k)
+    );
+  } catch {
+    return [];
+  }
 }
 
 const sessionOptions: SessionOptions = {
@@ -113,7 +130,7 @@ export async function loginAdmin(
   s.username = row.username;
   s.name = row.name;
   s.isSuper = row.is_super === 1;
-  s.menus = JSON.parse(row.menus_json) as Array<"all" | ProjectId>;
+  s.menus = parseStoredMenus(row.menus_json);
   s.loggedInAt = Date.now();
   await s.save();
   return { ok: true };
@@ -154,7 +171,7 @@ export async function requireSuper(): Promise<AdminSession | null> {
  *   if (!session) return NextResponse.json({ error: "无权限" }, { status: 403 });
  */
 export async function requireMenu(
-  menu: "all" | ProjectId
+  menu: StoredMenuKey
 ): Promise<AdminSession | null> {
   const s = await requireAdmin();
   if (!s) return null;

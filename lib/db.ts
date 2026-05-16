@@ -56,6 +56,48 @@ export function getDb(): Database.Database {
     );
     CREATE UNIQUE INDEX IF NOT EXISTS idx_admins_username ON admins(username);
   `);
+
+  // 服务跟踪：把咨询用户从 nav.reports「转入」持续服务跟进流程
+  _db.exec(`
+    CREATE TABLE IF NOT EXISTS service_tracking (
+      id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+      source_project      TEXT    NOT NULL CHECK (source_project IN ('report','nav')),
+      source_report_id    INTEGER NOT NULL,
+      user_name           TEXT,
+      user_phone          TEXT,
+      target_position     TEXT,
+      service_category    TEXT    NOT NULL
+                          CHECK (service_category IN ('easy','moderate','hard','priority','safety_net')),
+      status              TEXT    NOT NULL DEFAULT 'in_progress'
+                          CHECK (status IN ('in_progress','completed')),
+      staff1_admin_id     INTEGER NOT NULL,
+      staff2_admin_id     INTEGER
+                          CHECK (staff2_admin_id IS NULL OR staff2_admin_id != staff1_admin_id),
+      recorder_admin_id   INTEGER NOT NULL,
+      overall_note        TEXT,
+      first_service_at    INTEGER NOT NULL,
+      last_service_at     INTEGER,
+      created_at          INTEGER NOT NULL,
+      updated_at          INTEGER NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_st_source ON service_tracking(source_project, source_report_id);
+    CREATE INDEX IF NOT EXISTS idx_st_staff1 ON service_tracking(staff1_admin_id);
+    CREATE INDEX IF NOT EXISTS idx_st_staff2 ON service_tracking(staff2_admin_id);
+    CREATE INDEX IF NOT EXISTS idx_st_first ON service_tracking(first_service_at DESC);
+
+    CREATE TABLE IF NOT EXISTS service_records (
+      id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+      tracking_id         INTEGER NOT NULL,
+      service_at          INTEGER NOT NULL,
+      content             TEXT,
+      note                TEXT,
+      recorder_admin_id   INTEGER NOT NULL,
+      created_at          INTEGER NOT NULL,
+      updated_at          INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_sr_tracking_at ON service_records(tracking_id, service_at DESC);
+  `);
+
   return _db;
 }
 
