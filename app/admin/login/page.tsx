@@ -1,14 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ShieldCheck, Sparkles } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { isValidCnMobile } from "@/lib/phone";
 
 export default function AdminLoginPage() {
@@ -50,115 +47,118 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="relative min-h-dvh flex flex-col items-center justify-center px-4 py-12 bg-[#0b1226] overflow-hidden">
-      {/* 背景层 1：径向晕染 */}
+    <div className="relative min-h-dvh bg-white grid md:grid-cols-[1fr_1.5fr]">
+      {/* 顶部克制装饰：1px 蓝色细线 */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            "radial-gradient(60% 50% at 50% 0%, rgba(59,130,246,0.22) 0%, rgba(11,18,38,0) 60%), radial-gradient(40% 35% at 100% 100%, rgba(99,102,241,0.14) 0%, rgba(11,18,38,0) 60%), radial-gradient(35% 30% at 0% 80%, rgba(59,130,246,0.08) 0%, rgba(11,18,38,0) 60%)",
-        }}
-      />
-      {/* 背景层 2：细网格 */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.05]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
-        }}
-      />
-      {/* 背景层 3：底部装饰光线 */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-20 left-1/2 -translate-x-1/2 w-[600px] h-32 rounded-full bg-blue-500/20 blur-3xl"
+        className="absolute top-0 inset-x-0 h-px bg-[var(--blue-200)]"
       />
 
-      {/* 品牌标识 — 卡片上方 */}
-      <div className="relative z-10 mb-6 flex flex-col items-center gap-2.5">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 backdrop-blur-sm text-[11px] font-medium text-white/70 border border-white/10">
-          <Sparkles className="size-3" />
-          校招职业定位平台
-        </div>
-        <h1 className="text-2xl font-semibold text-white tracking-tight">
-          谨世 <span className="text-blue-300">ATA</span>
-        </h1>
-        <p className="text-[12px] text-white/50">管理后台 · 仅限授权人员</p>
-      </div>
+      {/* 左叙述区：仅桌面端显示 */}
+      <aside className="hidden md:flex md:flex-col md:justify-center md:px-12 md:py-16 md:border-r md:border-[var(--report-border)]">
+        <h2 className="text-3xl font-semibold tracking-tight text-[var(--navy-800)]">
+          谨世 ATA
+        </h2>
+        <p className="mt-3 text-sm text-[var(--navy-700)] leading-relaxed">
+          应届校招定位 &amp; 求职导航后台
+        </p>
+        <p className="mt-6 text-[10px] font-mono text-gray-400 tracking-wider uppercase">
+          PROD · v2.1
+        </p>
+      </aside>
 
-      {/* 登录卡片 */}
-      <Card className="relative z-10 w-full max-w-sm shadow-2xl shadow-blue-950/50 border-white/[0.08] bg-white/[0.96] backdrop-blur-md">
-        <CardContent className="p-6 pt-7">
-          {/* 卡片内的小图标 + 标题 */}
-          <div className="flex items-center gap-3 mb-6">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-b from-blue-500 to-blue-600 shadow-md shadow-blue-600/30 ring-1 ring-inset ring-white/20">
-              <ShieldCheck className="size-5 text-white" />
-            </div>
-            <div className="leading-tight">
-              <div className="text-base font-semibold text-gray-900 tracking-tight">
-                欢迎回来
-              </div>
-              <div className="text-[11px] text-gray-500">用手机号 + 密码登录</div>
-            </div>
+      {/* 右表单区 */}
+      <div className="flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-sm">
+          {/* 移动端品牌标识 — 仅 < md 显示 */}
+          <div className="md:hidden mb-6 flex flex-col items-center gap-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-[var(--navy-800)]">
+              谨世 ATA
+            </h1>
+            <p className="text-[12px] text-gray-500">管理后台</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="username">手机号</Label>
-              <Input
-                id="username"
-                type="tel"
-                inputMode="numeric"
-                placeholder="11 位大陆手机号"
-                value={username}
-                onChange={(e) => setUsername(e.target.value.trim())}
-                autoFocus
-                autoComplete="username"
-                maxLength={11}
-                required
-                className="h-10"
-                style={{ fontSize: "16px" }}
-              />
-              {usernameError && (
-                <p className="text-xs text-red-600">{usernameError}</p>
-              )}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password">密码</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="请输入密码"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                required
-                className="h-10"
-                style={{ fontSize: "16px" }}
-              />
-            </div>
-            {error && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                {error}
-              </p>
-            )}
-            <Button
-              type="submit"
-              className="w-full h-10 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-sm shadow-blue-600/30 disabled:opacity-50 disabled:shadow-none focus-visible:ring-2 focus-visible:ring-blue-400"
-              disabled={loading || !canSubmit}
-            >
-              {loading ? "登录中…" : "登录"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          {/* 登录卡片 + 左侧 accent rail */}
+          <div className="relative">
+            <span
+              aria-hidden
+              className="absolute left-0 inset-y-0 w-1 bg-[var(--blue-700)] rounded-l-md"
+            />
+            <Card className="relative ml-1 border border-[var(--report-border)] bg-white shadow-sm">
+              <CardContent className="p-6 pt-7">
+                {/* 卡片内的小图标 + 标题 */}
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-[var(--blue-700)]">
+                    <ShieldCheck className="size-5 text-white" />
+                  </div>
+                  <div className="leading-tight">
+                    <div className="text-base font-semibold text-[var(--navy-800)] tracking-tight">
+                      欢迎回来
+                    </div>
+                    <div className="text-[11px] text-gray-500">
+                      用手机号 + 密码登录
+                    </div>
+                  </div>
+                </div>
 
-      {/* 底部 helper */}
-      <p className="relative z-10 mt-6 text-[11px] text-white/40">
-        忘记密码？请联系超管重置
-      </p>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="username">手机号</Label>
+                    <Input
+                      id="username"
+                      type="tel"
+                      inputMode="numeric"
+                      placeholder="11 位大陆手机号"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value.trim())}
+                      autoFocus
+                      autoComplete="username"
+                      maxLength={11}
+                      required
+                      className="h-10"
+                      style={{ fontSize: "16px" }}
+                    />
+                    {usernameError && (
+                      <p className="text-xs text-red-600">{usernameError}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="password">密码</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="请输入密码"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="current-password"
+                      required
+                      className="h-10"
+                      style={{ fontSize: "16px" }}
+                    />
+                  </div>
+                  {error && (
+                    <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                      {error}
+                    </p>
+                  )}
+                  <Button
+                    type="submit"
+                    className="w-full h-10 bg-[var(--blue-700)] hover:bg-[var(--blue-600)] disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-[var(--blue-400)]"
+                    disabled={loading || !canSubmit}
+                  >
+                    {loading ? "登录中…" : "登录"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* 底部 helper */}
+          <p className="mt-6 text-[11px] text-gray-400 text-center">
+            忘记密码？请联系超管重置
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
