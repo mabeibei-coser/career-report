@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, Suspense, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { BarChart3, FileText, Clock, Users, Upload, ChevronDown, ChevronRight, AlertTriangle, RefreshCw } from "lucide-react";
+import { BarChart3, FileText, Clock, Users, Upload, ChevronDown, ChevronRight, AlertTriangle, RefreshCw, Inbox } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -111,22 +111,28 @@ function StatCard({
   label,
   value,
   sub,
+  accent,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
   sub?: string;
+  accent?: boolean; // 主指标：用蓝色强调
 }) {
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm flex items-start gap-3">
-      <div className="shrink-0 size-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-        {icon}
+    <div className="rounded-xl bg-white px-4 py-3.5 border border-gray-100/80 hover:border-gray-200 transition-colors">
+      <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-medium mb-2">
+        <span className="text-gray-400">{icon}</span>
+        {label}
       </div>
-      <div>
-        <div className="text-xs text-gray-500 mb-0.5">{label}</div>
-        <div className="text-xl font-bold text-gray-900">{value}</div>
-        {sub && <div className="text-[11px] text-gray-400 mt-0.5">{sub}</div>}
+      <div
+        className={`text-3xl font-semibold tabular-nums tracking-tight leading-none ${
+          accent ? "text-blue-600" : "text-gray-900"
+        }`}
+      >
+        {value}
       </div>
+      {sub && <div className="text-[11px] text-gray-400 mt-1.5">{sub}</div>}
     </div>
   );
 }
@@ -260,17 +266,34 @@ function AdminReportsContent() {
   const currentProjectLabel =
     project === "all" ? "全部报告" : `${PROJECTS[project as ProjectId].label}报告`;
 
+  // 页头副标题：根据加载状态显示总数 + 今日新增
+  const headerSub = (() => {
+    if (loading) return "加载中…";
+    if (!data) return "—";
+    const t = data.stats.total;
+    const today = data.stats.todayCount;
+    const parts: string[] = [`共 ${t} 份`];
+    if (today > 0) parts.push(`今日 +${today}`);
+    if (project === "all") parts.push("两个项目合计");
+    return parts.join(" · ");
+  })();
+
   return (
     <div className="p-6">
       <div className="max-w-7xl mx-auto space-y-5">
         {/* 标题 */}
-        <div className="flex flex-wrap items-end gap-2">
-          <h1 className="text-xl font-bold text-gray-900">{currentProjectLabel}</h1>
-          {project !== "all" && (
-            <span className="text-xs text-gray-400">
-              {PROJECTS[project as ProjectId].description ?? ""}
-            </span>
-          )}
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-baseline gap-2.5">
+            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
+              {currentProjectLabel}
+            </h1>
+            {project !== "all" && (
+              <span className="text-xs text-gray-500">
+                {PROJECTS[project as ProjectId].description ?? ""}
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-gray-500 tabular-nums">{headerSub}</p>
         </div>
 
         {/* nav 降级提示 */}
@@ -300,6 +323,7 @@ function AdminReportsContent() {
             icon={<Upload className="size-4" />}
             label="简历上传率"
             value={data ? `${data.stats.resumeRate}%` : "—"}
+            accent
           />
           <StatCard
             icon={<Clock className="size-4" />}
@@ -403,18 +427,30 @@ function AdminReportsContent() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={`skel-${i}`}>
                     {columns.map((c) => (
-                      <TableCell key={c} className="py-3">
-                        <div className="h-3 bg-gray-100 rounded animate-pulse" />
+                      <TableCell key={c} className="py-4">
+                        <div className="h-4 bg-gray-100 rounded animate-pulse" />
                       </TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : data?.rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center py-10 text-gray-400 text-sm">
-                    {project === "all"
-                      ? "暂无报告"
-                      : `${PROJECTS[project as ProjectId].label} 还没有报告`}
+                  <TableCell colSpan={columns.length} className="text-center py-16">
+                    <div className="flex flex-col items-center gap-3 text-gray-400">
+                      <div className="size-12 rounded-full bg-gray-50 flex items-center justify-center">
+                        <Inbox className="size-5" />
+                      </div>
+                      <div className="space-y-0.5">
+                        <p className="text-sm text-gray-600">
+                          {project === "all"
+                            ? "还没有人提交报告"
+                            : `${PROJECTS[project as ProjectId].label} 暂无报告`}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          当用户完成测评后，结果会出现在这里
+                        </p>
+                      </div>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -509,12 +545,12 @@ function ReportRowItem({
           <TableCell className="font-medium max-w-[180px] truncate">
             {row.target_position}
           </TableCell>
-          <TableCell className="tabular-nums text-xs text-gray-500">{durationCell}</TableCell>
+          <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">{durationCell}</TableCell>
           <TableCell className="text-right">
             <div className="flex items-center justify-end gap-2">
               <Link
                 href={`/admin/reports/${row.id}?project=${row.project}`}
-                className="text-xs px-2 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center justify-center min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                 onClick={(e) => e.stopPropagation()}
               >
                 详情
@@ -608,14 +644,14 @@ function RowActions({ row }: { row: ReportRow }) {
         <a
           href={`/api/admin/reports/${row.id}/resume?project=${row.project}`}
           download
-          className="text-xs px-2 py-0.5 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
+          className="inline-flex items-center justify-center min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
         >
           简历
         </a>
       ) : null}
       <Link
         href={`/admin/reports/${row.id}?project=${row.project}`}
-        className="text-xs px-2 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+        className="inline-flex items-center justify-center min-h-[28px] sm:min-h-0 text-xs px-2.5 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
       >
         详情
       </Link>
