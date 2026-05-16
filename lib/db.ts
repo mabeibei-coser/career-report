@@ -40,6 +40,22 @@ export function getDb(): Database.Database {
   _db.exec(
     `CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports(created_at DESC)`
   );
+  _db.exec(`
+    CREATE TABLE IF NOT EXISTS admins (
+      id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+      username              TEXT NOT NULL UNIQUE,
+      name                  TEXT NOT NULL,
+      password_hash         TEXT NOT NULL,
+      note                  TEXT,
+      menus_json            TEXT NOT NULL DEFAULT '[]',
+      is_super              INTEGER NOT NULL DEFAULT 0,
+      is_active             INTEGER NOT NULL DEFAULT 1,
+      session_invalid_after INTEGER,
+      created_at            INTEGER NOT NULL,
+      updated_at            INTEGER NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_admins_username ON admins(username);
+  `);
   return _db;
 }
 

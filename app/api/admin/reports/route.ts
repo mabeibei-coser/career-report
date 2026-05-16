@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb, isNavDbReady } from "@/lib/db";
+import { requireAdmin } from "@/lib/admin-session";
+import { canViewMenu } from "@/lib/menus";
 
 export const runtime = "nodejs";
 
@@ -8,6 +10,24 @@ type ProjectFilter = "all" | "report" | "nav";
 function parseProject(v: string | null): ProjectFilter {
   if (v === "report" || v === "nav") return v;
   return "all";
+}
+
+/**
+ * 把用户请求的 project 收窄到其实际拥有的权限范围内（体验更软，不 403）。
+ * 超管不限制。
+ */
+function clampProject(
+  requested: ProjectFilter,
+  session: Awaited<ReturnType<typeof requireAdmin>>
+): ProjectFilter {
+  if (!session) return "report";
+  if (session.isSuper) return requested;
+  if (canViewMenu(session, requested)) return requested;
+  // 没有请求的权限，降级到第一个有权限的菜单
+  if (canViewMenu(session, "report")) return "report";
+  if (canViewMenu(session, "nav")) return "nav";
+  if (canViewMenu(session, "all")) return "all";
+  return "report"; // 兜底
 }
 
 interface ReportRow {
@@ -31,6 +51,11 @@ interface ReportRow {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await requireAdmin();
+  if (!session) {
+    return NextResponse.json({ error: "未登录" }, { status: 401 });
+  }
+
   try {
     const { searchParams } = req.nextUrl;
     const page = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
@@ -41,7 +66,7 @@ export async function GET(req: NextRequest) {
     const to = searchParams.get("to");
     const position = searchParams.get("position");
     const hasResume = searchParams.get("hasResume");
-    const project = parseProject(searchParams.get("project"));
+    const project = clampProject(parseProject(searchParams.get("project")), session);
 
     const db = getAdminDb();
     const navReady = isNavDbReady();

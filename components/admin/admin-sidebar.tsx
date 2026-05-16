@@ -2,29 +2,57 @@
 
 import Link from "next/link";
 import { useSearchParams, usePathname } from "next/navigation";
-import { BarChart3, LayoutGrid, Briefcase, Compass, LogOut } from "lucide-react";
-import { useState } from "react";
+import {
+  BarChart3,
+  LayoutGrid,
+  Briefcase,
+  Compass,
+  LogOut,
+  Users,
+  KeyRound,
+} from "lucide-react";
+import { useState, useEffect } from "react";
+import { PROJECTS } from "@/lib/projects";
+import { ChangePasswordDialog } from "./change-password-dialog";
 
 type ProjectFilter = "all" | "report" | "nav";
 
-const MENU_ITEMS: Array<{
-  id: ProjectFilter;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  description: string;
-}> = [
-  { id: "all", label: "全部", icon: LayoutGrid, description: "两个项目合计" },
-  { id: "report", label: "职业定位", icon: Briefcase, description: "应届校招报告" },
-  { id: "nav", label: "职业导航", icon: Compass, description: "求职指导报告" },
-];
+interface MeData {
+  name: string;
+  username: string;
+  isSuper: boolean;
+  showAll: boolean;
+  visibleProjects: string[];
+  showAdmins: boolean;
+}
+
+/** 图标映射：project id → icon component */
+const PROJECT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  report: Briefcase,
+  nav: Compass,
+};
+
+/** 从 /api/admin/me 获取当前用户数据。加载中返回 null。 */
+function useAdminMe() {
+  const [data, setData] = useState<MeData | null>(null);
+  useEffect(() => {
+    fetch("/api/admin/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setData(d))
+      .catch(() => setData(null));
+  }, []);
+  return data;
+}
 
 export function AdminSidebar() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [pwdDialogOpen, setPwdDialogOpen] = useState(false);
+  const me = useAdminMe();
+
   const currentProject = (searchParams.get("project") ?? "all") as ProjectFilter;
 
-  // 登录页不显示 sidebar（让登录卡片居中）
   if (pathname === "/admin/login") return null;
 
   async function handleLogout() {
@@ -39,115 +67,238 @@ export function AdminSidebar() {
   }
 
   return (
-    <aside className="hidden md:flex md:flex-col md:w-56 lg:w-60 shrink-0 border-r border-gray-200 bg-white">
-      {/* Logo */}
-      <div className="px-5 py-4 border-b border-gray-100">
-        <Link
-          href="/admin/reports"
-          className="flex items-center gap-2 font-semibold text-gray-800"
-        >
-          <div className="size-8 rounded-lg bg-blue-600 flex items-center justify-center">
-            <BarChart3 className="size-4 text-white" />
-          </div>
-          <div className="leading-tight">
-            <div className="text-sm">谨世 ATA</div>
-            <div className="text-[10px] text-gray-400 font-normal">管理后台</div>
-          </div>
-        </Link>
-      </div>
+    <>
+      <ChangePasswordDialog
+        open={pwdDialogOpen}
+        onClose={() => setPwdDialogOpen(false)}
+      />
 
-      {/* Section title */}
-      <div className="px-5 pt-5 pb-2">
-        <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
-          报告管理
+      <aside className="hidden md:flex md:flex-col md:w-56 lg:w-60 shrink-0 border-r border-gray-200 bg-white">
+        {/* Logo */}
+        <div className="px-5 py-4 border-b border-gray-100">
+          <Link
+            href="/admin/reports"
+            className="flex items-center gap-2 font-semibold text-gray-800"
+          >
+            <div className="size-8 rounded-lg bg-blue-600 flex items-center justify-center">
+              <BarChart3 className="size-4 text-white" />
+            </div>
+            <div className="leading-tight">
+              <div className="text-sm">谨世 ATA</div>
+              <div className="text-[10px] text-gray-400 font-normal">管理后台</div>
+            </div>
+          </Link>
         </div>
-      </div>
 
-      {/* Menu */}
-      <nav className="px-3 flex flex-col gap-0.5">
-        {MENU_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const active = currentProject === item.id;
-          return (
-            <Link
-              key={item.id}
-              href={`/admin/reports?project=${item.id}`}
-              className={`
-                flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors
-                ${
-                  active
-                    ? "bg-blue-50 text-blue-700 font-medium"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                }
-              `}
-            >
-              <Icon className={`size-4 ${active ? "text-blue-600" : "text-gray-400"}`} />
-              <div className="flex-1 leading-tight">
-                <div>{item.label}</div>
-                <div
-                  className={`text-[10px] mt-0.5 ${
-                    active ? "text-blue-500" : "text-gray-400"
-                  }`}
-                >
-                  {item.description}
-                </div>
+        {/* 报告管理 section */}
+        <div className="px-5 pt-5 pb-2">
+          <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
+            报告管理
+          </div>
+        </div>
+        <nav className="px-3 flex flex-col gap-0.5">
+          {/* 全部 */}
+          {(!me || me.showAll) && (
+            <SidebarNavItem
+              id="all"
+              label="全部"
+              description="两个项目合计"
+              icon={LayoutGrid}
+              active={currentProject === "all"}
+              href="/admin/reports?project=all"
+            />
+          )}
+          {/* 各项目 */}
+          {(!me ? (["report", "nav"] as string[]) : me.visibleProjects).map(
+            (pid) => {
+              const meta = PROJECTS[pid as keyof typeof PROJECTS];
+              if (!meta) return null;
+              const Icon = PROJECT_ICONS[pid] ?? Briefcase;
+              return (
+                <SidebarNavItem
+                  key={pid}
+                  id={pid}
+                  label={meta.label}
+                  description={meta.description ?? ""}
+                  icon={Icon}
+                  active={currentProject === pid}
+                  href={`/admin/reports?project=${pid}`}
+                />
+              );
+            }
+          )}
+        </nav>
+
+        {/* 系统管理 section — 仅超管可见 */}
+        {(!me || me.showAdmins) && (
+          <>
+            <div className="px-5 pt-5 pb-2">
+              <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
+                系统管理
               </div>
-            </Link>
-          );
-        })}
-      </nav>
+            </div>
+            <nav className="px-3 flex flex-col gap-0.5">
+              <Link
+                href="/admin/admins"
+                className={`
+                  flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors
+                  ${
+                    pathname.startsWith("/admin/admins")
+                      ? "bg-blue-50 text-blue-700 font-medium"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  }
+                `}
+              >
+                <Users
+                  className={`size-4 ${
+                    pathname.startsWith("/admin/admins")
+                      ? "text-blue-600"
+                      : "text-gray-400"
+                  }`}
+                />
+                管理员管理
+              </Link>
+            </nav>
+          </>
+        )}
 
-      {/* Bottom: logout */}
-      <div className="mt-auto p-3 border-t border-gray-100">
-        <button
-          onClick={handleLogout}
-          disabled={loggingOut}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-50"
-        >
-          <LogOut className="size-4 text-gray-400" />
-          {loggingOut ? "登出中…" : "登出"}
-        </button>
-      </div>
-    </aside>
+        {/* Bottom: 修改密码 + 登出 */}
+        <div className="mt-auto p-3 border-t border-gray-100 flex flex-col gap-0.5">
+          <button
+            onClick={() => setPwdDialogOpen(true)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+          >
+            <KeyRound className="size-4 text-gray-400" />
+            修改密码
+          </button>
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-50"
+          >
+            <LogOut className="size-4 text-gray-400" />
+            {loggingOut ? "登出中…" : "登出"}
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }
 
-/** Mobile top bar — sidebar 在移动端折叠成顶部小条，简化版 */
+/** Shared nav item for desktop sidebar */
+function SidebarNavItem({
+  id,
+  label,
+  description,
+  icon: Icon,
+  active,
+  href,
+}: {
+  id: string;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  active: boolean;
+  href: string;
+}) {
+  return (
+    <Link
+      key={id}
+      href={href}
+      className={`
+        flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors
+        ${
+          active
+            ? "bg-blue-50 text-blue-700 font-medium"
+            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+        }
+      `}
+    >
+      <Icon className={`size-4 ${active ? "text-blue-600" : "text-gray-400"}`} />
+      <div className="flex-1 leading-tight">
+        <div>{label}</div>
+        <div
+          className={`text-[10px] mt-0.5 ${
+            active ? "text-blue-500" : "text-gray-400"
+          }`}
+        >
+          {description}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+/** Mobile top bar — 移动端折叠成顶部小条，同样按权限过滤 */
 export function AdminMobileBar() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const [pwdDialogOpen, setPwdDialogOpen] = useState(false);
+  const me = useAdminMe();
+
   const currentProject = (searchParams.get("project") ?? "all") as ProjectFilter;
 
   if (pathname === "/admin/login") return null;
 
+  // 在 me 加载前显示骨架（loading 状态）
+  const showAll = !me || me.showAll;
+  const visibleProjects: string[] = me ? me.visibleProjects : ["report", "nav"];
+
   return (
-    <div className="md:hidden border-b border-gray-200 bg-white px-4 py-2 flex items-center gap-3 overflow-x-auto">
-      <Link
-        href="/admin/reports"
-        className="flex items-center gap-1.5 font-semibold text-gray-800 shrink-0"
-      >
-        <BarChart3 className="size-4 text-blue-600" />
-        <span className="text-sm">谨世 ATA</span>
-      </Link>
-      <div className="h-4 w-px bg-gray-200 shrink-0" />
-      <div className="flex gap-1 shrink-0">
-        {MENU_ITEMS.map((item) => {
-          const active = currentProject === item.id;
-          return (
+    <>
+      <ChangePasswordDialog
+        open={pwdDialogOpen}
+        onClose={() => setPwdDialogOpen(false)}
+      />
+      <div className="md:hidden border-b border-gray-200 bg-white px-4 py-2 flex items-center gap-3 overflow-x-auto">
+        <Link
+          href="/admin/reports"
+          className="flex items-center gap-1.5 font-semibold text-gray-800 shrink-0"
+        >
+          <BarChart3 className="size-4 text-blue-600" />
+          <span className="text-sm">谨世 ATA</span>
+        </Link>
+        <div className="h-4 w-px bg-gray-200 shrink-0" />
+        <div className="flex gap-1 shrink-0 overflow-x-auto">
+          {showAll && (
             <Link
-              key={item.id}
-              href={`/admin/reports?project=${item.id}`}
+              href="/admin/reports?project=all"
               className={`px-2.5 py-1 rounded-md text-xs whitespace-nowrap ${
-                active
+                currentProject === "all"
                   ? "bg-blue-100 text-blue-700 font-medium"
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
-              {item.label}
+              全部
             </Link>
-          );
-        })}
+          )}
+          {visibleProjects.map((pid) => {
+            const meta = PROJECTS[pid as keyof typeof PROJECTS];
+            if (!meta) return null;
+            return (
+              <Link
+                key={pid}
+                href={`/admin/reports?project=${pid}`}
+                className={`px-2.5 py-1 rounded-md text-xs whitespace-nowrap ${
+                  currentProject === pid
+                    ? "bg-blue-100 text-blue-700 font-medium"
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {meta.label}
+              </Link>
+            );
+          })}
+        </div>
+        {/* 修改密码 — 右侧图标按钮 */}
+        <button
+          onClick={() => setPwdDialogOpen(true)}
+          className="ml-auto shrink-0 size-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+          aria-label="修改密码"
+        >
+          <KeyRound className="size-3.5" />
+        </button>
       </div>
-    </div>
+    </>
   );
 }
