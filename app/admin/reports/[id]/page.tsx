@@ -142,11 +142,24 @@ export default async function ReportDetailPage({
             label="创建时间"
             value={new Date(row.created_at as number).toLocaleString("zh-CN")}
           />
+          {/* 姓名（nav 侧从 form_data_json 取；report 侧暂无此字段） */}
+          {project === "nav" && (
+            <Row label="姓名" value={navFormData?.name ?? null} />
+          )}
           <Row label="意向岗位" value={row.target_position as string} />
-          <Row label="学历" value={row.target_education as string | null} />
+          {/* nav 侧学历优先取 form_data_json，列里的 target_education 总是 NULL */}
+          <Row
+            label="学历"
+            value={
+              project === "nav"
+                ? navFormData?.education ?? null
+                : (row.target_education as string | null)
+            }
+          />
 
           {project === "nav" ? (
             <>
+              <Row label="工作年限" value={navFormData?.workYears ?? null} />
               <Row
                 label="用户身份"
                 value={IDENTITY_LABELS[row.user_identity as string] ?? (row.user_identity as string | null)}
@@ -216,6 +229,7 @@ export default async function ReportDetailPage({
         {/* ── 表单原始数据（nav 侧） ────────────────────────────────── */}
         {project === "nav" && navFormData && (
           <Card title="填报信息（原始）">
+            <Row label="姓名" value={navFormData.name ?? null} />
             <Row label="意向岗位" value={navFormData.targetPosition} />
             <Row label="学历" value={navFormData.education} />
             <Row label="工作年限" value={navFormData.workYears} />

@@ -24,6 +24,8 @@ interface ReportRow {
   project: ProjectId;
   target_position: string;
   target_education: string | null;
+  work_years: string | null;
+  user_name: string | null;
   target_company: string | null;
   target_city_tier: string | null;
   has_resume: number;
@@ -203,10 +205,13 @@ function AdminReportsContent() {
   const navDegraded = data && data.project !== project; // 后端把 nav 降级到 report（nav 库不可用）
 
   // 列定义（通用 + 项目专属）
+  // 通用列把"姓名"放在"时间"之后第二列（career-report 没姓名，显示 "—"）
   const columns = useMemo(() => {
-    const common = ["时间", "项目"];
-    if (project === "report") return [...common, "岗位", "学历", "公司", "城市", "简历", "耗时", "操作"];
-    if (project === "nav") return [...common, "岗位", "用户身份", "学历", "耗时", "操作"];
+    const common = ["时间", "姓名", "项目"];
+    if (project === "report")
+      return [...common, "岗位", "学历", "公司", "城市", "简历", "耗时", "操作"];
+    if (project === "nav")
+      return [...common, "岗位", "用户身份", "学历", "工作年限", "耗时", "操作"];
     return [...common, "岗位", "耗时", "详情"]; // all
   }, [project]);
 
@@ -444,12 +449,15 @@ function ReportRowItem({
   const durationCell = row.duration_ms ? `${Math.round(row.duration_ms / 1000)}s` : "—";
 
   if (!showProjectSpecific) {
-    // tab=all：4 列 + 展开按钮（行下方展示项目专属字段）
+    // tab=all：通用列（时间/姓名/项目/岗位/耗时/详情）+ 展开按钮
     return (
       <>
         <TableRow className="text-sm cursor-pointer hover:bg-gray-50" onClick={onToggleExpand}>
           <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">
             {formatTs(row.created_at)}
+          </TableCell>
+          <TableCell className="text-gray-700 max-w-[100px] truncate">
+            {row.user_name || "—"}
           </TableCell>
           <TableCell>
             <ProjectBadge project={row.project} />
@@ -473,7 +481,7 @@ function ReportRowItem({
         </TableRow>
         {expanded && (
           <TableRow className="bg-gray-50/50">
-            <TableCell colSpan={5} className="px-4 py-3 text-xs">
+            <TableCell colSpan={6} className="px-4 py-3 text-xs">
               <ExpandedDetails row={row} />
             </TableCell>
           </TableRow>
@@ -488,6 +496,9 @@ function ReportRowItem({
       <TableRow className="text-sm">
         <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">
           {formatTs(row.created_at)}
+        </TableCell>
+        <TableCell className="text-gray-700 max-w-[100px] truncate">
+          {row.user_name || "—"}
         </TableCell>
         <TableCell>
           <ProjectBadge project={row.project} />
@@ -521,6 +532,9 @@ function ReportRowItem({
       <TableCell className="tabular-nums text-xs text-gray-500 whitespace-nowrap">
         {formatTs(row.created_at)}
       </TableCell>
+      <TableCell className="text-gray-700 max-w-[100px] truncate">
+        {row.user_name || "—"}
+      </TableCell>
       <TableCell>
         <ProjectBadge project={row.project} />
       </TableCell>
@@ -529,6 +543,7 @@ function ReportRowItem({
         {row.user_identity ? IDENTITY_LABELS[row.user_identity] ?? row.user_identity : "—"}
       </TableCell>
       <TableCell className="text-gray-600">{row.target_education ?? "—"}</TableCell>
+      <TableCell className="text-gray-600">{row.work_years ?? "—"}</TableCell>
       <TableCell className="tabular-nums text-xs text-gray-500">{durationCell}</TableCell>
       <TableCell className="text-right">
         <RowActions row={row} />
@@ -585,12 +600,13 @@ function ExpandedDetails({ row }: { row: ReportRow }) {
   }
   // nav
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-gray-600">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-gray-600">
       <div>
         <span className="text-gray-400">用户身份：</span>
         {row.user_identity ? IDENTITY_LABELS[row.user_identity] ?? row.user_identity : "—"}
       </div>
       <div><span className="text-gray-400">学历：</span>{row.target_education ?? "—"}</div>
+      <div><span className="text-gray-400">工作年限：</span>{row.work_years ?? "—"}</div>
       <div>
         <span className="text-gray-400">简历：</span>
         {row.has_resume ? (

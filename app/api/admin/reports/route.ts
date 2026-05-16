@@ -16,6 +16,8 @@ interface ReportRow {
   project: "report" | "nav";
   target_position: string;
   target_education: string | null;
+  work_years: string | null;
+  user_name: string | null;
   target_company: string | null;
   target_city_tier: string | null;
   has_resume: number;
@@ -69,18 +71,26 @@ export async function GET(req: NextRequest) {
     }
     const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-    // 列对齐：report 库没有 user_identity / uuid，select NULL 占位
+    // 列对齐：report 库没有 user_identity / uuid / work_years / user_name，select NULL 占位
     const reportSelect = `
       SELECT id, created_at, 'report' AS project,
-             target_position, target_education, target_company, target_city_tier,
+             target_position, target_education,
+             NULL AS work_years, NULL AS user_name,
+             target_company, target_city_tier,
              has_resume, resume_filename, NULL AS user_identity, NULL AS uuid,
              duration_ms, sections_status, ip
       FROM main.reports ${where}
     `;
-    // nav 库有 user_identity / uuid；老 schema 字段（company/city_tier）写 null
+    // nav 库的 target_education 列在 finalize 时写 NULL，真实学历在 form_data_json 里。
+    // 用 SQLite JSON1 的 json_extract 直接抽出，省得前端解析。
+    // user_name / work_years 同理。
     const navSelect = `
       SELECT id, created_at, 'nav' AS project,
-             target_position, target_education, NULL AS target_company, NULL AS target_city_tier,
+             target_position,
+             json_extract(form_data_json, '$.education') AS target_education,
+             json_extract(form_data_json, '$.workYears') AS work_years,
+             json_extract(form_data_json, '$.name') AS user_name,
+             NULL AS target_company, NULL AS target_city_tier,
              has_resume, resume_filename, user_identity, uuid,
              duration_ms, sections_status, ip
       FROM nav.reports ${where}
