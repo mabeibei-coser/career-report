@@ -42,5 +42,12 @@ export function getDb(): Database.Database {
     `CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports(created_at DESC)`
   );
 
+  // 增量迁移：老库 reports 表没有 user_name/user_phone 列时补上
+  // （2026-06 新增：从上传简历中提取的联系方式，供后台展示）。
+  const cols = _db.prepare("PRAGMA table_info(reports)").all() as Array<{ name: string }>;
+  const hasCol = (n: string) => cols.some((c) => c.name === n);
+  if (!hasCol("user_name")) _db.exec("ALTER TABLE reports ADD COLUMN user_name TEXT");
+  if (!hasCol("user_phone")) _db.exec("ALTER TABLE reports ADD COLUMN user_phone TEXT");
+
   return _db;
 }

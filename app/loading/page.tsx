@@ -153,6 +153,8 @@ export default function LoadingPage() {
             durationMs: Date.now() - startTime,
             resumeRef: sessionStorage.getItem("resumeRef") ?? undefined,
             resumeFilename: sessionStorage.getItem("resumeFilename") ?? undefined,
+            userName: sessionStorage.getItem("userName") ?? undefined,
+            userPhone: sessionStorage.getItem("userPhone") ?? undefined,
           }),
         }).catch((e) => console.warn("[finalize] failed (ignored):", e));
         setDone(true);

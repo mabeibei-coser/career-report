@@ -16,6 +16,8 @@ export async function POST(req: NextRequest) {
       durationMs,
       resumeRef,
       resumeFilename,
+      userName,
+      userPhone,
     } = body ?? {};
 
     if (!formData?.targetPosition) {
@@ -37,8 +39,9 @@ export async function POST(req: NextRequest) {
       .prepare(
         `INSERT INTO reports
           (created_at, target_position, target_education, target_company, target_city_tier,
-           has_resume, resume_filename, sections_status, ip, user_agent, duration_ms)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+           has_resume, resume_filename, sections_status, ip, user_agent, duration_ms,
+           user_name, user_phone)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         now,
@@ -51,7 +54,9 @@ export async function POST(req: NextRequest) {
         sectionsStatus ? JSON.stringify(sectionsStatus) : null,
         ip,
         userAgent,
-        durationMs ?? null
+        durationMs ?? null,
+        userName ?? null,
+        userPhone ?? null
       );
 
     const reportId = result.lastInsertRowid as number;

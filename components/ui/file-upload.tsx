@@ -15,6 +15,8 @@ export interface FileUploadValue {
   truncated?: boolean;
   resumeRef?: string;
   resumeFilename?: string;
+  userName?: string;
+  userPhone?: string;
 }
 
 export interface FileUploadProps {
@@ -98,6 +100,8 @@ export function FileUpload({
         truncated: data.truncated,
         resumeRef: data.resumeRef,
         resumeFilename: data.resumeFilename,
+        userName: data.userName,
+        userPhone: data.userPhone,
       };
       setStatus("success");
       onChange?.(next);

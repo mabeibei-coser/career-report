@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
+import { extractContact } from "@/lib/resume-extract";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -68,6 +69,8 @@ export async function POST(req: NextRequest) {
       truncated: false,
       resumeRef: "e2e-mock-resume-ref",
       resumeFilename: "test-resume.pdf",
+      userName: "李明",
+      userPhone: "13800138000",
     });
   }
   try {
@@ -126,6 +129,8 @@ export async function POST(req: NextRequest) {
     }
 
     const text = truncate(cleaned);
+    // 从简历全文（未截断）尽力提取姓名 + 手机号，供后台展示联系方式
+    const contact = extractContact(cleaned);
 
     const tempId = randomUUID();
     const cleanName = sanitizeFilename(file.name);
@@ -140,6 +145,8 @@ export async function POST(req: NextRequest) {
       truncated: cleaned.length > text.length,
       resumeRef: tempId,
       resumeFilename: cleanName,
+      userName: contact.userName,
+      userPhone: contact.userPhone,
     });
   } catch (error: unknown) {
     console.error("Resume parse error:", error);
