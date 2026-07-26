@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:unit": "node --test --experimental-strip-types tests/*.test.mts",
     "tts:cache": "node scripts/generate-tts-cache.mjs",
     "test:e2e": "playwright test",
     "test:e2e:mobile": "playwright test --project \"iPhone 14\" --project \"Pixel 7\"",

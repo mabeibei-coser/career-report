@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   APPLICANT_BASELINE,
+  callBananaRouterJson,
   callDeepSeekJson,
-  callIflytekJson,
 } from "@/lib/report-shared";
-import { hasIflytek } from "@/lib/iflytek";
+import { hasBananaRouter } from "@/lib/bananarouter";
 import type { JobFormData, QuizQuestion } from "@/lib/types";
 import {
   mergeQuizSkeleton,
@@ -161,20 +161,20 @@ export async function POST(req: NextRequest) {
       maxTokens: from === 3 ? 1500 : from === 2 ? 1900 : 2200,
     };
 
-    // 讯飞主、DeepSeek 兜底。讯飞经常 25s+，超时拉短让 fallback 提前介入：
+    // BananaRouter 主、DeepSeek 兜底。超时后尽快切换真实备用：
     // 常态下 5-20s 返回；>25s 说明 slow path，快速切 DeepSeek（~30s）总比 50s+30s 快
     let aiQuiz: AiQuizResponse;
-    if (hasIflytek) {
+    if (hasBananaRouter) {
       try {
-        aiQuiz = await callIflytekJson<AiQuizResponse>({
+        aiQuiz = await callBananaRouterJson<AiQuizResponse>({
           ...baseOpts,
           // 真机 5G 下讯飞 >25s 很常见；40s 给移动网络足够余量，仍比 50s 默认早
           timeoutMs: 40000,
         });
-      } catch (iflytekErr) {
+      } catch (bananaErr) {
         console.warn(
-          "iFlytek quiz generate failed, falling back to DeepSeek:",
-          iflytekErr
+          "BananaRouter quiz generate failed, falling back to DeepSeek:",
+          bananaErr
         );
         // DeepSeek fallback 用默认 50s 超时（节省 token 模式下通常 20-35s）
         aiQuiz = await callDeepSeekJson<AiQuizResponse>(baseOpts);

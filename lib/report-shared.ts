@@ -1,5 +1,8 @@
 import client, { DEEPSEEK_MODEL } from "@/lib/deepseek";
-import iflytek, { IFLYTEK_MODEL } from "@/lib/iflytek";
+import {
+  callBananaRouterText,
+  hasBananaRouter,
+} from "@/lib/bananarouter";
 import type { JobFormData, QuizAnswer } from "@/lib/types";
 import { inferIndustry } from "@/lib/industry-resolver";
 
@@ -157,46 +160,24 @@ export async function callDeepSeekJson<T>(
   }
 }
 
-// 讯飞 fallback：镜像 callDeepSeekJson 的结构和后处理管线
-// 与 DeepSeek 的区别：
-// 1. 使用 iflytek client（可能为 null，未配 key 时抛错）
-// 2. model 用 IFLYTEK_MODEL（默认 astron-code-latest）
-// 3. 其他（JSON_ONLY_PREFIX / response_format / stripReasoning / extractJson / tryFixAndParse）完全一致
-export async function callIflytekJson<T>(
+// BananaRouter fallback：使用 Gemini 原生 generateContent 协议。
+export async function callBananaRouterJson<T>(
   opts: CallOptions & { timeoutMs?: number }
 ): Promise<T> {
-  if (!iflytek) throw new Error("讯飞 fallback 未配置");
-  const controller = new AbortController();
-  const timer = setTimeout(
-    () => controller.abort(),
-    opts.timeoutMs ?? SECTION_HARD_TIMEOUT_MS
-  );
-  try {
-    const response = await iflytek.chat.completions.create(
-      {
-        model: IFLYTEK_MODEL,
-        messages: [
-          { role: "system", content: JSON_ONLY_PREFIX + opts.systemPrompt },
-          { role: "user", content: opts.userPrompt },
-        ],
-        temperature: opts.temperature ?? 0.6,
-        max_tokens: opts.maxTokens ?? 3000,
-        response_format: { type: "json_object" },
-      },
-      { signal: controller.signal }
-    );
-
-    const rawContent = response.choices[0]?.message?.content || "";
-    const cleaned = stripReasoning(rawContent);
-    const jsonStr = extractJson(cleaned);
-    return tryFixAndParse(jsonStr) as T;
-  } finally {
-    clearTimeout(timer);
-  }
+  const rawContent = await callBananaRouterText({
+    systemPrompt: JSON_ONLY_PREFIX + opts.systemPrompt,
+    userPrompt: opts.userPrompt,
+    temperature: opts.temperature,
+    maxTokens: opts.maxTokens,
+    timeoutMs: opts.timeoutMs ?? SECTION_HARD_TIMEOUT_MS,
+  });
+  const cleaned = stripReasoning(rawContent);
+  const jsonStr = extractJson(cleaned);
+  return tryFixAndParse(jsonStr) as T;
 }
 
 /**
- * 章节 AI 调用的统一入口：DeepSeek 主 → iFlytek fallback。
+ * 章节 AI 调用的统一入口：DeepSeek 主 → BananaRouter fallback。
  *
  * **失败**包含三种情况，任一出现都会触发切换讯飞 key 重试：
  * 1. API 调用错误（429/529/超时/网络）
@@ -204,7 +185,7 @@ export async function callIflytekJson<T>(
  * 3. `validator` 返回非 null 字符串（内容校验不通过——字段缺失/占位符/空串）
  *
  * 两家都失败才抛**原始 DeepSeek 错误**（第一手信息便于排查）。
- * 未配 IFLYTEK_API_KEY 时自动退化为单路 DeepSeek，调用方无需改 env。
+ * 未配 BANANAROUTER_API_KEY 时自动退化为单路 DeepSeek。
  */
 export async function callWithFallback<T>(
   opts: CallOptions & {
@@ -215,13 +196,13 @@ export async function callWithFallback<T>(
 ): Promise<T> {
   const { validator, ...callOpts } = opts;
   const runOnce = async (
-    caller: "deepseek" | "iflytek",
+    caller: "deepseek" | "bananarouter",
     sectionName: string
   ): Promise<T> => {
     const data =
       caller === "deepseek"
         ? await callDeepSeekJson<T>(callOpts)
-        : await callIflytekJson<T>(callOpts);
+        : await callBananaRouterJson<T>(callOpts);
     if (validator) {
       const issue = validator(data);
       if (issue) throw new Error(`[${sectionName}] 内容校验失败: ${issue}`);
@@ -232,16 +213,19 @@ export async function callWithFallback<T>(
   try {
     return await runOnce("deepseek", "DeepSeek");
   } catch (deepseekErr) {
-    if (!iflytek) throw deepseekErr;
+    if (!hasBananaRouter) throw deepseekErr;
     const dsMsg =
       deepseekErr instanceof Error ? deepseekErr.message : String(deepseekErr);
-    console.warn("[fallback] DeepSeek 失败/校验不通过，切换讯飞重试:", dsMsg);
+    console.warn(
+      "[fallback] DeepSeek 失败/校验不通过，切换 BananaRouter 重试:",
+      dsMsg
+    );
     try {
-      return await runOnce("iflytek", "iFlytek");
-    } catch (iflytekErr) {
-      const ifMsg =
-        iflytekErr instanceof Error ? iflytekErr.message : String(iflytekErr);
-      console.warn("[fallback] 讯飞也失败:", ifMsg);
+      return await runOnce("bananarouter", "BananaRouter");
+    } catch (bananaErr) {
+      const bananaMsg =
+        bananaErr instanceof Error ? bananaErr.message : String(bananaErr);
+      console.warn("[fallback] BananaRouter 也失败:", bananaMsg);
       throw deepseekErr; // 抛原始 DeepSeek 错误，看到首因
     }
   }
