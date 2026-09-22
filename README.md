@@ -39,3 +39,5 @@ career-report 当前**只服务终端用户的前台**。原来内嵌的管理�
 ## 部署
 
 参考 `~/.claude/skills/gstack/tencent-deploy/SKILL.md` 或项目 CLAUDE.md 里的部署节。
+
+维护前必读：[维护经验与问题索引](docs/maintenance-experience.md)。

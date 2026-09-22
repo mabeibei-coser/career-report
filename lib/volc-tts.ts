@@ -1,7 +1,4 @@
-import { randomUUID } from "crypto";
-
-const TTS_URL = "https://openspeech.bytedance.com/api/v1/tts";
-const RESOURCE_ID = "volc.service_type.10029";
+import { requestSpeech } from "./volc-tts-provider.mjs";
 const DEFAULT_SPEAKER = "zh_female_vv_uranus_bigtts";
 
 /**
@@ -9,6 +6,9 @@ const DEFAULT_SPEAKER = "zh_female_vv_uranus_bigtts";
  * @returns base64-encoded MP3 string, or "" if synthesis fails
  */
 export async function synthesizeTTS(text: string): Promise<string> {
+  // 测试模式不调用付费语音服务。
+  if (process.env.E2E_MOCK_MODE === "true") return "";
+
   const appKey = process.env.VOLC_TTS_APP_KEY;
   const accessKey = process.env.VOLC_TTS_ACCESS_KEY;
 
@@ -22,35 +22,13 @@ export async function synthesizeTTS(text: string): Promise<string> {
   const timeout = setTimeout(() => controller.abort(), 10_000);
 
   try {
-    const res = await fetch(TTS_URL, {
-      method: "POST",
+    const audio = await requestSpeech(text, {
+      appKey,
+      accessKey,
+      speaker,
       signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        "X-Api-App-Key": appKey,
-        "X-Api-Access-Key": accessKey,
-        "X-Api-Resource-Id": RESOURCE_ID,
-      },
-      body: JSON.stringify({
-        app: { appid: appKey, cluster: "volcano_bigtts" },
-        user: { uid: randomUUID() },
-        audio: { voice_type: speaker, encoding: "mp3", speed_ratio: 1.0 },
-        request: {
-          reqid: randomUUID(),
-          text,
-          operation: "query",
-        },
-      }),
     });
-
-    const d = await res.json();
-
-    if (d.data) {
-      return d.data as string;
-    }
-
-    console.error("[volc-tts] API error:", d);
-    return "";
+    return audio.toString("base64");
   } catch (err) {
     console.error("[volc-tts] request failed:", err);
     return "";
